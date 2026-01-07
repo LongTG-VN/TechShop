@@ -1,4 +1,6 @@
+dao\userDAO.class
 controller\adminServlet.class
 dao\roleDAO.class
 model\role.class
+model\user.class
 utils\DBContext.class

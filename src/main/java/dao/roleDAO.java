@@ -13,7 +13,7 @@ import utils.DBContext;
 
 /**
  *
- * @author ASUS
+ * @author ASU
  */
 public class roleDAO extends DBContext {
 
@@ -99,15 +99,15 @@ public class roleDAO extends DBContext {
         roleDAO a = new roleDAO();
         List<role> list = a.getAllRole();
         // hiển thị 
-                for (role object : list) {
-            System.out.println(object);
-        }
+//                for (role object : list) {
+//            System.out.println(object);
+//        }
         // Xóa 
 //         a.deleteRole(3);
         //Chèn
 //        a.insertRole(new role(10,"hhi", "Nhân viên bán hàng tai gia",(byte) 1));
         // Update
-//        a.updateRole(new role(6, "WAREHOUSE", "Nhân viên kho", (byte) 0));
+//        a.updateRole(new role(4, "WAREHOUSE", "Nhân viên kho", (byte) 0));
         // Get by ID
 //        System.out.println(a.getRoleById(1));
 

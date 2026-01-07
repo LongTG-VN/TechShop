@@ -9,10 +9,10 @@ package model;
  * @author ASUS
  */
 public class role {
-    public int role_id;
-    public String role_name;
-    public String description;
-    public byte is_active;
+    private int role_id;
+    private String role_name;
+    private String description;
+    private byte is_active;
 
     public role() {
     }
