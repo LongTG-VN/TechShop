@@ -125,10 +125,8 @@ public class userDAO extends DBContext {
 
 //        System.out.println(a.getUserById(1));
 //        roleDAO roleDAO = new roleDAO();
-
 //        a.updateUser(new user(1005, "Long", "aaaaaa@gmi", "1234", "1234", roleDAO.getRoleById(1), "ACTIVE", LocalDateTime.now()));
 //  a.deleteUser(3);
 //        a.addUser(new user(0, "NGộ độc 3", "aa242@gma", "123", "123", roleDAO.getRoleById(1), "ACTIVE", LocalDateTime.now()));
-
     }
 }

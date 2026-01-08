@@ -1,6 +1,8 @@
 D:\prj301\TechShop\src\main\java\controller\adminServlet.java
 D:\prj301\TechShop\src\main\java\dao\roleDAO.java
+D:\prj301\TechShop\src\main\java\dao\userAddressesDAO.java
 D:\prj301\TechShop\src\main\java\dao\userDAO.java
 D:\prj301\TechShop\src\main\java\model\role.java
 D:\prj301\TechShop\src\main\java\model\user.java
+D:\prj301\TechShop\src\main\java\model\userAddresses.java
 D:\prj301\TechShop\src\main\java\utils\DBContext.java
