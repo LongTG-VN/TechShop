@@ -1,7 +1,11 @@
 D:\prj301\TechShop\src\main\java\controller\adminServlet.java
+D:\prj301\TechShop\src\main\java\dao\loyaltyPointsDAO.java
+D:\prj301\TechShop\src\main\java\dao\PaymentMethodDAO.java
 D:\prj301\TechShop\src\main\java\dao\roleDAO.java
 D:\prj301\TechShop\src\main\java\dao\userAddressesDAO.java
 D:\prj301\TechShop\src\main\java\dao\userDAO.java
+D:\prj301\TechShop\src\main\java\model\loyaltyPoints.java
+D:\prj301\TechShop\src\main\java\model\PaymentMethod.java
 D:\prj301\TechShop\src\main\java\model\role.java
 D:\prj301\TechShop\src\main\java\model\user.java
 D:\prj301\TechShop\src\main\java\model\userAddresses.java
