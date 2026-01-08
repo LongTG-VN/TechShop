@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 public class user {
     private int userId;
     private String fullName;
+    private String userName;
     private String email;
     private String password;
     private String phone;
@@ -23,9 +24,10 @@ public class user {
     public user() {
     }
 
-    public user(int userId, String fullName, String email, String password, String phone, role role, String status, LocalDateTime created_at) {
+    public user(int userId, String fullName, String userName, String email, String password, String phone, role role, String status, LocalDateTime created_at) {
         this.userId = userId;
         this.fullName = fullName;
+        this.userName = userName;
         this.email = email;
         this.password = password;
         this.phone = phone;
@@ -48,6 +50,14 @@ public class user {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     public String getEmail() {
@@ -100,8 +110,10 @@ public class user {
 
     @Override
     public String toString() {
-        return "user{" + "userId=" + userId + ", fullName=" + fullName + ", email=" + email + ", password=" + password + ", phone=" + phone + ", role=" + role + ", status=" + status + ", created_at=" + created_at + '}';
+        return "user{" + "userId=" + userId + ", fullName=" + fullName + ", userName=" + userName + ", email=" + email + ", password=" + password + ", phone=" + phone + ", role=" + role + ", status=" + status + ", created_at=" + created_at + '}';
     }
+
+    
     
     
     
