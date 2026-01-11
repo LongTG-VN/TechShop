@@ -22,7 +22,7 @@ import utils.DBContext;
  */
 public class ImportReceiptsDAO extends DBContext {
 
-    private userDAO userDao = new userDAO();
+    private UserDAO userDao = new UserDAO();
     private SupplierDAO supplierDAO = new SupplierDAO();
 
     // 1. READ: Lấy tất cả phiếu nhập
@@ -157,7 +157,7 @@ public class ImportReceiptsDAO extends DBContext {
     public static void main(String[] args) {
         ImportReceiptsDAO dao = new ImportReceiptsDAO();
         SupplierDAO supDao = new SupplierDAO();
-        userDAO uDao = new userDAO();
+        UserDAO uDao = new UserDAO();
 
         System.out.println("--- 1. LIST ALL RECEIPTS ---");
         List<ImportReceipts> list = dao.getAllImportReceipt();

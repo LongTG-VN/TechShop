@@ -16,9 +16,9 @@ import utils.DBContext;
  *
  * @author ASUS
  */
-public class loyaltyPointsDAO extends DBContext{
+public class LoyaltyPointsDAO extends DBContext{
     
-        private userDAO userDAO = new userDAO();
+        private UserDAO userDAO = new UserDAO();
 
         public List<LoyaltyPoints> getAllloyaltyPoints() {
        
@@ -62,8 +62,8 @@ public class loyaltyPointsDAO extends DBContext{
     }
         
         public static void main(String[] args) {
-         loyaltyPointsDAO a = new loyaltyPointsDAO();
-         userDAO uDao = new userDAO();
+         LoyaltyPointsDAO a = new LoyaltyPointsDAO();
+         UserDAO uDao = new UserDAO();
          model.User u = uDao.getUserById(1);
          LoyaltyPoints newPoint = new LoyaltyPoints(0, u, 100, "Thưởng mua hàng A", LocalDateTime.now());
          a.addLoyaltyPoints(newPoint);     

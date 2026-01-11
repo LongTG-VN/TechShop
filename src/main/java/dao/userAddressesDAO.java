@@ -16,9 +16,9 @@ import utils.DBContext;
  *
  * @author ASUS
  */
-public class userAddressesDAO extends DBContext {
+public class UserAddressesDAO extends DBContext {
 
-    private userDAO userDAO = new userDAO();
+    private UserDAO userDAO = new UserDAO();
 
     public List<UserAddresses> getAllUserAddresses() {
         List<UserAddresses> list = new ArrayList<>();
@@ -44,7 +44,7 @@ public class userAddressesDAO extends DBContext {
     }
 
     public static void main(String[] args) {
-        userAddressesDAO a = new userAddressesDAO();
+        UserAddressesDAO a = new UserAddressesDAO();
         List<UserAddresses> list = a.getAllUserAddresses();
         for (UserAddresses addresses : list) {
             System.out.println(addresses);

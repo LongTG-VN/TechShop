@@ -21,7 +21,7 @@ import utils.DBContext;
  */
 public class WishlistDAO extends DBContext {
 
-    private userDAO userDAO = new userDAO();
+    private UserDAO userDAO = new UserDAO();
     private ProductDAO productDAO = new ProductDAO();
 
     public List<Wishlist> getAllWishlists() {

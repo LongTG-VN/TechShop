@@ -15,7 +15,7 @@ import utils.DBContext;
  *
  * @author ASU
  */
-public class roleDAO extends DBContext {
+public class RoleDAO extends DBContext {
 
     public List<Role> getAllRole() {
         List<Role> list = new ArrayList<>();
@@ -96,7 +96,7 @@ public class roleDAO extends DBContext {
     }
 
     public static void main(String[] args) {
-        roleDAO a = new roleDAO();
+        RoleDAO a = new RoleDAO();
         List<Role> list = a.getAllRole();
         // hiển thị 
 //                for (Role object : list) {

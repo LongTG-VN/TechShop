@@ -17,9 +17,9 @@ import utils.DBContext;
  *
  * @author ASUS
  */
-public class shoppingSessionDAO extends DBContext {
+public class ShoppingSessionDAO extends DBContext {
 
-    private userDAO userDAO = new userDAO();
+    private UserDAO userDAO = new UserDAO();
 
     public List<ShoppingSession> getAllShoppingSession() {
         List<ShoppingSession> list = new ArrayList<>();
@@ -69,7 +69,7 @@ public class shoppingSessionDAO extends DBContext {
     }
 
     public static void main(String[] args) {
-        shoppingSessionDAO a = new shoppingSessionDAO();
+        ShoppingSessionDAO a = new ShoppingSessionDAO();
         List<ShoppingSession> list = a.getAllShoppingSession();
 //        for (ShoppingSession session : list) {
 //            System.out.println(session);

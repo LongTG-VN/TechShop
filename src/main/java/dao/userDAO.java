@@ -11,9 +11,9 @@ import model.Role;
 import model.User;
 import utils.DBContext;
 
-public class userDAO extends DBContext {
+public class UserDAO extends DBContext {
 
-    private roleDAO roleDAO = new roleDAO();
+    private RoleDAO roleDAO = new RoleDAO();
 
     // 1. Lấy tất cả người dùng
     public List<User> getAllUser() {
@@ -149,13 +149,13 @@ public class userDAO extends DBContext {
     }
 
     public static void main(String[] args) {
-        userDAO dao = new userDAO();
+        UserDAO dao = new UserDAO();
         // Test login
         List<User> list = dao.getAllUser();
 //        for (User object : list) {
 //            System.out.println(object);
 //        }
-         roleDAO b = new roleDAO();
+         RoleDAO b = new RoleDAO();
 //      dao.deleteUser(1008);
 //        dao.updateUser(new User(1009, "long", "lo", "aa@gmail.com", "123", "12312", b.getRoleById(1), "ACTIVE", LocalDateTime.now()));
 //        dao.addUser(new User(0, "long", "lol", "a111a@gmail.com", "12345", "12312", b.getRoleById(1), "ACTIVE", LocalDateTime.now()));

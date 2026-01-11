@@ -26,7 +26,7 @@ import utils.DBContext;
  */
 public class OrderDAO extends DBContext {
 
-    private userDAO userDAO = new userDAO();
+    private UserDAO userDAO = new UserDAO();
     private VoucherDAO voucherDAO = new VoucherDAO();
     private PaymentMethodDAO paymentMethodDAO = new PaymentMethodDAO();
 
@@ -204,7 +204,7 @@ public static void main(String[] args) {
     // 1. Khởi tạo các DAO
     OrderDAO orderDAO = new OrderDAO();
     ProductVariantDAO productDAO = new ProductVariantDAO();
-    userDAO uDao = new userDAO();
+    UserDAO uDao = new UserDAO();
     OrderItemDAO orderItemDAO = new OrderItemDAO();
     PaymentMethodDAO pDao = new PaymentMethodDAO();
 

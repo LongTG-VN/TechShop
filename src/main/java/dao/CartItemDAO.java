@@ -22,7 +22,7 @@ import utils.DBContext;
 public class CartItemDAO extends DBContext {
     
     // Khai báo các DAO phụ thuộc để lấy thông tin chi tiết
-    private shoppingSessionDAO sessionDAO = new shoppingSessionDAO();
+    private ShoppingSessionDAO sessionDAO = new ShoppingSessionDAO();
     private ProductVariantDAO productVariantDAO = new ProductVariantDAO();
 
     // 1. READ: Lấy tất cả item trong kho giỏ hàng (Chỉ dùng cho Admin check data)
