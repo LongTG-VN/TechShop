@@ -1,15 +1,7 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
-/**
- *
- * @author WIN11
- */
 public class Voucher {
 
     private int voucherId;
@@ -17,11 +9,20 @@ public class Voucher {
     private int discountPercent;
     private double maxDiscountAmount;
     private double minOrderValue;
-    private Timestamp validFrom;
-    private Timestamp validTo;
-    private boolean isActive;
+    private LocalDateTime validFrom;
+    private LocalDateTime validTo;
+    private int totalQuantity;
+    private int usedQuantity;
+    private String status; // Khớp với VARCHAR(20) trong DB (ACTIVE, EXPIRED,...)
 
-    public Voucher(int voucherId, String code, int discountPercent, double maxDiscountAmount, double minOrderValue, Timestamp validFrom, Timestamp validTo, boolean isActive) {
+    // Constructor mặc định
+    public Voucher() {
+    }
+
+    // Constructor đầy đủ tham số
+    public Voucher(int voucherId, String code, int discountPercent, double maxDiscountAmount,
+            double minOrderValue, LocalDateTime validFrom, LocalDateTime validTo,
+            int totalQuantity, int usedQuantity, String status) {
         this.voucherId = voucherId;
         this.code = code;
         this.discountPercent = discountPercent;
@@ -29,9 +30,12 @@ public class Voucher {
         this.minOrderValue = minOrderValue;
         this.validFrom = validFrom;
         this.validTo = validTo;
-        this.isActive = isActive;
+        this.totalQuantity = totalQuantity;
+        this.usedQuantity = usedQuantity;
+        this.status = status;
     }
 
+    // Getter và Setter
     public int getVoucherId() {
         return voucherId;
     }
@@ -72,34 +76,54 @@ public class Voucher {
         this.minOrderValue = minOrderValue;
     }
 
-    public Timestamp getValidFrom() {
+    public LocalDateTime getValidFrom() {
         return validFrom;
     }
 
-    public void setValidFrom(Timestamp validFrom) {
+    public void setValidFrom(LocalDateTime validFrom) {
         this.validFrom = validFrom;
     }
 
-    public Timestamp getValidTo() {
+    public LocalDateTime getValidTo() {
         return validTo;
     }
 
-    public void setValidTo(Timestamp validTo) {
+    public void setValidTo(LocalDateTime validTo) {
         this.validTo = validTo;
     }
 
-    public boolean isIsActive() {
-        return isActive;
+    public int getTotalQuantity() {
+        return totalQuantity;
     }
 
-    public void setIsActive(boolean isActive) {
-        this.isActive = isActive;
+    public void setTotalQuantity(int totalQuantity) {
+        this.totalQuantity = totalQuantity;
+    }
+
+    public int getUsedQuantity() {
+        return usedQuantity;
+    }
+
+    public void setUsedQuantity(int usedQuantity) {
+        this.usedQuantity = usedQuantity;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    // Helper method: Kiểm tra xem voucher còn lượt dùng không
+    public boolean isAvailable() {
+        return "ACTIVE".equalsIgnoreCase(this.status) && (usedQuantity < totalQuantity);
     }
 
     @Override
     public String toString() {
-        return voucherId + " | " + code + " | " + discountPercent + "% | "
-                + maxDiscountAmount + " | " + minOrderValue + " | "
-                + validFrom + " | " + validTo + " | " + isActive;
+        return String.format("Voucher[ID=%d, Code=%s, %d%%, Min=%.2f, Status=%s, Qty=%d/%d]",
+                voucherId, code, discountPercent, minOrderValue, status, usedQuantity, totalQuantity);
     }
 }

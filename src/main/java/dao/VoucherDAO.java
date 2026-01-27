@@ -1,21 +1,31 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dao;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import model.Voucher;
 import utils.DBContext;
 
-/**
- *
- * @author WIN11
- */
 public class VoucherDAO extends DBContext {
+
+    // Helper method: Map ResultSet to Voucher Object
+    private Voucher mapResultSetToVoucher(ResultSet rs) throws Exception {
+        return new Voucher(
+                rs.getInt("voucher_id"),
+                rs.getString("code"),
+                rs.getInt("discount_percent"),
+                rs.getDouble("max_discount_amount"),
+                rs.getDouble("min_order_value"),
+                rs.getTimestamp("valid_from").toLocalDateTime(),
+                rs.getTimestamp("valid_to").toLocalDateTime(),
+                rs.getInt("total_quantity"),
+                rs.getInt("used_quantity"),
+                rs.getString("status")
+        );
+    }
 
     // ===== GET ALL =====
     public List<Voucher> getAllVoucher() {
@@ -25,16 +35,7 @@ public class VoucherDAO extends DBContext {
             PreparedStatement ps = conn.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                list.add(new Voucher(
-                        rs.getInt("voucher_id"),
-                        rs.getString("code"),
-                        rs.getInt("discount_percent"),
-                        rs.getDouble("max_discount_amount"),
-                        rs.getDouble("min_order_value"),
-                        rs.getTimestamp("valid_from"),
-                        rs.getTimestamp("valid_to"),
-                        rs.getBoolean("is_active")
-                ));
+                list.add(mapResultSetToVoucher(rs));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -44,22 +45,29 @@ public class VoucherDAO extends DBContext {
 
     // ===== GET BY ID =====
     public Voucher getVoucherById(int id) {
-        String sql = "SELECT * FROM vouchers WHERE voucher_id=?";
+        String sql = "SELECT * FROM vouchers WHERE voucher_id= ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return new Voucher(
-                        rs.getInt("voucher_id"),
-                        rs.getString("code"),
-                        rs.getInt("discount_percent"),
-                        rs.getDouble("max_discount_amount"),
-                        rs.getDouble("min_order_value"),
-                        rs.getTimestamp("valid_from"),
-                        rs.getTimestamp("valid_to"),
-                        rs.getBoolean("is_active")
-                );
+                return mapResultSetToVoucher(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // ===== GET BY CODE (Dùng cho tính năng áp dụng Voucher) =====
+    public Voucher getVoucherByCode(String code) {
+        String sql = "SELECT * FROM vouchers WHERE code = ? AND status = 'ACTIVE'";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, code);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToVoucher(rs);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -68,12 +76,12 @@ public class VoucherDAO extends DBContext {
     }
 
     // ===== INSERT =====
-    public void insertVoucher(Voucher v) {
+    public boolean insertVoucher(Voucher v) {
         String sql = """
-            INSERT INTO vouchers
-            (code, discount_percent, max_discount_amount,
-             min_order_value, valid_from, valid_to, is_active)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO vouchers 
+            (code, discount_percent, max_discount_amount, min_order_value, 
+             valid_from, valid_to, total_quantity, used_quantity, status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -81,20 +89,24 @@ public class VoucherDAO extends DBContext {
             ps.setInt(2, v.getDiscountPercent());
             ps.setDouble(3, v.getMaxDiscountAmount());
             ps.setDouble(4, v.getMinOrderValue());
-            ps.setTimestamp(5, v.getValidFrom());
-            ps.setTimestamp(6, v.getValidTo());
-            ps.setBoolean(7, v.isIsActive());
-            ps.executeUpdate();
+            ps.setTimestamp(5, Timestamp.valueOf(v.getValidFrom()));
+            ps.setTimestamp(6, Timestamp.valueOf(v.getValidTo()));
+            ps.setInt(7, v.getTotalQuantity());
+            ps.setInt(8, v.getUsedQuantity());
+            ps.setString(9, v.getStatus());
+            return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return false;
     }
 
-    public void updateVoucher(Voucher v) {
+    // ===== UPDATE =====
+    public boolean updateVoucher(Voucher v) {
         String sql = """
-            UPDATE vouchers
-            SET code=?, discount_percent=?, max_discount_amount=?,
-                min_order_value=?, valid_from=?, valid_to=?, is_active=?
+            UPDATE vouchers 
+            SET code=?, discount_percent=?, max_discount_amount=?, min_order_value=?, 
+                valid_from=?, valid_to=?, total_quantity=?, used_quantity=?, status=? 
             WHERE voucher_id=?
         """;
         try {
@@ -103,87 +115,73 @@ public class VoucherDAO extends DBContext {
             ps.setInt(2, v.getDiscountPercent());
             ps.setDouble(3, v.getMaxDiscountAmount());
             ps.setDouble(4, v.getMinOrderValue());
-            ps.setTimestamp(5, v.getValidFrom());
-            ps.setTimestamp(6, v.getValidTo());
-            ps.setBoolean(7, v.isIsActive());
-            ps.setInt(8, v.getVoucherId());
-            ps.executeUpdate();
+            ps.setTimestamp(5, Timestamp.valueOf(v.getValidFrom()));
+            ps.setTimestamp(6, Timestamp.valueOf(v.getValidTo()));
+            ps.setInt(7, v.getTotalQuantity());
+            ps.setInt(8, v.getUsedQuantity());
+            ps.setString(9, v.getStatus());
+            ps.setInt(10, v.getVoucherId());
+            return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return false;
     }
 
-    // ===== DELETE =====
-    public void deleteVoucher(int id) {
+    // ===== DELETE (Xóa cứng) =====
+    public boolean deleteVoucher(int id) {
         String sql = "DELETE FROM vouchers WHERE voucher_id=?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, id);
-            ps.executeUpdate();
+            return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return false;
     }
 
-    // ===== TEST  =====
-    private static final String VOUCHER_FORMAT
-            = "%-4d | %-10s | %-9s | %-14.2f | %-10.2f | %-23s | %-23s | %-7s%n";
-
+    // ===== TEST MAIN =====
     public static void main(String[] args) {
-        VoucherDAO a = new VoucherDAO();
-        System.out.printf(
-                "%-4s | %-10s | %-9s | %-14s | %-10s | %-23s | %-23s | %-7s%n",
-                "ID", "CODE", "DISCOUNT", "MAX_DISCOUNT",
-                "MIN_ORDER", "VALID_FROM", "VALID_TO", "ACTIVE"
-        );
-
-        // GetAll
-        List<Voucher> list = a.getAllVoucher();
-        for (Voucher v : list) {
-            System.out.printf(
-                    "%-4d | %-10s | %-9s | %-14.2f | %-10.2f | %-23s | %-23s | %-7s%n",
-                    v.getVoucherId(),
-                    v.getCode(),
-                    v.getDiscountPercent() + "%",
-                    v.getMaxDiscountAmount(),
-                    v.getMinOrderValue(),
-                    v.getValidFrom(),
-                    v.getValidTo(),
-                    v.isIsActive()
-            );
-        }
-//         //Insert
-//        a.insertVoucher(new Voucher(
-//                0, "SALE101", 10, 50000, 200000,
-//                Timestamp.valueOf("2025-01-20 00:00:00"),
-//                Timestamp.valueOf("2025-12-31 23:59:59"),
-//                true
-//        ));
-
-        // Update
-//        a.updateVoucher(new Voucher(
-//                2, "SALE30", 20, 100000, 300000,
-//                Timestamp.valueOf("2025-01-01 00:00:00"),
-//                Timestamp.valueOf("2025-12-31 23:59:59"),
-//                true
-//        ));
-//        
-//  //Delete
-//        a.deleteVoucher(3);
-//        // Get by ID
-//        Voucher v = a.getVoucherById(2);
-//        if (v != null) {
-//            System.out.printf(
-//                    VOUCHER_FORMAT,
-//                    v.getVoucherId(),
-//                    v.getCode(),
-//                    v.getDiscountPercent() + "%",
-//                    v.getMaxDiscountAmount(),
-//                    v.getMinOrderValue(),
-//                    v.getValidFrom(),
-//                    v.getValidTo(),
-//                    v.isIsActive()
-//            );
+        VoucherDAO dao = new VoucherDAO();
+        List<Voucher> list = dao.getAllVoucher();
+        
+//        System.out.println("--- DANH SÁCH VOUCHER ---");
+//        for (Voucher v : list) {
+//            System.out.println(v);
 //        }
+        
+        LocalDateTime startTime = LocalDateTime.now();
+        LocalDateTime endTime = startTime.plusMonths(1); // Hết hạn sau 1 tháng
+
+//        dao.insertVoucher(new Voucher(
+//                0, // ID (sẽ tự tăng trong DB)
+//                "SUMMER2026", // Code
+//                15, // 15%
+//                100000, // Max giảm 100k
+//                500000, // Đơn tối thiểu 500k
+//                startTime, // Ngày bắt đầu
+//                endTime, // Ngày kết thúc
+//                100, // Tổng số lượng 100 mã
+//                0, // Đã dùng 0 mã
+//                "ACTIVE" // Trạng thái
+//        ));
+        
+//        dao.updateVoucher(new Voucher(
+//                6, // ID (sẽ tự tăng trong DB)
+//                "SUMMER2026", // Code
+//                100, // 15%
+//                100000, // Max giảm 100k
+//                500000, // Đơn tối thiểu 500k
+//                startTime, // Ngày bắt đầu
+//                endTime, // Ngày kết thúc
+//                100, // Tổng số lượng 100 mã
+//                0, // Đã dùng 0 mã
+//                "ACTIVE" // Trạng thái
+//        ));
+        
+//        dao.deleteVoucher(6);
+System.out.println(   dao.getVoucherById(1));
+//        dao.getVoucherById(1);
     }
 }
