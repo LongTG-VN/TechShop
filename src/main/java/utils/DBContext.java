@@ -23,7 +23,7 @@ public class DBContext {
         try {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
            String dbURL = "jdbc:sqlserver://localhost:1433;" 
-             + "databaseName=PhoneShopDB;"
+             + "databaseName=TechShop_DB;"
              + "user=sa;"
              + "password=123;" 
              + "encrypt=true;trustServerCertificate=true;";
