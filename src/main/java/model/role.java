@@ -11,16 +11,14 @@ package model;
 public class Role {
     private int role_id;
     private String role_name;
-    private String description;
     private byte is_active;
 
     public Role() {
     }
 
-    public Role(int role_id, String role_name, String description, byte is_active) {
+    public Role(int role_id, String role_name, byte is_active) {
         this.role_id = role_id;
         this.role_name = role_name;
-        this.description = description;
         this.is_active = is_active;
     }
 
@@ -40,13 +38,7 @@ public class Role {
         this.role_name = role_name;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
+   
 
     public byte getIs_active() {
         return is_active;
@@ -58,7 +50,7 @@ public class Role {
 
     @Override
     public String toString() {
-        return "role{" + "role_id=" + role_id + ", role_name=" + role_name + ", description=" + description + ", is_active=" + is_active + '}';
+        return "role{" + "role_id=" + role_id + ", role_name=" + role_name  + ", is_active=" + is_active + '}';
     }
 
     

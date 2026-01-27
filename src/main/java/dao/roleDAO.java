@@ -28,9 +28,8 @@ public class RoleDAO extends DBContext {
 
                 int role_id = rs.getInt("role_id");
                 String role_name = rs.getString("role_name");
-                String description = rs.getString("description");
                 byte is_active = rs.getByte("is_active");
-                Role role = new Role(role_id, role_name, description, is_active);
+                Role role = new Role(role_id, role_name, is_active);
 
                 list.add(role);
             }
@@ -40,12 +39,11 @@ public class RoleDAO extends DBContext {
     }
 
     public void insertRole(Role r) {
-        String sql = "INSERT INTO roles (role_name, description, is_active) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO roles (role_name, is_active) VALUES (?, ?)";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, r.getRole_name());
-            ps.setString(2, r.getDescription());
-            ps.setByte(3, r.getIs_active());
+            ps.setByte(2, r.getIs_active());
             ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
@@ -61,7 +59,6 @@ public class RoleDAO extends DBContext {
             if (rs.next()) {
                 return new Role(rs.getInt("role_id"),
                         rs.getString("role_name"),
-                        rs.getString("description"),
                         rs.getByte("is_active"));
             }
         } catch (Exception e) {
@@ -71,12 +68,11 @@ public class RoleDAO extends DBContext {
     }
 
     public void updateRole(Role r) {
-        String sql = "UPDATE roles SET role_name = ?, description = ? WHERE role_id = ?";
+        String sql = "UPDATE roles SET role_name = ? WHERE role_id = ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, r.getRole_name());
-            ps.setString(2, r.getDescription());
-            ps.setInt(3, r.getRole_id());
+            ps.setInt(2, r.getRole_id());
             ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
@@ -84,32 +80,46 @@ public class RoleDAO extends DBContext {
     }
 //
 
-    public void deleteRole(int id) {
+   public boolean softDeleteRole(int id) {
         String sql = "UPDATE roles SET is_active = 0 WHERE role_id = ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, id);
-            ps.executeUpdate();
+            return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return false;
+    }   
+   public boolean hardDeleteRole(int id) {
+        String sql = "DELETE FROM roles WHERE role_id = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            // Nếu lỗi do ràng buộc khóa ngoại (Foreign Key Constraint), e sẽ thông báo rõ.
+            e.printStackTrace();
+        }
+        return false;
     }
 
     public static void main(String[] args) {
         RoleDAO a = new RoleDAO();
         List<Role> list = a.getAllRole();
         // hiển thị 
-//                for (Role object : list) {
-//            System.out.println(object);
-//        }
+                for (Role object : list) {
+            System.out.println(object);
+        }
         // Xóa 
-//         a.deleteRole(3);
+//         a.hardDeleteRole(3);
+//         a.softDeleteRole(1);
         //Chèn
-//        a.insertRole(new Role(10,"hhi", "Nhân viên bán hàng tai gia",(byte) 1));
+//        a.insertRole(new Role(10,"hhi",(byte) 1));
         // Update
-//        a.updateRole(new Role(4, "WAREHOUSE", "Nhân viên kho", (byte) 0));
+//        a.updateRole(new Role(3, "WAREHOUSE", (byte) 0));
         // Get by ID
-//        System.out.println(a.getRoleById(1));
+//        System.out.println(a.getRoleById(3));
 
     }
 }
