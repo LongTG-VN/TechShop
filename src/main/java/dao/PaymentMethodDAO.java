@@ -17,16 +17,17 @@ import utils.DBContext;
  */
 public class PaymentMethodDAO extends DBContext {
 
-    public List<PaymentMethod> getAllPaymentMethod() {
+    public List<PaymentMethod> getAllActivePaymentMethods() {
         List<PaymentMethod> list = new ArrayList<>();
-        String sql = "SELECT * FROM payment_methods";
+        String sql = "SELECT * FROM payment_methods WHERE is_active = 1";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 list.add(new PaymentMethod(
                         rs.getInt("method_id"),
-                        rs.getString("method_name")
+                        rs.getString("method_name"),
+                        rs.getBoolean("is_active")
                 ));
             }
         } catch (Exception e) {
@@ -35,8 +36,8 @@ public class PaymentMethodDAO extends DBContext {
         return list;
     }
 
-    public PaymentMethod getPaymentMethodById(int id) {
-        String sql = "SELECT * FROM payment_methods WHERE method_id = ?";
+    public PaymentMethod getActivePaymentMethodById(int id) {
+        String sql = "SELECT * FROM payment_methods WHERE method_id = ? AND is_active = 1";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, id);
@@ -44,7 +45,8 @@ public class PaymentMethodDAO extends DBContext {
             if (rs.next()) {
                 return new PaymentMethod(
                         rs.getInt("method_id"),
-                        rs.getString("method_name")
+                        rs.getString("method_name"),
+                        rs.getBoolean("is_active")
                 );
             }
         } catch (Exception e) {
@@ -53,11 +55,30 @@ public class PaymentMethodDAO extends DBContext {
         return null;
     }
 
-    public void insertPaymentMethod(PaymentMethod pm) {
+    public List<PaymentMethod> getAllInactivePaymentMethods() {
+        List<PaymentMethod> list = new ArrayList<>();
+        String sql = "SELECT * FROM payment_methods WHERE is_active = 0";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(new PaymentMethod(
+                        rs.getInt("method_id"),
+                        rs.getString("method_name"),
+                        rs.getBoolean("is_active")
+                ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public void insertPaymentMethod(String name) {
         String sql = "INSERT INTO payment_methods(method_name) VALUES (?)";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, pm.getMethod_name());
+            ps.setString(1, name);
             ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
@@ -76,8 +97,9 @@ public class PaymentMethodDAO extends DBContext {
         }
     }
 
-    public void deletePaymentMethod(int id) {
-        String sql = "DELETE FROM payment_methods WHERE method_id=?";
+    //Soft delete
+    public void disablePaymentMethod(int id) {
+        String sql = "UPDATE payment_methods SET is_active = 0 WHERE method_id=?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, id);
@@ -87,22 +109,31 @@ public class PaymentMethodDAO extends DBContext {
         }
     }
 
-    public static void main(String[] args) {
-        PaymentMethodDAO a = new PaymentMethodDAO();
-// Delete
-//        a.deletePaymentMethod(9); 
-// Insert
-//        a.insertPaymentMethod(new PaymentMethod(6, "QR Pay"));
-// Update
-//        a.updatePaymentMethod(new PaymentMethod(2, "Bank Transfer"));
-// Get by ID
-//        System.out.println(a.getPaymentMethodById(1));        
+//    //TEST
+//    public static void main(String[] args) {
+//        PaymentMethodDAO dao = new PaymentMethodDAO();
 
-// Get all
-        List<PaymentMethod> list = a.getAllPaymentMethod();
-        for (PaymentMethod object : list) {
-            System.out.println(object);
-        }
+////         ===== INSERT =====
+////         dao.insertPaymentMethod("COD");
+////         dao.insertPaymentMethod("VNPAY");
+////         dao.insertPaymentMethod("MOMO");
+//        // ===== UPDATE =====
+////         dao.updatePaymentMethod(new PaymentMethod(2, "Bank Transfer", true));
+//        // ===== DISABLE (Soft delete) =====
+////         dao.disablePaymentMethod(3);
+//        // ===== GET BY ID  =====
+//        System.out.println(dao.getActivePaymentMethodById(2));
+////          ===== GET ALL UN-ACTIVE =====
+////          List<PaymentMethod> list = dao.getAllInactivePaymentMethods();
+////          for (PaymentMethod pm : list) {
+////          System.out.println(pm);
+////          }
+//
+//        // ===== GET ALL =====
+////        List<PaymentMethod> allList = dao.getAllActivePaymentMethods();
+////        for (PaymentMethod pm : allList) {
+////            System.out.println(pm);
+////        }
+//    }
 
-    }
 }
