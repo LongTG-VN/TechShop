@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
-package controller;
+package controller.User;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -16,8 +16,8 @@ import jakarta.servlet.http.HttpServletResponse;
  *
  * @author ASUS
  */
-@WebServlet(name = "adminServlet", urlPatterns = {"/adminservlet"})
-public class adminServlet extends HttpServlet {
+@WebServlet(name = "userServlet", urlPatterns = {"/userservlet"})
+public class userServlet extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -36,10 +36,10 @@ public class adminServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet adminServlet</title>");
+            out.println("<title>Servlet userServlet</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet adminServlet at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet userServlet at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -58,48 +58,50 @@ public class adminServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // 1. Thiết lập Tiếng Việt cho cả Request và Response
-        response.setCharacterEncoding("UTF-8");
-        response.setContentType("text/html;charset=UTF-8");
-
-        // 2. Lấy tham số 'action' từ URL (ví dụ: adminservlet?action=dashboard)
+        String headerComponent = "/components/navbar.jsp"; // Trang mặc định khi mới vào
+        String footerComponent = "/components/footer.jsp"; // Trang mặc định khi mới vào
+        String page = "/pages/homePage.jsp"; // Trang mặc định khi mới vào
         String action = request.getParameter("action");
-        String page = "/pages/dashboardPage.jsp"; // Trang mặc định khi mới vào
 
-        // 3. Logic điều hướng (Switch-case sẽ sạch sẽ hơn if-else)
-       if (action != null) {
-        switch (action) {
-            case "dashboard":
-                page = "/pages/dashboardPage.jsp";
-                break;
-            case "customerManagement":
-                page = "/pages/customerManagement.jsp"; // Bạn cần tạo file này
-                break;
-            case "employeeManagement":
-                page = "/pages/employeeManagement.jsp"; // Bạn cần tạo file này
-                break;
-            case "categoryManagement":
-                page = "/pages/categoryManagement.jsp";
-                break;
-            case "brandManagement":
-                page = "/pages/brandManagement.jsp";
-                break;
-            case "productManagement":
-                page = "/pages/productManagement.jsp";
-                break;
-            case "voucherManagement":
-                page = "/pages/voucherManagement.jsp";
-                break;
-            default:
-                page = "/pages/dashboardPage.jsp";
+        if (action != null) {
+            switch (action) {
+                case "homePage":
+                    page = "/pages/homePage.jsp";
+                    break;
+                case "loginPage":
+                    page = "/pages/loginPage.jsp"; // Bạn cần tạo file này
+                    break;
+                case "registerPage":
+                    page = "/pages/registerPage.jsp"; // Bạn cần tạo file này
+                    break;
+                case "categoryManagement":
+                    page = "/pages/categoryManagement.jsp";
+                    break;
+                case "brandManagement":
+                    page = "/pages/brandManagement.jsp";
+                    break;
+                case "productManagement":
+                    page = "/pages/productManagement.jsp";
+                    break;
+                case "voucherManagement":
+                    page = "/pages/voucherManagement.jsp";
+                    break;
+                default:
+                    page = "/pages/dashboardPage.jsp";
+            }
         }
-    }
 
-        // 4. Đẩy đường dẫn trang con vào Attribute để Template include
-        request.setAttribute("contentPage", page);
+        request.setAttribute("HeaderComponent", headerComponent);
+        request.setAttribute("FooterComponent", footerComponent);
+        request.setAttribute("ContentPage", page);
 
         // 5. Forward đến Template duy nhất
-        request.getRequestDispatcher("/template/adminTemplate.jsp").forward(request, response);
+        request.getRequestDispatcher("/template/userTemplate.jsp").forward(request, response);
+
+        processRequest(request, response);
+
+
+    
     }
 
     /**

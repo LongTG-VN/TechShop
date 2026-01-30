@@ -20,7 +20,7 @@
         <aside id="separator-sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
             <div class="h-full px-3 py-4 overflow-y-auto bg-white border-r border-gray-200">
                 <div class="flex items-center ps-2.5 mb-5">
-                    <span class="self-center text-xl font-semibold whitespace-nowrap text-blue-600">G5 Clothing Admin</span>
+                    <span class="self-center text-xl font-semibold whitespace-nowrap text-blue-600">TechShop Admin</span>
                 </div>
 
                 <ul class="space-y-2 font-medium">
@@ -92,10 +92,10 @@
                             <li><a href="#" class="hover:text-blue-600 block py-1 text-gray-600">Thêm danh mục</a></li>
                         </ul>
                     </li>
-                    
-                    
-                    
-<c:set var="isBrand" value="${param.action == 'brandManagement'}" />                    <li>
+
+
+
+                    <c:set var="isBrand" value="${param.action == 'brandManagement'}" />                    <li>
                         <div class="flex items-center w-full rounded-lg group ${isBrand ? 'bg-blue-50' : 'hover:bg-gray-100'}">
                             <a href="adminservlet?action=brandManagement" 
                                class="flex-1 flex items-center p-2 ${isBrand ? 'text-blue-600 font-bold' : 'text-gray-900 group-hover:text-blue-600'}">
@@ -112,7 +112,7 @@
                             <li><a href="#" class="hover:text-blue-600 block py-1 text-gray-600">Thêm</a></li>
                         </ul>
                     </li>
-                    
+
 
                     <c:set var="isProd" value="${param.action == 'productManagement'}" />
                     <li>
