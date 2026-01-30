@@ -1,21 +1,15 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
 
-/**
- *
- * @author WIN11
- */
 public class PaymentMethod {
 
     private int method_id;
     private String method_name;
+    private boolean is_active;
 
-    public PaymentMethod(int method_id, String method_name) {
+    public PaymentMethod(int method_id, String method_name, boolean is_active) {
         this.method_id = method_id;
         this.method_name = method_name;
+        this.is_active = is_active;
     }
 
     public int getMethod_id() {
@@ -34,10 +28,18 @@ public class PaymentMethod {
         this.method_name = method_name;
     }
 
-    @Override
-    public String toString() {
-        return "payment id: " + method_id + " | payment method: " + method_name ;
+    public boolean isIs_active() {
+        return is_active;
+    }
+
+    public void setIs_active(boolean is_active) {
+        this.is_active = is_active;
     }
 
     
+
+    @Override
+    public String toString() {
+        return "ID: " + method_id + " | Name: " + method_name + " | Active: " + is_active;
+    }
 }
