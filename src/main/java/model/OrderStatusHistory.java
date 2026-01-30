@@ -4,34 +4,46 @@
  */
 package model;
 
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 /**
  *
- * @author ASUS
+ * @author WIN11
  */
 public class OrderStatusHistory {
+
     private int historyId;
-    private Order order;
-    private String status;
-    private String note;
-    private LocalDateTime updated_at;
+    private int orderId;
+    private int statusId;
+    private String statusCode;
+    private String statusName;
+    private Integer changedByEmployee;
+    private Timestamp changedAt;
 
-    public OrderStatusHistory() {
+    //Insert Constructor
+    public OrderStatusHistory(int orderId, int statusId, Integer changedByEmployee) {
+        this.orderId = orderId;
+        this.statusId = statusId;
+        this.changedByEmployee = changedByEmployee;
     }
 
-    @Override
-    public String toString() {
-        return "OrderStatusHistory{" + "historyId=" + historyId + ", order=" + order + ", status=" + status + ", note=" + note + ", updated_at=" + updated_at + '}';
-    }
-
-    
-    public OrderStatusHistory(int historyId, Order order, String status, String note, LocalDateTime updated_at) {
+    public OrderStatusHistory(int historyId, int orderId, int statusId, Integer changedByEmployee, Timestamp changedAt) {
         this.historyId = historyId;
-        this.order = order;
-        this.status = status;
-        this.note = note;
-        this.updated_at = updated_at;
+        this.orderId = orderId;
+        this.statusId = statusId;
+        this.changedByEmployee = changedByEmployee;
+        this.changedAt = changedAt;
+    }
+
+    //Read constructor
+    public OrderStatusHistory(int historyId, int orderId, int statusId, String statusCode, String statusName, Integer changedByEmployee, Timestamp changedAt) {
+        this.historyId = historyId;
+        this.orderId = orderId;
+        this.statusId = statusId;
+        this.statusCode = statusCode;
+        this.statusName = statusName;
+        this.changedByEmployee = changedByEmployee;
+        this.changedAt = changedAt;
     }
 
     public int getHistoryId() {
@@ -42,37 +54,49 @@ public class OrderStatusHistory {
         this.historyId = historyId;
     }
 
-    public Order getOrder() {
-        return order;
+    public int getOrderId() {
+        return orderId;
     }
 
-    public void setOrder(Order order) {
-        this.order = order;
+    public void setOrderId(int orderId) {
+        this.orderId = orderId;
     }
 
-    public String getStatus() {
-        return status;
+    public int getStatusId() {
+        return statusId;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setStatusId(int statusId) {
+        this.statusId = statusId;
     }
 
-    public String getNote() {
-        return note;
+    public Integer getChangedByEmployee() {
+        return changedByEmployee;
     }
 
-    public void setNote(String note) {
-        this.note = note;
+    public void setChangedByEmployee(Integer changedByEmployee) {
+        this.changedByEmployee = changedByEmployee;
     }
 
-    public LocalDateTime getUpdated_at() {
-        return updated_at;
+    public Timestamp getChangedAt() {
+        return changedAt;
     }
 
-    public void setUpdated_at(LocalDateTime updated_at) {
-        this.updated_at = updated_at;
+    public void setChangedAt(Timestamp changedAt) {
+        this.changedAt = changedAt;
     }
 
-    
+    @Override
+    public String toString() {
+        return "OrderStatusHistory{"
+                + "historyId=" + historyId
+                + ", orderId=" + orderId
+                + ", statusId=" + statusId
+                + ", statusCode='" + statusCode + '\''
+                + ", statusName='" + statusName + '\''
+                + ", changedByEmployee=" + changedByEmployee
+                + ", changedAt=" + changedAt
+                + '}';
+    }
+
 }
