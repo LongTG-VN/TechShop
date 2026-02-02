@@ -45,13 +45,9 @@
                                 </svg>
                                 <span class="ms-3 text-nowrap">Khách hàng</span>
                             </a>
-                            <button type="button" class="p-2 text-gray-500 hover:text-blue-600" data-collapse-toggle="dropdown-customer">
-                                <svg class="w-3 h-3" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg>
-                            </button>
+
                         </div>
-                        <ul id="dropdown-customer" class="${isCust ? '' : 'hidden'} py-2 space-y-2 pl-11 text-sm">
-                            <li><a href="user?action=add" class="hover:text-blue-600 block py-1 text-gray-600">Thêm mới khách</a></li>
-                        </ul>
+
                     </li>
 
                     <c:set var="isEmp" value="${param.action == 'employeeManagement'}" />
@@ -64,13 +60,9 @@
                                 </svg>
                                 <span class="ms-3">Nhân Viên</span>
                             </a>
-                            <button type="button" class="p-2 text-gray-500 hover:text-blue-600" data-collapse-toggle="dropdown-employee">
-                                <svg class="w-3 h-3" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg>
-                            </button>
+                            
                         </div>
-                        <ul id="dropdown-employee" class="${isEmp ? '' : 'hidden'} py-2 space-y-2 pl-11 text-sm">
-                            <li><a href="user?action=add" class="hover:text-blue-600 block py-1 text-gray-600">Thêm nhân sự</a></li>
-                        </ul>
+                      
                     </li>
 
                     <c:set var="isCat" value="${param.action == 'categoryManagement'}" />
@@ -83,13 +75,9 @@
                                 </svg>
                                 <span class="ms-3">Danh Mục</span>
                             </a>
-                            <button type="button" class="p-2 text-gray-500 hover:text-blue-600" data-collapse-toggle="dropdown-category">
-                                <svg class="w-3 h-3" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg>
-                            </button>
+                            
                         </div>
-                        <ul id="dropdown-category" class="${isCat ? '' : 'hidden'} py-2 space-y-2 pl-11 text-sm">
-                            <li><a href="#" class="hover:text-blue-600 block py-1 text-gray-600">Thêm danh mục</a></li>
-                        </ul>
+                        
                     </li>
 
 
@@ -103,13 +91,9 @@
                                 </svg>
                                 <span class="ms-3 text-nowrap">Thương Hiệu</span>
                             </a>
-                            <button type="button" class="p-2 text-gray-500 hover:text-blue-600" data-collapse-toggle="dropdown-product">
-                                <svg class="w-3 h-3" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg>
-                            </button>
+                          
                         </div>
-                        <ul id="dropdown-product" class="${isBrand ? '' : 'hidden'} py-2 space-y-2 pl-11 text-sm">
-                            <li><a href="#" class="hover:text-blue-600 block py-1 text-gray-600">Thêm</a></li>
-                        </ul>
+                       
                     </li>
 
 
@@ -123,13 +107,9 @@
                                 </svg>
                                 <span class="ms-3 text-nowrap">Sản phẩm</span>
                             </a>
-                            <button type="button" class="p-2 text-gray-500 hover:text-blue-600" data-collapse-toggle="dropdown-product">
-                                <svg class="w-3 h-3" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg>
-                            </button>
+                            
                         </div>
-                        <ul id="dropdown-product" class="${isProd ? '' : 'hidden'} py-2 space-y-2 pl-11 text-sm">
-                            <li><a href="#" class="hover:text-blue-600 block py-1 text-gray-600">Nhập kho</a></li>
-                        </ul>
+                       
                     </li>
 
                     <c:set var="isVouch" value="${param.action == 'voucherManagement'}" />
@@ -142,16 +122,12 @@
                                 </svg>
                                 <span class="ms-3">Voucher</span>
                             </a>
-                            <button type="button" class="p-2 text-gray-500 hover:text-blue-600" data-collapse-toggle="dropdown-voucher">
-                                <svg class="w-3 h-3" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg>
-                            </button>
+                           
                         </div>
-                        <ul id="dropdown-voucher" class="${isVouch ? '' : 'hidden'} py-2 space-y-2 pl-11 text-sm">
-                            <li><a href="#" class="hover:text-blue-600 block py-1 text-gray-600">Tạo mã mới</a></li>
-                        </ul>
+                       
                     </li>
-                    
-                     <c:set var="isPayment" value="${param.action == 'paymentMethodManagement'}" />
+
+                    <c:set var="isPayment" value="${param.action == 'paymentMethodManagement'}" />
                     <li>
                         <div class="flex items-center w-full rounded-lg group ${isPayment ? 'bg-blue-50' : 'hover:bg-gray-100'}">
                             <a href="adminservlet?action=paymentMethodManagement" 
@@ -161,13 +137,9 @@
                                 </svg>
                                 <span class="ms-3">Payment method</span>
                             </a>
-                            <button type="button" class="p-2 text-gray-500 hover:text-blue-600" data-collapse-toggle="dropdown-voucher">
-                                <svg class="w-3 h-3" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg>
-                            </button>
+                          
                         </div>
-                        <ul id="dropdown-voucher" class="${isPayment ? '' : 'hidden'} py-2 space-y-2 pl-11 text-sm">
-                            <li><a href="#" class="hover:text-blue-600 block py-1 text-gray-600">Tạo </a></li>
-                        </ul>
+                        
                     </li>
                 </ul>
 
@@ -191,7 +163,7 @@
         </div>
         <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>      
         <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-        
+
 
     </body>
 </html>

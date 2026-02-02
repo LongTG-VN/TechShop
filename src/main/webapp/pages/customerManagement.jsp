@@ -81,10 +81,7 @@
 
                             <a href="customerservlet?action=delete&id=${cus.customerID}" 
                                onclick="return confirm('Bạn có chắc muốn xóa khách hàng này?')"
-                               class="text-red-600 hover:text-red-800 font-medium">Xóa</a>
-
-                            <a href="adminservlet?action=detailCustomer&id=${cus.customerID}" 
-                               class="text-gray-600 hover:text-gray-800 font-medium">Chi tiết</a>
+                               class="text-red-600 hover:text-red-800 font-medium">Xóa</a>                  
                         </td>
                     </tr>
                 </c:forEach>
