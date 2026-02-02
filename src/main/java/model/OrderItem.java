@@ -4,26 +4,32 @@
  */
 package model;
 
-/**
- *
- * @author ASUS
- */
+import java.math.BigDecimal;
+
+
 public class OrderItem {
-       private int orderItemId;
-       private Order order;
-       private ProductVariants productVariants;
-       private int quantity;
-       private double price;
+
+    private int orderItemId;
+    private int orderId;
+    private int inventoryId;
+    private BigDecimal sellingPrice;
 
     public OrderItem() {
     }
 
-    public OrderItem(int orderItemId, Order order, ProductVariants productVariants, int quantity, double price) {
+    // ===== INSERT constructor =====
+    public OrderItem(int orderId, int inventoryId, BigDecimal sellingPrice) {
+        this.orderId = orderId;
+        this.inventoryId = inventoryId;
+        this.sellingPrice = sellingPrice;
+    }
+
+    // ===== READ constructor =====
+    public OrderItem(int orderItemId, int orderId, int inventoryId, BigDecimal sellingPrice) {
         this.orderItemId = orderItemId;
-        this.order = order;
-        this.productVariants = productVariants;
-        this.quantity = quantity;
-        this.price = price;
+        this.orderId = orderId;
+        this.inventoryId = inventoryId;
+        this.sellingPrice = sellingPrice;
     }
 
     public int getOrderItemId() {
@@ -34,42 +40,37 @@ public class OrderItem {
         this.orderItemId = orderItemId;
     }
 
-    public Order getOrder() {
-        return order;
+    public int getOrderId() {
+        return orderId;
     }
 
-    public void setOrder(Order order) {
-        this.order = order;
+    public void setOrderId(int orderId) {
+        this.orderId = orderId;
     }
 
-    public ProductVariants getProductVariants() {
-        return productVariants;
+    public int getInventoryId() {
+        return inventoryId;
     }
 
-    public void setProductVariants(ProductVariants productVariants) {
-        this.productVariants = productVariants;
+    public void setInventoryId(int inventoryId) {
+        this.inventoryId = inventoryId;
     }
 
-    public int getQuantity() {
-        return quantity;
+    public BigDecimal getSellingPrice() {
+        return sellingPrice;
     }
 
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
+    public void setSellingPrice(BigDecimal sellingPrice) {
+        this.sellingPrice = sellingPrice;
     }
 
     @Override
     public String toString() {
-        return "OrderItem{" + "orderItemId=" + orderItemId + ", order=" + order + ", productVariants=" + productVariants + ", quantity=" + quantity + ", price=" + price + '}';
+        return "OrderItem{"
+                + "orderItemId=" + orderItemId
+                + ", orderId=" + orderId
+                + ", inventoryId=" + inventoryId
+                + ", sellingPrice=" + sellingPrice
+                + '}';
     }
-       
-       
 }
