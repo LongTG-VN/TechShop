@@ -2,8 +2,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
-package controller;
+package controller.admin;
 
+import dao.CustomerDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -11,6 +12,10 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
+import java.util.List;
+import model.Customer;
+import model.Employees;
 
 /**
  *
@@ -66,37 +71,46 @@ public class adminServlet extends HttpServlet {
         String action = request.getParameter("action");
         String page = "/pages/dashboardPage.jsp"; // Trang mặc định khi mới vào
 
+        List<?> listData = null; // Dấu <?> cho phép gán bất kỳ List nào (Customer, Employee...)
+
         // 3. Logic điều hướng (Switch-case sẽ sạch sẽ hơn if-else)
-       if (action != null) {
-        switch (action) {
-            case "dashboard":
-                page = "/pages/dashboardPage.jsp";
-                break;
-            case "customerManagement":
-                page = "/pages/customerManagement.jsp"; // Bạn cần tạo file này
-                break;
-            case "employeeManagement":
-                page = "/pages/employeeManagement.jsp"; // Bạn cần tạo file này
-                break;
-            case "categoryManagement":
-                page = "/pages/categoryManagement.jsp";
-                break;
-            case "brandManagement":
-                page = "/pages/brandManagement.jsp";
-                break;
-            case "productManagement":
-                page = "/pages/productManagement.jsp";
-                break;
-            case "voucherManagement":
-                page = "/pages/voucherManagement.jsp";
-                break;
-            default:
-                page = "/pages/dashboardPage.jsp";
+        if (action != null) {
+            switch (action) {
+                case "dashboard":
+                    page = "/pages/dashboardPage.jsp";
+                    break;
+                case "customerManagement":
+                    page = "/pages/customerManagement.jsp"; // Bạn cần tạo file này
+                    listData = new CustomerDAO().getAllCustomer();
+                    break;
+                case "employeeManagement":
+                    page = "/pages/employeeManagement.jsp"; // Bạn cần tạo file này          
+                    break;
+                case "categoryManagement":
+                    page = "/pages/categoryManagement.jsp";
+                    break;
+                case "brandManagement":
+                    page = "/pages/brandManagement.jsp";
+                    break;
+                case "productManagement":
+                    page = "/pages/productManagement.jsp";
+                    break;
+                case "voucherManagement":
+                    page = "/pages/voucherManagement.jsp";
+                    break;
+
+                case "paymentMethodManagement":
+                    page = "/pages/paymentMethodManagement.jsp";
+                    break;
+
+                default:
+                    page = "/pages/dashboardPage.jsp";
+            }
         }
-    }
 
         // 4. Đẩy đường dẫn trang con vào Attribute để Template include
         request.setAttribute("contentPage", page);
+        request.setAttribute("listdata", listData);
 
         // 5. Forward đến Template duy nhất
         request.getRequestDispatcher("/template/adminTemplate.jsp").forward(request, response);

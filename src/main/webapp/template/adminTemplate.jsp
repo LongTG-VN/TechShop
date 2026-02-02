@@ -5,8 +5,7 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <script src="https://cdn.tailwindcss.com"></script>
-        <link href="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.css" rel="stylesheet" />
-        <title>Admin Dashboard - Clothing Shop</title>
+        <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />        <title>Admin Dashboard - Clothing Shop</title>
     </head>
     <body class="bg-gray-50">
 
@@ -151,6 +150,25 @@
                             <li><a href="#" class="hover:text-blue-600 block py-1 text-gray-600">Tạo mã mới</a></li>
                         </ul>
                     </li>
+                    
+                     <c:set var="isPayment" value="${param.action == 'paymentMethodManagement'}" />
+                    <li>
+                        <div class="flex items-center w-full rounded-lg group ${isPayment ? 'bg-blue-50' : 'hover:bg-gray-100'}">
+                            <a href="adminservlet?action=paymentMethodManagement" 
+                               class="flex-1 flex items-center p-2 ${isPayment ? 'text-blue-600 font-bold' : 'text-gray-900 group-hover:text-blue-600'}">
+                                <svg class="w-5 h-5 transition duration-75 ${isPayment ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-600'}" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M11.074 4 8.442.47a1 1 0 0 0-1.588 0L4.223 4H11.074ZM2 6v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6H2Zm14 3a1 1 0 1 1 0 2 1 1 0 0 1 0-2ZM5 9a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z"/>
+                                </svg>
+                                <span class="ms-3">Payment method</span>
+                            </a>
+                            <button type="button" class="p-2 text-gray-500 hover:text-blue-600" data-collapse-toggle="dropdown-voucher">
+                                <svg class="w-3 h-3" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg>
+                            </button>
+                        </div>
+                        <ul id="dropdown-voucher" class="${isPayment ? '' : 'hidden'} py-2 space-y-2 pl-11 text-sm">
+                            <li><a href="#" class="hover:text-blue-600 block py-1 text-gray-600">Tạo </a></li>
+                        </ul>
+                    </li>
                 </ul>
 
                 <ul class="pt-4 mt-4 space-y-2 font-medium border-t border-gray-200">
@@ -171,8 +189,9 @@
                 <jsp:include page="${contentPage}" />
             </div>
         </div>
-        <script src="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>      
         <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+        
 
     </body>
 </html>

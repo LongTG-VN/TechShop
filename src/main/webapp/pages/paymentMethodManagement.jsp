@@ -1,4 +1,5 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+
 <div class="bg-white rounded-xl shadow-lg p-5">
 
     <!-- Header -->
@@ -15,19 +16,19 @@
                 </span>
                 <input type="text"
                        class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                       placeholder="Tìm thương hiệu theo tên hoặc mô tả...">
+                       placeholder="Tìm sản phẩm theo tên, mã hoặc danh mục...">
             </div>
         </form>
 
-        <!-- Add brand -->
-        <a href="brand?action=add"
+        <!-- Add product -->
+        <a href="product?action=add"
            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 transition-colors">
             <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd"
                       d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
                       clip-rule="evenodd"/>
             </svg>
-            Thêm thương hiệu
+            Thêm sản phẩm
         </a>
     </div>
 
@@ -36,8 +37,10 @@
         <table class="w-full text-sm text-left text-gray-600">
             <thead class="text-xs uppercase bg-gray-50 text-gray-700 font-semibold">
                 <tr>
-                    <th class="px-4 py-3">Thương hiệu</th>
-                    <th class="px-4 py-3">Quốc gia</th>
+                    <th class="px-4 py-3">Sản phẩm</th>
+                    <th class="px-4 py-3">Danh mục</th>
+                    <th class="px-4 py-3 text-right">Giá</th>
+                    <th class="px-4 py-3 text-center">Tồn kho</th>
                     <th class="px-4 py-3 text-center">Trạng thái</th>
                     <th class="px-4 py-3 text-center">Hành động</th>
                 </tr>
@@ -46,15 +49,23 @@
             <tbody class="divide-y divide-gray-200">
                 <tr class="hover:bg-gray-50 transition-colors">
                     <td class="px-4 py-3 font-medium text-gray-900">
-                        Apple
-                        <p class="text-xs text-gray-500">Thương hiệu công nghệ cao cấp</p>
+                        iPhone 15 Pro Max
+                        <p class="text-xs text-gray-500">Mã: IP15PM</p>
                     </td>
                     <td class="px-4 py-3">
-                        Mỹ
+                        <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded border border-purple-200">
+                            Điện thoại
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-right font-semibold">
+                        34.990.000 ₫
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        25
                     </td>
                     <td class="px-4 py-3 text-center">
                         <span class="px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">
-                            Hoạt động
+                            Đang bán
                         </span>
                     </td>
                     <td class="px-4 py-3 text-center space-x-2">
@@ -66,15 +77,23 @@
 
                 <tr class="hover:bg-gray-50 transition-colors">
                     <td class="px-4 py-3 font-medium text-gray-900">
-                        Samsung
-                        <p class="text-xs text-gray-500">Thiết bị điện tử & gia dụng</p>
+                        Laptop ASUS TUF F15
+                        <p class="text-xs text-gray-500">Mã: ASUSF15</p>
                     </td>
                     <td class="px-4 py-3">
-                        Hàn Quốc
+                        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded border border-blue-200">
+                            Laptop
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-right font-semibold">
+                        22.490.000 ₫
                     </td>
                     <td class="px-4 py-3 text-center">
-                        <span class="px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">
-                            Hoạt động
+                        8
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <span class="px-2 py-1 text-xs font-semibold text-yellow-700 bg-yellow-100 rounded-full">
+                            Sắp hết hàng
                         </span>
                     </td>
                     <td class="px-4 py-3 text-center space-x-2">
@@ -86,15 +105,23 @@
 
                 <tr class="hover:bg-gray-50 transition-colors">
                     <td class="px-4 py-3 font-medium text-gray-900">
-                        Xiaomi
-                        <p class="text-xs text-gray-500">Công nghệ giá tốt</p>
+                        Tai nghe AirPods Pro 2
+                        <p class="text-xs text-gray-500">Mã: APP2</p>
                     </td>
                     <td class="px-4 py-3">
-                        Trung Quốc
+                        <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded border border-gray-200">
+                            Phụ kiện
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-right font-semibold">
+                        6.190.000 ₫
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        0
                     </td>
                     <td class="px-4 py-3 text-center">
                         <span class="px-2 py-1 text-xs font-semibold text-red-700 bg-red-100 rounded-full">
-                            Ngưng hợp tác
+                            Hết hàng
                         </span>
                     </td>
                     <td class="px-4 py-3 text-center space-x-2">
@@ -111,7 +138,7 @@
     <div class="flex flex-col md:flex-row justify-between items-center gap-3 mt-5">
         <p class="text-sm text-gray-500">
             Hiển thị <span class="font-semibold text-gray-900">1–10</span> /
-            <span class="font-semibold text-gray-900">18</span> thương hiệu
+            <span class="font-semibold text-gray-900">36</span> sản phẩm
         </p>
 
         <nav class="inline-flex rounded-lg shadow-sm isolate">
