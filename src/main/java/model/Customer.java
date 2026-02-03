@@ -5,12 +5,14 @@
 package model;
 
 import java.time.LocalDateTime;
-
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 /**
  *
  * @author ASUS
  */
 public class Customer {
+
     private int customerID;
     private String userName;
     private String password;
@@ -90,18 +92,20 @@ public class Customer {
         this.status = status;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public String getCreatedAt() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return this.createdAt.format(formatter);
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
+    
+
     @Override
     public String toString() {
         return "Customer{" + "customerID=" + customerID + ", userName=" + userName + ", password=" + password + ", fullname=" + fullname + ", email=" + email + ", phoneNumber=" + phoneNumber + ", status=" + status + ", createdAt=" + createdAt + '}';
     }
-    
-    
+
 }

@@ -113,27 +113,27 @@ public class CustomerAddressDAO extends DBContext {
     public static void main(String[] args) {
         CustomerAddressDAO dao = new CustomerAddressDAO();
         int testCustomerId = 1; // Đảm bảo ID này tồn tại trong bảng customers
-
-        System.out.println("--- 1. TEST LẤY DANH SÁCH BAN ĐẦU ---");
+//
+//        System.out.println("--- 1. TEST LẤY DANH SÁCH BAN ĐẦU ---");
         List<CustomerAddress> list = dao.getAddressesByCustomerId(testCustomerId);
         list.forEach(System.out::println);
+//
+//        System.out.println("\n--- 2. TEST THÊM ĐỊA CHỈ MỚI ---");
+//        CustomerAddress newAd = new CustomerAddress(0, testCustomerId, "999 Đường Bưởi, Ba Đình, Hà Nội", "0333555777", "Người Nhận Test", true);
+//        if (dao.insertAddress(newAd)) {
+//            System.out.println("Thêm thành công!");
+//        }
 
-        System.out.println("\n--- 2. TEST THÊM ĐỊA CHỈ MỚI ---");
-        CustomerAddress newAd = new CustomerAddress(0, testCustomerId, "999 Đường Bưởi, Ba Đình, Hà Nội", "0333555777", "Người Nhận Test", true);
-        if (dao.insertAddress(newAd)) {
-            System.out.println("Thêm thành công!");
-        }
-
-        System.out.println("\n--- 3. TEST CẬP NHẬT TÊN NGƯỜI NHẬN ---");
-        list = dao.getAddressesByCustomerId(testCustomerId); // Load lại list mới
-        if (!list.isEmpty()) {
-            CustomerAddress toUpdate = list.get(0);
-            toUpdate.setNameReceiver("Tên Đã Sửa");
-            dao.updateAddress(toUpdate);
-            System.out.println("Cập nhật thành công ID: " + toUpdate.getAddressId());
-        }
-
-        System.out.println("\n--- 4. DANH SÁCH CUỐI CÙNG ---");
-        dao.getAddressesByCustomerId(testCustomerId).forEach(System.out::println);
+//        System.out.println("\n--- 3. TEST CẬP NHẬT TÊN NGƯỜI NHẬN ---");
+//        list = dao.getAddressesByCustomerId(testCustomerId); // Load lại list mới
+//        if (!list.isEmpty()) {
+//            CustomerAddress toUpdate = list.get(0);
+//            toUpdate.setNameReceiver("Tên Đã Sửa");
+//            dao.updateAddress(toUpdate);
+//            System.out.println("Cập nhật thành công ID: " + toUpdate.getAddressId());
+//        }
+//
+//        System.out.println("\n--- 4. DANH SÁCH CUỐI CÙNG ---");
+//        dao.getAddressesByCustomerId(testCustomerId).forEach(System.out::println);
     }
 }

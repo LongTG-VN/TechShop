@@ -28,7 +28,7 @@
                   d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
                   clip-rule="evenodd"/>
             </svg>
-            Thêm khách hàng
+            New Customer
         </a>
 
 
@@ -42,12 +42,12 @@
         <table class="w-full text-sm text-left text-gray-600">
             <thead class="text-xs uppercase bg-gray-100 text-gray-700">
                 <tr>
-                    <th class="px-4 py-3">Khách hàng</th>
+                    <th class="px-4 py-3">Name</th>
                     <th class="px-4 py-3">Email</th>
-                    <th class="px-4 py-3">SĐT</th>
-                    <th class="px-4 py-3">Ngày tạo</th>
-                    <th class="px-4 py-3">Trạng thái</th>
-                    <th class="px-4 py-3 text-center">Hành động</th>
+                    <th class="px-4 py-3">Phone</th>
+                    <th class="px-4 py-3">Created At</th>
+                    <th class="px-4 py-3">Status</th>
+                    <th class="px-4 py-3 text-center">Action</th>
                 </tr>
             </thead>
             <tbody class="divide-y">
@@ -62,27 +62,52 @@
                         <td class="px-4 py-3">${cus.phoneNumber}</td>
                         <td class="px-4 py-3 text-xs">${cus.createdAt}</td>
                         <td class="px-4 py-3">
+
                             <c:choose>
                                 <c:when test="${cus.status eq 'Active' || cus.status eq 'Hoạt động'}">
                                     <span class="px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">
-                                        Hoạt động
+                                        Active
                                     </span>
                                 </c:when>
                                 <c:otherwise>
                                     <span class="px-2 py-1 text-xs font-semibold text-red-700 bg-red-100 rounded-full">
-                                        ${cus.status}
+                                        Locked
                                     </span>
                                 </c:otherwise>
                             </c:choose>
                         </td>
-                        <td class="px-4 py-3 text-center space-x-3">
-                            <a href="customerservlet?action=edit&id=${cus.customerID}" 
-                               class="text-blue-600 hover:text-blue-800 font-medium">Sửa</a>
+                       <td class="px-4 py-3">
+    <div class="flex items-center justify-center space-x-3">
+        <a href="customerservlet?action=detail&id=${cus.customerID}" 
+           class="inline-flex items-center p-1.5 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-200" 
+           title="View Details">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
+            <span class="ml-1 text-xs font-bold uppercase hidden md:inline">Detail</span>
+        </a>
 
-                            <a href="customerservlet?action=delete&id=${cus.customerID}" 
-                               onclick="return confirm('Bạn có chắc muốn xóa khách hàng này?')"
-                               class="text-red-600 hover:text-red-800 font-medium">Xóa</a>                  
-                        </td>
+        <a href="customerservlet?action=edit&id=${cus.customerID}" 
+           class="inline-flex items-center p-1.5 text-amber-600 bg-amber-50 rounded-lg hover:bg-amber-500 hover:text-white transition-all duration-200" 
+           title="Update Customer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+            <span class="ml-1 text-xs font-bold uppercase hidden md:inline">Edit</span>
+        </a>
+
+        <a href="customerservlet?action=delete&id=${cus.customerID}" 
+           onclick="return confirm('Are you sure you want to delete this customer?')"
+           class="inline-flex items-center p-1.5 text-red-600 bg-red-50 rounded-lg hover:bg-red-600 hover:text-white transition-all duration-200" 
+           title="Delete Customer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+            <span class="ml-1 text-xs font-bold uppercase hidden md:inline">Delete</span>
+        </a>
+    </div>
+</td>
                     </tr>
                 </c:forEach>
 

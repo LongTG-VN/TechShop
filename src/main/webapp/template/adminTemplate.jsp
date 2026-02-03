@@ -5,7 +5,7 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <script src="https://cdn.tailwindcss.com"></script>
-        <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />        <title>Admin Dashboard - Clothing Shop</title>
+        <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />        <title>Admin Dashboard - Tech Shop</title>
     </head>
     <body class="bg-gray-50">
 
@@ -43,7 +43,7 @@
                                 <svg class="w-5 h-5 transition duration-75 ${isCust ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-600'}" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"></path>
                                 </svg>
-                                <span class="ms-3 text-nowrap">Khách hàng</span>
+                                <span class="ms-3 text-nowrap">Customer</span>
                             </a>
 
                         </div>

@@ -4,6 +4,7 @@
  */
 package controller.admin;
 
+import dao.CustomerAddressDAO;
 import dao.CustomerDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -15,6 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import java.util.List;
 import model.Customer;
+import model.CustomerAddress;
 
 /**
  *
@@ -65,6 +67,7 @@ public class customerServlet extends HttpServlet {
         String page = "/pages/customerManagement.jsp"; // Mặc định là bảng danh sách
         List<?> listData = null; // Dấu <?> cho phép gán bất kỳ List nào (Customer, Employee...)
         CustomerDAO cdao = new CustomerDAO();
+        CustomerAddressDAO addressDAO = new CustomerAddressDAO();
 
         if (action != null) {
             switch (action) {
@@ -84,8 +87,25 @@ public class customerServlet extends HttpServlet {
                     page = "/pages/customerManagement.jsp";
                     listData = new CustomerDAO().getAllCustomer();
                     break;
+                case "deleteAddress":
+                    int addressId = Integer.parseInt(request.getParameter("addressId"));
+                    addressDAO.deleteAddress(addressId);
+                    int idDEA = Integer.parseInt(request.getParameter("customerID"));
+                    Customer customerDEA = cdao.getCustomerById(idDEA);
+                    List<CustomerAddress> listCustomerAddressA = addressDAO.getAddressesByCustomerId(idDEA);
+                    request.setAttribute("customer", customerDEA);
+                    request.setAttribute("customerAddress", listCustomerAddressA);
+                    page = "/pages/detailCustomer.jsp";
+                    break;
+                case "detail":
+                    int idDE = Integer.parseInt(request.getParameter("id"));
+                    Customer customerDE = cdao.getCustomerById(idDE);
+                    List<CustomerAddress> listCustomerAddress = addressDAO.getAddressesByCustomerId(idDE);
+                    request.setAttribute("customer", customerDE);
+                    request.setAttribute("customerAddress", listCustomerAddress);
+                    page = "/pages/detailCustomer.jsp";
+                    break;
                 case "all":
-                    // Code lấy list dữ liệu từ DB ở đây
                     page = "/pages/customerManagement.jsp";
                     listData = new CustomerDAO().getAllCustomer();
                     break;
@@ -123,26 +143,17 @@ public class customerServlet extends HttpServlet {
                     String password = request.getParameter("password");
                     String phone = request.getParameter("phone_number");
                     String status = request.getParameter("status");
-                    cdao.addCustomer(new Customer(0, username, password, fullName, email, phone, status, LocalDateTime.now()));
-                    // 3. Thực hiện lưu vào Database qua lớp DAO
-                    // Customer newCustomer = new Customer(username, password, fullName, email, phone, status);
-                    // customerDAO.insert(newCustomer);
-                    // 4. QUAN TRỌNG: Điều hướng ngược lại trang danh sách khách hàng
-                    // Sử dụng sendRedirect để trình duyệt gọi lại doGet của Servlet
+                    cdao.addCustomer(new Customer(0, username, password, fullName, email, phone, status, LocalDateTime.now()));      
                     break;
-                case "edit":
-                    // 1. Lấy ID (Cực kỳ quan trọng để Update)
-                    int id = Integer.parseInt(request.getParameter("customerID"));
-
-                    // 2. Lấy các thông tin mới từ Form
+                case "edit":                
+                    int id = Integer.parseInt(request.getParameter("customerID"));                
                     String usernameE = request.getParameter("username");
                     String fullNameE = request.getParameter("full_name");
                     String emailE = request.getParameter("email");
                     String phoneE = request.getParameter("phone_number");
                     String statusE = request.getParameter("status");
 
-                    // 3. Thực hiện Update
-                    // Lưu ý: Thường không cập nhật Password và CreatedAt ở đây để bảo mật
+              
                     Customer updatedCus = cdao.getCustomerById(id);
                     updatedCus.setCustomerID(id);
                     updatedCus.setUserName(usernameE);
@@ -151,8 +162,7 @@ public class customerServlet extends HttpServlet {
                     updatedCus.setPhoneNumber(phoneE);
                     updatedCus.setStatus(statusE);
 
-                    cdao.updateCustomer(updatedCus); // Gọi hàm update trong DAO
-                    // 4. Quay lại trang danh sách
+                    cdao.updateCustomer(updatedCus); 
                     break;
             }
         }
