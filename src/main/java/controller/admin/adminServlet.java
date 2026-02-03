@@ -99,7 +99,7 @@ public class adminServlet extends HttpServlet {
                     BrandDAO brandDAO = new BrandDAO();
                     List<Brand> list = brandDAO.getAllBrand();
                     request.setAttribute("brandList", list);
-                    page = "/pages/brandManagement.jsp";
+                    page = "/pages/BrandManagementPage/brandManagement.jsp";
                     break;
                 case "productManagement":
                     page = "/pages/productManagement.jsp";

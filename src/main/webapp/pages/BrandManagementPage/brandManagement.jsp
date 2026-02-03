@@ -152,11 +152,29 @@
                             </td>
                         </tr>
                     </c:forEach>
+                    <c:if test="${empty brandList}">
+                        <tr>
+                            <td colspan="6" class="px-4 py-10 text-center text-gray-500">
+                                No brand data found.
+                            </td>
+                        </tr>
+                    </c:if>
                 </tbody>
             </table>
         </div>
+
+        <%-- PHẦN PHÂN TRANG (PAGINATION) --%>
+        <div class="mt-5 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
+            <span>Showing <span class="font-bold text-gray-900">1-${brandList.size()}</span> of <span class="font-bold text-gray-900">${brandList.size()}</span> brands</span>
+            <nav class="inline-flex rounded-md shadow-sm">
+                <button class="px-3 py-2 border rounded-l-md bg-white hover:bg-gray-50 text-gray-400 cursor-not-allowed transition">Previous</button>
+                <button class="px-3 py-2 border-t border-b bg-blue-50 text-blue-600 font-bold">1</button>
+                <button class="px-3 py-2 border rounded-r-md bg-white hover:bg-gray-50 text-gray-400 cursor-not-allowed transition">Next</button>
+            </nav>
+        </div>
     </div>
 </div>
+
 
 <script>
     function applyFilters() {
@@ -175,17 +193,47 @@
     function showDeleteOptions(id, name) {
         Swal.fire({
             title: 'How would you like to delete "' + name + '"?',
+            text: 'Please choose a deletion method!',
             icon: 'warning',
             showDenyButton: true,
             showCancelButton: true,
-            confirmButtonText: 'Deactivate', // Ngừng hoạt động (Soft Delete)
-            denyButtonText: 'Delete Permanently', // Xóa vĩnh viễn (Hard Delete)
+            customClass: {
+                confirmButton: 'btn-soft',
+                denyButton: 'btn-hard',
+                cancelButton: 'btn-cancel'
+            },
+            confirmButtonColor: '#f59e0b',
+            denyButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Deactivate',
+            denyButtonText: 'Delete Permanently',
             cancelButtonText: 'Cancel'
         }).then((result) => {
-            if (result.isConfirmed)
+            if (result.isConfirmed) {
                 window.location.href = 'brand?action=softDelete&id=' + id;
-            else if (result.isDenied)
+            } else if (result.isDenied) {
                 window.location.href = 'brand?action=delete&id=' + id;
+            }
         });
     }
 </script>
+<style>
+    .btn-soft   {
+        background:#f59e0b;
+        color:#fff;
+        padding:8px 16px;
+        border-radius:8px;
+    }
+    .btn-hard   {
+        background:#ef4444;
+        color:#fff;
+        padding:8px 16px;
+        border-radius:8px;
+    }
+    .btn-cancel {
+        background:#e5e7eb;
+        color:#374151;
+        padding:8px 16px;
+        border-radius:8px;
+    }
+</style>
