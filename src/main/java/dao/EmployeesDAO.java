@@ -3,98 +3,123 @@ package dao;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import model.Employees; 
+import model.Employees;
+import model.Role;
 import utils.DBContext;
 
 public class EmployeesDAO extends DBContext {
 
-    // Helper: Map ResultSet sang Object Employee
-    private Employees mapResultSetToEmployee(ResultSet rs) throws Exception {
-        Employees emp = new Employees();
-        emp.setEmployeeId(rs.getInt("employee_id"));
-        emp.setUsername(rs.getString("username"));
-        emp.setFullName(rs.getNString("full_name"));
-        emp.setEmail(rs.getString("email"));
-        emp.setPhoneNumber(rs.getString("phone_number"));
-        emp.setRoleId(rs.getInt("role_id"));
-        emp.setRoleName(rs.getString("role_name")); 
-        emp.setStatus(rs.getString("status"));
-        emp.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-        return emp;
-    }
-
-    // 1. Hàm Đăng nhập (Login)
-    public Employees login(String username, String password) {
-        String sql = """
-                     SELECT e.*, r.role_name 
-                     FROM employees e 
-                     JOIN roles r ON e.role_id = r.role_id 
-                     WHERE e.username = ? AND e.password_hash = ? AND e.status = 'ACTIVE'
-                     """;
+    public List<Employees> getAllEmployeeses() {
+        RoleDAO dAO = new RoleDAO();
+        List<Employees> list = new ArrayList<>();
+        String sql = "SELECT        employees.*, roles.*\n"
+                + "FROM            roles INNER JOIN\n"
+                + "                         employees ON roles.role_id = employees.role_id";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, username);
-            ps.setString(2, password);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+
+                int employeesId = rs.getInt("employee_id");
+                String username = rs.getString("username");
+                String password = rs.getString("password_hash");
+                String fullname = rs.getString("full_name");
+                String email = rs.getString("email");
+                String phone = rs.getString("phone_number");
+                int roleId = rs.getInt("role_id");
+                String status = rs.getString("status");
+                LocalDateTime createdAt = rs.getTimestamp("created_at").toLocalDateTime();
+
+                Employees employees = new Employees(employeesId, username, password, fullname, email, phone, dAO.getRoleById(roleId), status, createdAt);
+
+                list.add(employees);
+            }
+        } catch (Exception e) {
+        }
+        return list;
+    }
+
+    // 17.5 Hard Delete Employee Record
+    public boolean deleteEmployee(int id) {
+        // Câu lệnh SQL xóa vĩnh viễn dựa trên ID
+        String sql = "DELETE FROM employees WHERE employee_id = ?";
+
+        try {
+            // Sử dụng getConnection() từ DBContext để thực thi
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, id);
+
+            // Trả về true nếu xóa thành công ít nhất 1 dòng
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            // Log lỗi nếu có ràng buộc khóa ngoại (Foreign Key) không cho xóa
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // 17.1 View Employee Detail - Get Data by ID
+    public Employees getEmployeeById(int id) {
+        RoleDAO dAO = new RoleDAO();
+
+        String sql = "SELECT e.*, r.role_name FROM employees e "
+                + "JOIN roles r ON e.role_id = r.role_id WHERE e.employee_id = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return mapResultSetToEmployee(rs);
+                // Đổ dữ liệu trực tiếp vào object
+
+                int employeesId = rs.getInt("employee_id");
+                String username = rs.getString("username");
+                String password = rs.getString("password_hash");
+                String fullname = rs.getString("full_name");
+                String email = rs.getString("email");
+                String phone = rs.getString("phone_number");
+                int roleId = rs.getInt("role_id");
+                String status = rs.getString("status");
+                LocalDateTime createdAt = rs.getTimestamp("created_at").toLocalDateTime();
+
+                Employees employees = new Employees(employeesId, username, password, fullname, email, phone, dAO.getRoleById(roleId), status, createdAt);
+
+                return employees;
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
+    // 17.3 Modify Employee Record
 
-    // 2. Lấy danh sách tất cả nhân viên
-    public List<Employees> getAllEmployees() {
-        List<Employees> list = new ArrayList<>();
-        String sql = "SELECT e.*, r.role_name FROM employees e JOIN roles r ON e.role_id = r.role_id";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                list.add(mapResultSetToEmployee(rs));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return list;
-    }
-
-    // 3. Thêm nhân viên mới
-    public boolean insertEmployee(Employees emp) {
-        String sql = """
-                     INSERT INTO employees (username, password_hash, full_name, email, phone_number, role_id, status, created_at)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE())
-                     """;
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, emp.getUsername());
-            ps.setString(2, emp.getPasswordHash());
-            ps.setNString(3, emp.getFullName());
-            ps.setString(4, emp.getEmail());
-            ps.setString(5, emp.getPhoneNumber());
-            ps.setInt(6, emp.getRoleId());
-            ps.setString(7, "ACTIVE");
-            return ps.executeUpdate() > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    // 4. Cập nhật thông tin nhân viên
     public boolean updateEmployee(Employees e) {
-        String sql = "UPDATE employees SET full_name = ?, email = ?, phone_number = ?, role_id = ? WHERE employee_id = ?";
+        // Câu lệnh SQL cập nhật các trường thông tin dựa trên employee_id
+        String sql = "UPDATE employees SET "
+                + "full_name = ?, "
+                + "email = ?, "
+                + "phone_number = ?, "
+                + "role_id = ?, "
+                + "status = ? "
+                + "WHERE employee_id = ?";
         try {
+            // Sử dụng getConnection() để đảm bảo kết nối luôn sẵn sàng
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setNString(1, e.getFullName());
+
+            // Mapping dữ liệu từ object vào câu lệnh SQL
+            ps.setNString(1, e.getFullName()); // Hỗ trợ tiếng Việt
             ps.setString(2, e.getEmail());
             ps.setString(3, e.getPhoneNumber());
-            ps.setInt(4, e.getRoleId());
-            ps.setInt(5, e.getEmployeeId());
+
+            // Lấy ID từ đối tượng Role bên trong Employee
+            ps.setInt(4, e.getRole().getRole_id());
+
+            ps.setString(5, e.getStatus());
+            ps.setInt(6, e.getEmployeeId());
+
+            // Trả về true nếu cập nhật thành công ít nhất 1 dòng
             return ps.executeUpdate() > 0;
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -102,70 +127,60 @@ public class EmployeesDAO extends DBContext {
         return false;
     }
 
-    // 5. Đổi mật khẩu
-    public boolean changePassword(int employeeId, String newPasswordHash) {
-        String sql = "UPDATE employees SET password_hash = ? WHERE employee_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, newPasswordHash);
-            ps.setInt(2, employeeId);
-            return ps.executeUpdate() > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
+    public void insertEmployee(Employees e) {
+        // 1. Correct the SQL string: remove the 8th '?' and add closing bracket
+        String sql = "INSERT INTO employees ("
+                + "username, "
+                + "password_hash, "
+                + "full_name, "
+                + "email, "
+                + "phone_number, "
+                + "role_id, "
+                + "status, "
+                + "created_at"
+                + ") "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE())"; // Use GETDATE() for created_at
 
-    // 6. Vô hiệu hóa nhân viên (Xóa mềm)
-    public boolean deactivateEmployee(int id) {
-        String sql = "UPDATE employees SET status = 'INACTIVE' WHERE employee_id = ?";
         try {
+            // Use getConnection() to ensure the connection is active
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, id);
-            return ps.executeUpdate() > 0;
+
+            // 2. Map the 7 parameters
+            ps.setString(1, e.getUsername());
+            ps.setString(2, e.getPasswordHash());
+            ps.setNString(3, e.getFullName()); // Use setNString for Vietnamese support
+            ps.setString(4, e.getEmail());
+            ps.setString(5, e.getPhoneNumber());
+
+            // Ensure your role object is not null to avoid NullPointerException
+            ps.setInt(6, e.getRole().getRole_id());
+
+            ps.setString(7, e.getStatus());
+
+            // 3. Execute the update
+            ps.executeUpdate();
+
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        return false;
     }
 
     // Test Main
     public static void main(String[] args) {
         EmployeesDAO dao = new EmployeesDAO();
+        RoleDAO aO = new RoleDAO();
+//        System.out.println("--- 1. TEST READ ---");
+//        dao.getAllEmployeeses().forEach(System.out::println);
 
-        System.out.println("--- 1. TEST READ ---");
-        dao.getAllEmployees().forEach(System.out::println);
+// 2. Khởi tạo Employee với các giá trị thực tế để test
+        String username = "test_staff_" + System.currentTimeMillis() % 1000; // Tạo username không trùng
+        String passwordHash = "123456"; // Mật khẩu mẫu
+        String fullName = "Nguyen Van Test";
+        String email = username + "@phonestore.com";
+        String phoneNumber = "0912345678";
+        String status = "ACTIVE";
 
-        System.out.println("\n--- 2. TEST CREATE ---");
-        Employees newEmp = new Employees();
-        String uniqueUser = "staff_" + (System.currentTimeMillis() % 10000);
-        newEmp.setUsername(uniqueUser);
-        newEmp.setPasswordHash("hash123");
-        newEmp.setFullName("Nhân Viên Mới");
-        newEmp.setEmail(uniqueUser + "@techshop.com");
-        newEmp.setPhoneNumber("0987654321");
-        newEmp.setRoleId(2); 
-        
-        if (dao.insertEmployee(newEmp)) {
-            System.out.println("Thêm thành công: " + uniqueUser);
-        }
-
-        System.out.println("\n--- 3. TEST UPDATE & CHANGE PASS ---");
-        List<Employees> list = dao.getAllEmployees();
-        if (!list.isEmpty()) {
-            Employees last = list.get(list.size() - 1);
-            last.setFullName("Tên Đã Sửa");
-            if(dao.updateEmployee(last)) System.out.println("Update thông tin OK");
-            if(dao.changePassword(last.getEmployeeId(), "new_hash_456")) System.out.println("Đổi pass OK");
-        }
-
-        System.out.println("\n--- 4. TEST DEACTIVATE ---");
-        if (!list.isEmpty()) {
-            int id = list.get(list.size() - 1).getEmployeeId();
-            if (dao.deactivateEmployee(id)) System.out.println("Vô hiệu hóa ID " + id + " OK");
-        }
-
-        System.out.println("\n--- 5. KIỂM TRA LẠI ---");
-        dao.getAllEmployees().forEach(System.out::println);
+// 3. Gọi hàm DAO để chèn vào Database
+        System.out.println(dao.getEmployeeById(2));
     }
 }

@@ -4,8 +4,8 @@
  */
 package controller.admin;
 
-import dao.CustomerAddressDAO;
-import dao.CustomerDAO;
+import dao.EmployeesDAO;
+import dao.RoleDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -13,17 +13,16 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.time.LocalDateTime;
 import java.util.List;
-import model.Customer;
-import model.CustomerAddress;
+import model.Employees;
+import model.Role;
 
 /**
  *
  * @author ASUS
  */
-@WebServlet(name = "customerServlet", urlPatterns = {"/customerservlet"})
-public class customerServlet extends HttpServlet {
+@WebServlet(name = "employeeServlet", urlPatterns = {"/employeeservlet"})
+public class employeeServlet extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -42,10 +41,10 @@ public class customerServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet customerServlet</title>");
+            out.println("<title>Servlet employeeServlet</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet customerServlet at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet employeeServlet at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -64,50 +63,38 @@ public class customerServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String action = request.getParameter("action");
-        String page = "/pages/customerManagement.jsp"; // Mặc định là bảng danh sách
+        String page = "/pages/EmployeeManagementPage/employeeManagement.jsp";
         List<?> listData = null; // Dấu <?> cho phép gán bất kỳ List nào (Customer, Employee...)
-        CustomerDAO cdao = new CustomerDAO();
-        CustomerAddressDAO addressDAO = new CustomerAddressDAO();
-
+        EmployeesDAO edao = new EmployeesDAO();
+        RoleDAO rdao = new RoleDAO();
         if (action != null) {
             switch (action) {
                 case "add":
-                    page = "/pages/CustomerManagementPage/addCustomer.jsp";
+                    page = "/pages/EmployeeManagementPage/addEmployee.jsp";
                     break;
                 case "edit":
-                    int idC = Integer.parseInt(request.getParameter("id"));
-                    Customer customer = cdao.getCustomerById(idC);
-                    request.setAttribute("customer", customer);
-                    page = "/pages/CustomerManagementPage/editCustomer.jsp";
+                    int id = Integer.parseInt(request.getParameter("id"));
+                    Employees emp = edao.getEmployeeById(id);
+                    List<Role> roles = rdao.getAllRole(); // Fetch all roles for the dropdown
+                    request.setAttribute("employee", emp);
+                    request.setAttribute("roleList", roles);
+                    page = "/pages/EmployeeManagementPage/editEmployee.jsp";
                     break;
                 case "delete":
                     int idD = Integer.parseInt(request.getParameter("id"));
-                    Customer customerD = cdao.getCustomerById(idD);
-                    cdao.deleteCustomer(idD);
-                    page = "/pages/CustomerManagementPage/customerManagement.jsp";
-                    listData = new CustomerDAO().getAllCustomer();
-                    break;
-                case "deleteAddress":
-                    int addressId = Integer.parseInt(request.getParameter("addressId"));
-                    addressDAO.deleteAddress(addressId);
-                    int idDEA = Integer.parseInt(request.getParameter("customerID"));
-                    Customer customerDEA = cdao.getCustomerById(idDEA);
-                    List<CustomerAddress> listCustomerAddressA = addressDAO.getAddressesByCustomerId(idDEA);
-                    request.setAttribute("customer", customerDEA);
-                    request.setAttribute("customerAddress", listCustomerAddressA);
-                    page = "/pages/CustomerManagementPage/detailCustomer.jsp";
+                    edao.deleteEmployee(idD);
+                    page = "/pages/EmployeeManagementPage/employeeManagement.jsp";
+                    listData = edao.getAllEmployeeses();
                     break;
                 case "detail":
                     int idDE = Integer.parseInt(request.getParameter("id"));
-                    Customer customerDE = cdao.getCustomerById(idDE);
-                    List<CustomerAddress> listCustomerAddress = addressDAO.getAddressesByCustomerId(idDE);
-                    request.setAttribute("customer", customerDE);
-                    request.setAttribute("customerAddress", listCustomerAddress);
-                    page = "/pages/CustomerManagementPage/detailCustomer.jsp";
+                    Employees employees = edao.getEmployeeById(idDE);
+                    request.setAttribute("employee", employees);
+                    page = "/pages/EmployeeManagementPage/detailEmployee.jsp";
                     break;
                 case "all":
-                    page = "/pages/CustomerManagementPage/customerManagement.jsp";
-                    listData = new CustomerDAO().getAllCustomer();
+                    page = "/pages/EmployeeManagementPage/employeeManagement.jsp";
+                    listData = edao.getAllEmployeeses();
                     break;
             }
         }
@@ -132,41 +119,65 @@ public class customerServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String action = request.getParameter("action");
-        CustomerDAO cdao = new CustomerDAO();
+        EmployeesDAO edao = new EmployeesDAO();
+        RoleDAO rdao = new RoleDAO();
         if (action != null) {
             switch (action) {
                 case "add":
-                    // 2. Lấy dữ liệu từ các thẻ <input> (theo đúng 'name' bạn đặt ở Form)
+                    // 1. Lấy dữ liệu từ Form Add Employee
                     String username = request.getParameter("username");
                     String fullName = request.getParameter("full_name");
                     String email = request.getParameter("email");
                     String password = request.getParameter("password");
                     String phone = request.getParameter("phone_number");
                     String status = request.getParameter("status");
-                    cdao.addCustomer(new Customer(0, username, password, fullName, email, phone, status, LocalDateTime.now()));      
+
+                    // Lấy role_id từ <select> và ép kiểu sang int
+                    int roleId = Integer.parseInt(request.getParameter("role_id"));
+
+                    // 2. Khởi tạo đối tượng Employees (Model mới của bạn)
+                    Employees newEmp = new Employees();
+                    newEmp.setUsername(username);
+                    newEmp.setFullName(fullName);
+                    newEmp.setEmail(email);
+                    newEmp.setPasswordHash(password); // Trong thực tế nên hash mật khẩu ở đây
+                    newEmp.setPhoneNumber(phone);
+                    newEmp.setRole(rdao.getRoleById(roleId));
+                    newEmp.setStatus(status);
+
+                    // 3. Gọi hàm insert từ EmployeesDAO
+                    edao.insertEmployee(newEmp);
                     break;
-                case "edit":                
-                    int id = Integer.parseInt(request.getParameter("customerID"));                
-                    String usernameE = request.getParameter("username");
-                    String fullNameE = request.getParameter("full_name");
-                    String emailE = request.getParameter("email");
-                    String phoneE = request.getParameter("phone_number");
-                    String statusE = request.getParameter("status");
+                case "edit":
+// 1. Lấy dữ liệu từ các input name trong Form Edit
+                    int employeeId = Integer.parseInt(request.getParameter("employeeId"));
+                    String fullNameE = request.getParameter("full_nameE"); // Thêm E
+                    String emailE = request.getParameter("emailE");       // Thêm E
+                    String phoneE = request.getParameter("phoneE");       // Đổi thành phoneE
+                    String statusE = request.getParameter("statusE");     // Thêm E
 
-              
-                    Customer updatedCus = cdao.getCustomerById(id);
-                    updatedCus.setCustomerID(id);
-                    updatedCus.setUserName(usernameE);
-                    updatedCus.setFullname(fullNameE);
-                    updatedCus.setEmail(emailE);
-                    updatedCus.setPhoneNumber(phoneE);
-                    updatedCus.setStatus(statusE);
+                    // Lấy role_id từ select name="role_idE"
+                    int roleIdE = Integer.parseInt(request.getParameter("role_idE")); // Thêm E
 
-                    cdao.updateCustomer(updatedCus); 
+                    // Đóng gói vào object
+                    Employees empUpdate = new Employees();
+                    empUpdate.setEmployeeId(employeeId);
+                    empUpdate.setFullName(fullNameE);
+                    empUpdate.setEmail(emailE);
+                    empUpdate.setPhoneNumber(phoneE);
+                    empUpdate.setStatus(statusE);
+
+                    Role r = new Role();
+                    r.setRole_id(roleIdE);
+                    empUpdate.setRole(r);
+
+                    // Gọi DAO cập nhật
+                    boolean isSuccess = edao.updateEmployee(empUpdate);
+
                     break;
             }
         }
-        response.sendRedirect("customerservlet?action=all");
+        response.sendRedirect("employeeservlet?action=all");
     }
 
     /**

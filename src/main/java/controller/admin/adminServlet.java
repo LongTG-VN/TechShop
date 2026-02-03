@@ -5,7 +5,10 @@
 package controller.admin;
 
 import dao.CustomerDAO;
+
+import dao.EmployeesDAO;
 import dao.PaymentMethodDAO;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -80,11 +83,12 @@ public class adminServlet extends HttpServlet {
                     page = "/pages/dashboardPage.jsp";
                     break;
                 case "customerManagement":
-                    page = "/pages/customerManagement.jsp"; // Bạn cần tạo file này
+                    page = "/pages/CustomerManagementPage/customerManagement.jsp"; 
                     listData = new CustomerDAO().getAllCustomer();
                     break;
                 case "employeeManagement":
-                    page = "/pages/employeeManagement.jsp"; // Bạn cần tạo file này          
+                    page = "/pages/EmployeeManagementPage/employeeManagement.jsp";         
+                    listData = new EmployeesDAO().getAllEmployeeses();
                     break;
                 case "categoryManagement":
                     page = "/pages/categoryManagement.jsp";
