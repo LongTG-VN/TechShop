@@ -53,7 +53,7 @@ public class ProductDAO extends DBContext {
                 + "warranty_months, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, p.getCategory().getCategory_id());
-            ps.setInt(2, p.getBrand().getBrand_id());
+            ps.setInt(2, p.getBrand().getBrandId());
             ps.setString(3, p.getProductName());
             ps.setString(4, p.getDescription());
             ps.setInt(5, p.getWarranty_months());
@@ -73,7 +73,7 @@ public class ProductDAO extends DBContext {
                 + "description = ?, warranty_months = ?, is_active = ? WHERE product_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, p.getCategory().getCategory_id());
-            ps.setInt(2, p.getBrand().getBrand_id());
+            ps.setInt(2, p.getBrand().getBrandId());
             ps.setString(3, p.getProductName());
             ps.setString(4, p.getDescription());
             ps.setInt(5, p.getWarranty_months());
@@ -129,7 +129,7 @@ public class ProductDAO extends DBContext {
         model.Category cat = new model.Category();
         cat.setCategory_id(1);
         model.Brand brand = new model.Brand();
-        brand.setBrand_id(1);
+        brand.setBrandId(1);
 
 
         // 1. TEST INSERT

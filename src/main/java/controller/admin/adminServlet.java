@@ -4,6 +4,7 @@
  */
 package controller.admin;
 
+import dao.BrandDAO;
 import dao.CustomerDAO;
 import dao.PaymentMethodDAO;
 import java.io.IOException;
@@ -15,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
+import model.Brand;
 import model.Customer;
 import model.Employees;
 
@@ -90,6 +92,9 @@ public class adminServlet extends HttpServlet {
                     page = "/pages/categoryManagement.jsp";
                     break;
                 case "brandManagement":
+                    BrandDAO brandDAO = new BrandDAO();
+                    List<Brand> list = brandDAO.getAllBrand();
+                    request.setAttribute("brandList", list);
                     page = "/pages/brandManagement.jsp";
                     break;
                 case "productManagement":
