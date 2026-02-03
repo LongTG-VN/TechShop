@@ -104,7 +104,7 @@ public class adminServlet extends HttpServlet {
                     break;
 
                 case "paymentMethodManagement":
-                    page = "/pages/paymentMethodManagement.jsp";
+                    page = "/pages/PaymentMethodManagementPage/paymentMethodManagement.jsp";
                     PaymentMethodDAO pdao = new PaymentMethodDAO();
                     listData = pdao.getAllPaymentMethods();
                     break;

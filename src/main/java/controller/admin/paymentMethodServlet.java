@@ -67,7 +67,7 @@ public class paymentMethodServlet extends HttpServlet {
         if (action != null) {
             switch (action) {
                 case "add":
-                    page = "/pages/addPaymentMethod.jsp";
+                    page = "/pages/PaymentMethodManagementPage/addPaymentMethod.jsp";
                     break;
                 case "delete":
                     int idDelete = Integer.parseInt(request.getParameter("id"));
@@ -78,10 +78,10 @@ public class paymentMethodServlet extends HttpServlet {
                     int idEdit = Integer.parseInt(request.getParameter("id"));
                     PaymentMethod pm = pdao.getPaymentMethodById(idEdit);
                     request.setAttribute("payment", pm);
-                    page = "/pages/editPaymentMethod.jsp";
+                    page = "/pages/PaymentMethodManagementPage/editPaymentMethod.jsp";
                     break;
                 case "all":
-                    page = "/pages/paymentMethodManagement.jsp";
+                    page = "/pages/PaymentMethodManagementPage/paymentMethodManagement.jsp";
                     listData = pdao.getAllPaymentMethods();
                     break;
 
