@@ -13,24 +13,24 @@ import utils.DBContext;
 
 /**
  *
- * @author LE HOANG NHAN
+ * @author CT
  */
+
 public class CategoryDAO extends DBContext {
 
-    // READ ALL
-    public List<Category> getAllCategories() {
+    // Lấy tất cả danh mục
+    public List<Category> getAllCategory() {
         List<Category> list = new ArrayList<>();
-        String sql = "SELECT * FROM categories";
+        String sql = "SELECT category_id, category_name, is_active FROM categories";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                Category c = new Category(
-                        rs.getInt("category_id"),
-                        rs.getString("category_name"),
-                        rs.getString("slug")
-                );
-                list.add(c);
+                list.add(new Category(
+                    rs.getInt("category_id"),
+                    rs.getString("category_name"),
+                    rs.getBoolean("is_active") // Sử dụng String tên cột để tránh lỗi type mismatch
+                ));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -38,18 +38,18 @@ public class CategoryDAO extends DBContext {
         return list;
     }
 
-    // GET BY ID
+    // Lấy danh mục theo ID
     public Category getCategoryById(int id) {
-        String sql = "SELECT * FROM categories WHERE category_id = ?";
+        String sql = "SELECT category_id, category_name, is_active FROM categories WHERE category_id = ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 return new Category(
-                        rs.getInt("category_id"),
-                        rs.getString("category_name"),
-                        rs.getString("slug")
+                    rs.getInt("category_id"),
+                    rs.getString("category_name"),
+                    rs.getBoolean("is_active")
                 );
             }
         } catch (Exception e) {
@@ -58,34 +58,34 @@ public class CategoryDAO extends DBContext {
         return null;
     }
 
-    // CREATE
+    // Thêm danh mục mới
     public void insertCategory(Category c) {
-        String sql = "INSERT INTO categories(category_name, slug) VALUES (?, ?)";
+        String sql = "INSERT INTO categories (category_name, is_active) VALUES (?, ?)";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, c.getCategory_Name());
-            ps.setString(2, c.getSlug());
+            ps.setString(1, c.getCategoryName());
+            ps.setBoolean(2, c.isIsActive()); // Sử dụng setBoolean cho kiểu BIT trong SQL
             ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    // UPDATE
+    // Cập nhật danh mục
     public void updateCategory(Category c) {
-        String sql = "UPDATE categories SET category_name = ?, slug = ? WHERE category_id = ?";
+        String sql = "UPDATE categories SET category_name = ?, is_active = ? WHERE category_id = ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, c.getCategory_Name());
-            ps.setString(2, c.getSlug());
-            ps.setInt(3, c.getCategory_id());
+            ps.setString(1, c.getCategoryName());
+            ps.setBoolean(2, c.isIsActive());
+            ps.setInt(3, c.getCategoryId());
             ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    // DELETE
+    // Xóa danh mục
     public void deleteCategory(int id) {
         String sql = "DELETE FROM categories WHERE category_id = ?";
         try {
@@ -97,21 +97,10 @@ public class CategoryDAO extends DBContext {
         }
     }
 
-    // TEST
     public static void main(String[] args) {
         CategoryDAO dao = new CategoryDAO();
-
-        // INSERT
-//        dao.insertCategory(new Category(0, "Phone", "phone"));
-        // UPDATE
-//        dao.updateCategory(new Category(1, "Smart Phone", "smart-phone"));
-        // GET BY ID
-//        System.out.println(dao.getCategoryById(1));
-        // DELETE
-//        dao.deleteCategory(3);
-        // GET ALL
-        List<Category> list = dao.getAllCategories();
-        for (Category c : list) {
+        // Test: In ra tất cả danh mục
+        for (Category c : dao.getAllCategory()) {
             System.out.println(c);
         }
     }

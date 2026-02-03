@@ -6,50 +6,54 @@ package model;
 
 /**
  *
- * @author LE HOANG NHAN
+ * @author CT
  */
 public class Category {
 
-    private int category_id;
-    private String category_Name;
-    private String slug;
+    private int categoryId;
+    private String categoryName;
+    private boolean isActive;
 
     public Category() {
     }
 
-    public Category(int category_id, String category_Name, String slug) {
-        this.category_id = category_id;
-        this.category_Name = category_Name;
-        this.slug = slug;
+    public Category(int categoryId, String categoryName, boolean isActive) {
+        this.categoryId = categoryId;
+        this.categoryName = categoryName;
+        this.isActive = isActive;
     }
 
-    public int getCategory_id() {
-        return category_id;
+    public Category(String categoryName, boolean isActive) {
+        this.categoryName = categoryName;
+        this.isActive = isActive;
     }
 
-    public void setCategory_id(int category_id) {
-        this.category_id = category_id;
+    public int getCategoryId() {
+        return categoryId;
     }
 
-    public String getCategory_Name() {
-        return category_Name;
+    public void setCategoryId(int categoryId) {
+        this.categoryId = categoryId;
     }
 
-    public void setCategory_Name(String category_Name) {
-        this.category_Name = category_Name;
+    public String getCategoryName() {
+        return categoryName;
     }
 
-    public String getSlug() {
-        return slug;
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
     }
 
-    public void setSlug(String slug) {
-        this.slug = slug;
+    public boolean isIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(boolean isActive) {
+        this.isActive = isActive;
     }
 
     @Override
     public String toString() {
-        return "Category{" + "category_id=" + category_id + ", category_Name=" + category_Name + ", slug=" + slug + '}';
+        return "Category{" + "categoryId=" + categoryId + ", categoryName=" + categoryName + ", isActive=" + isActive + '}';
     }
-
 }
