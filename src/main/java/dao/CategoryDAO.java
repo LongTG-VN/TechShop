@@ -15,7 +15,6 @@ import utils.DBContext;
  *
  * @author CT
  */
-
 public class CategoryDAO extends DBContext {
 
     // Lấy tất cả danh mục
@@ -29,7 +28,7 @@ public class CategoryDAO extends DBContext {
                 list.add(new Category(
                     rs.getInt("category_id"),
                     rs.getString("category_name"),
-                    rs.getBoolean("is_active") // Sử dụng String tên cột để tránh lỗi type mismatch
+                    rs.getBoolean("is_active")
                 ));
             }
         } catch (Exception e) {
@@ -59,12 +58,12 @@ public class CategoryDAO extends DBContext {
     }
 
     // Thêm danh mục mới
-    public void insertCategory(Category c) {
+    public void insertCategory(String name, boolean is_active) {
         String sql = "INSERT INTO categories (category_name, is_active) VALUES (?, ?)";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, c.getCategoryName());
-            ps.setBoolean(2, c.isIsActive()); // Sử dụng setBoolean cho kiểu BIT trong SQL
+            ps.setString(1, name);
+            ps.setBoolean(2, is_active); 
             ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();

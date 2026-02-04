@@ -16,7 +16,7 @@ public class Category {
 
     public Category() {
     }
-
+    
     public Category(int categoryId, String categoryName, boolean isActive) {
         this.categoryId = categoryId;
         this.categoryName = categoryName;

@@ -115,8 +115,8 @@
                 <select id="statusFilter" onchange="applyFilters()" 
                         class="px-4 py-2 text-sm border border-gray-300 rounded-lg outline-none bg-white cursor-pointer shadow-sm focus:ring-2 focus:ring-blue-500 font-medium">
                     <option value="all">All Status</option>
-                    <option value="active">Only Active</option>
-                    <option value="inactive">Only Inactive</option>
+                    <option value="active">Active Only</option>
+                    <option value="inactive">Inactive Only</option>
                 </select>
             </div>
             <a href="brand?action=add" class="inline-flex items-center px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-sm">+ Add New Brand</a>
