@@ -17,12 +17,12 @@ import utils.DBContext;
  */
 public class PaymentMethodDAO extends DBContext {
 
-    public List<PaymentMethod> getAllActivePaymentMethods() {
+    //get all payment methods
+    public List<PaymentMethod> getAllPaymentMethods() {
         List<PaymentMethod> list = new ArrayList<>();
-        String sql = "SELECT * FROM payment_methods WHERE is_active = 1";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery();
+        String sql = "SELECT * FROM payment_methods";
+        try (PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
             while (rs.next()) {
                 list.add(new PaymentMethod(
                         rs.getInt("method_id"),
@@ -36,8 +36,9 @@ public class PaymentMethodDAO extends DBContext {
         return list;
     }
 
-    public PaymentMethod getActivePaymentMethodById(int id) {
-        String sql = "SELECT * FROM payment_methods WHERE method_id = ? AND is_active = 1";
+    //get payment method by id
+    public PaymentMethod getPaymentMethodById(int id) {
+        String sql = "SELECT * FROM payment_methods WHERE method_id = ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, id);
@@ -55,51 +56,36 @@ public class PaymentMethodDAO extends DBContext {
         return null;
     }
 
-    public List<PaymentMethod> getAllInactivePaymentMethods() {
-        List<PaymentMethod> list = new ArrayList<>();
-        String sql = "SELECT * FROM payment_methods WHERE is_active = 0";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                list.add(new PaymentMethod(
-                        rs.getInt("method_id"),
-                        rs.getString("method_name"),
-                        rs.getBoolean("is_active")
-                ));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return list;
-    }
-
-    public void insertPaymentMethod(String name) {
-        String sql = "INSERT INTO payment_methods(method_name) VALUES (?)";
+    //create payment method
+    public void insertPaymentMethod(String name, boolean is_active) {
+        String sql = "INSERT INTO payment_methods(method_name,is_active) VALUES (?,?)";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, name);
+            ps.setBoolean(2, is_active);
             ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    //update payment method
     public void updatePaymentMethod(PaymentMethod pm) {
-        String sql = "UPDATE payment_methods SET method_name=? WHERE method_id=?";
+        String sql = "UPDATE payment_methods SET method_name=?,is_active=? WHERE method_id=?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, pm.getMethod_name());
-            ps.setInt(2, pm.getMethod_id());
+            ps.setBoolean(2, pm.isIs_active());
+            ps.setInt(3, pm.getMethod_id());
             ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    //Soft delete
-    public void disablePaymentMethod(int id) {
-        String sql = "UPDATE payment_methods SET is_active = 0 WHERE method_id=?";
+    //Hard delete
+    public void deletePaymentMethod(int id) {
+        String sql = "DELETE FROM payment_methods WHERE method_id = ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, id);

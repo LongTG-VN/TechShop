@@ -4,11 +4,7 @@
  */
 package controller.admin;
 
-import dao.BrandDAO;
 import dao.CategoryDAO;
-import dao.CustomerDAO;
-import dao.EmployeesDAO;
-import dao.PaymentMethodDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -16,18 +12,15 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
 import java.util.List;
-import model.Brand;
-import model.Customer;
-import model.Employees;
+import model.Category;
 
 /**
  *
- * @author ASUS
+ * @author CaoTram
  */
-@WebServlet(name = "adminServlet", urlPatterns = {"/adminservlet"})
-public class adminServlet extends HttpServlet {
+@WebServlet(name = "categoryServlet", urlPatterns = {"/categoryServlet"})
+public class categoryServlet extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -46,10 +39,10 @@ public class adminServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet adminServlet</title>");
+            out.println("<title>Servlet categoryServlet</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet adminServlet at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet categoryServlet at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -67,64 +60,43 @@ public class adminServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
-        // 1. Thiết lập Tiếng Việt cho cả Request và Response
-        response.setCharacterEncoding("UTF-8");
-        response.setContentType("text/html;charset=UTF-8");
-
-        // 2. Lấy tham số 'action' từ URL (ví dụ: adminservlet?action=dashboard)
         String action = request.getParameter("action");
-        String page = "/pages/dashboardPage.jsp"; // Trang mặc định khi mới vào
+        String page = "/pages/CategoryManagementPage/categoryManagement.jsp";
+        List<?> listData = null;
+        CategoryDAO cdao = new CategoryDAO();
 
-        List<?> listData = null; // Dấu <?> cho phép gán bất kỳ List nào (Customer, Employee...)
-
-        // 3. Logic điều hướng (Switch-case sẽ sạch sẽ hơn if-else)
         if (action != null) {
             switch (action) {
-                case "dashboard":
-                    page = "/pages/dashboardPage.jsp";
+                case "add":
+                    page = "/pages/CategoryManagementPage/addCategory.jsp";
                     break;
-                case "customerManagement":
-                    page = "/pages/CustomerManagementPage/customerManagement.jsp";
-                    listData = new CustomerDAO().getAllCustomer();
+                case "delete":
+                    int idDelete = Integer.parseInt(request.getParameter("id"));
+                    cdao.deleteCategory(idDelete);
+                    response.sendRedirect("categoryServlet?action=all");
+                    return;
+                case "edit":
+                    int idEdit = Integer.parseInt(request.getParameter("id"));
+                    Category c = cdao.getCategoryById(idEdit);
+                    request.setAttribute("category", c);
+                    page = "/pages/CategoryManagementPage/editCategory.jsp";
                     break;
-                case "employeeManagement":
-                    page = "/pages/EmployeeManagementPage/employeeManagement.jsp";
-                    listData = new EmployeesDAO().getAllEmployeeses();
+                case "detail":
+                    int idDetail = Integer.parseInt(request.getParameter("id"));
+                    Category cd = cdao.getCategoryById(idDetail);
+                    request.setAttribute("category", cd);
+                    page = "/pages/CategoryManagementPage/detailCategory.jsp";
                     break;
-                case "categoryManagement":
+                case "all":
                     page = "/pages/CategoryManagementPage/categoryManagement.jsp";
-                    CategoryDAO cdao = new CategoryDAO();
                     listData = cdao.getAllCategory();
                     break;
-                case "brandManagement":
-                    BrandDAO brandDAO = new BrandDAO();
-                    List<Brand> list = brandDAO.getAllBrand();
-                    request.setAttribute("brandList", list);
-                    page = "/pages/BrandManagementPage/brandManagement.jsp";
-                    break;
-                case "productManagement":
-                    page = "/pages/productManagement.jsp";
-                    break;
-                case "voucherManagement":
-                    page = "/pages/voucherManagement.jsp";
-                    break;
-                case "paymentMethodManagement":
-                    page = "/pages/PaymentMethodManagementPage/paymentMethodManagement.jsp";
-                    PaymentMethodDAO pdao = new PaymentMethodDAO();
-                    listData = pdao.getAllPaymentMethods();
-                    break;
 
-                default:
-                    page = "/pages/dashboardPage.jsp";
             }
         }
 
-        // 4. Đẩy đường dẫn trang con vào Attribute để Template include
         request.setAttribute("contentPage", page);
         request.setAttribute("listdata", listData);
-
-        // 5. Forward đến Template duy nhất
         request.getRequestDispatcher("/template/adminTemplate.jsp").forward(request, response);
     }
 
@@ -139,7 +111,25 @@ public class adminServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        String action = request.getParameter("action");
+        CategoryDAO cdao = new CategoryDAO();
+
+        if ("add".equals(action)) {
+            String name = request.getParameter("categoryName");
+            String statusRaw = request.getParameter("isActive");
+            boolean status = "1".equals(statusRaw);
+            cdao.insertCategory(name, status);
+        }
+        if ("update".equals(action)) {
+            int id = Integer.parseInt(request.getParameter("categoryId"));
+            String name = request.getParameter("categoryName");
+            boolean status = "1".equals(request.getParameter("isActive"));
+
+            Category c = new Category(id, name, status);
+            cdao.updateCategory(c);
+        }
+
+        response.sendRedirect("categoryServlet?action=all");
     }
 
     /**

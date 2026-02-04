@@ -58,7 +58,7 @@
                                 <svg class="w-5 h-5 transition duration-75 ${isEmp ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-600'}" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
                                 </svg>
-                                <span class="ms-3">Nhân Viên</span>
+                                <span class="ms-3">Employee</span>
                             </a>
                             
                         </div>
@@ -73,7 +73,7 @@
                                 <svg class="w-5 h-5 transition duration-75 ${isCat ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-600'}" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M18 5h-7V2a1 1 0 0 0-2 0v3H2a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z"/>
                                 </svg>
-                                <span class="ms-3">Danh Mục</span>
+                                <span class="ms-3">Category</span>
                             </a>
                             
                         </div>
@@ -89,7 +89,7 @@
                                 <svg class="w-5 h-5 transition duration-75 ${isBrand ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-600'}" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M17 5.923A1 1 0 0 0 16 5h-3V4a4 4 0 1 0-8 0v1H2a1 1 0 0 0-1 .923L.086 17.846A2 2 0 0 0 2.08 20h13.84a2 2 0 0 0 1.994-2.153L17 5.923ZM7 9a1 1 0 0 1-2 0V7h2v2Zm0-5a2 2 0 1 1 4 0v1H7V4Zm6 5a1 1 0 1 1-2 0V7h2v2Z"/>
                                 </svg>
-                                <span class="ms-3 text-nowrap">Thương Hiệu</span>
+                                <span class="ms-3 text-nowrap">Brand</span>
                             </a>
                           
                         </div>
@@ -105,7 +105,7 @@
                                 <svg class="w-5 h-5 transition duration-75 ${isProd ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-600'}" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M17 5.923A1 1 0 0 0 16 5h-3V4a4 4 0 1 0-8 0v1H2a1 1 0 0 0-1 .923L.086 17.846A2 2 0 0 0 2.08 20h13.84a2 2 0 0 0 1.994-2.153L17 5.923ZM7 9a1 1 0 0 1-2 0V7h2v2Zm0-5a2 2 0 1 1 4 0v1H7V4Zm6 5a1 1 0 1 1-2 0V7h2v2Z"/>
                                 </svg>
-                                <span class="ms-3 text-nowrap">Sản phẩm</span>
+                                <span class="ms-3 text-nowrap">Product</span>
                             </a>
                             
                         </div>

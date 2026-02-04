@@ -9,48 +9,50 @@ package model;
  * @author CT
  */
 public class Brand {
-
-    private int brand_id;
-    private String brand_name;
-    private String logo_url;
+    private int brandId;
+    private String brandName;
+    private boolean isActive;
 
     public Brand() {
     }
 
-    public Brand(int brand_id, String brand_name, String logo_url) {
-        this.brand_id = brand_id;
-        this.brand_name = brand_name;
-        this.logo_url = logo_url;
+    public Brand(int brandId, String brandName, boolean isActive) {
+        this.brandId = brandId;
+        this.brandName = brandName;
+        this.isActive = isActive;
     }
 
-    public int getBrand_id() {
-        return brand_id;
+    public Brand(String brandName, boolean isActive) {
+        this.brandName = brandName;
+        this.isActive = isActive;
     }
 
-    public void setBrand_id(int brand_id) {
-        this.brand_id = brand_id;
+    public int getBrandId() {
+        return brandId;
     }
 
-    public String getBrand_name() {
-        return brand_name;
+    public void setBrandId(int brandId) {
+        this.brandId = brandId;
     }
 
-    public void setBrand_name(String brand_name) {
-        this.brand_name = brand_name;
+    public String getBrandName() {
+        return brandName;
     }
 
-    public String getLogo_url() {
-        return logo_url;
+    public void setBrandName(String brandName) {
+        this.brandName = brandName;
     }
 
-    public void setLogo_url(String logo_url) {
-        this.logo_url = logo_url;
+    public boolean isIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(boolean isActive) {
+        this.isActive = isActive;
     }
 
     @Override
     public String toString() {
-        return "Brand: " + "brand_id = " + brand_id + " | brand_name = " + brand_name + " | logo_url = " + logo_url;
+        return "Brand{" + "brandId=" + brandId + ", brandName=" + brandName + ", isActive=" + isActive + '}';
     }
-
 }
-//test
