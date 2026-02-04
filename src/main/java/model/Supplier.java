@@ -12,17 +12,17 @@ public class Supplier {
 
     private int supplier_id;
     private String supplier_name;
-    private String contact_email;
-    private String address;
+    private String phone;
+    private boolean is_active;
 
     public Supplier() {
     }
 
-    public Supplier(int supplier_id, String supplier_name, String contact_email, String address) {
+    public Supplier(int supplier_id, String supplier_name, String phone, boolean is_active) {
         this.supplier_id = supplier_id;
         this.supplier_name = supplier_name;
-        this.contact_email = contact_email;
-        this.address = address;
+        this.phone = phone;
+        this.is_active = is_active;
     }
 
     public int getSupplier_id() {
@@ -41,25 +41,24 @@ public class Supplier {
         this.supplier_name = supplier_name;
     }
 
-    public String getContact_email() {
-        return contact_email;
+    public String getPhone() {
+        return phone;
     }
 
-    public void setContact_email(String contact_email) {
-        this.contact_email = contact_email;
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
-    public String getAddress() {
-        return address;
+    public boolean isIs_active() {
+        return is_active;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setIs_active(boolean is_active) {
+        this.is_active = is_active;
     }
 
     @Override
     public String toString() {
-        return "Supplier{" + "supplier_id=" + supplier_id + ", supplier_name=" + supplier_name + ", contact_email=" + contact_email + ", address=" + address + '}';
+        return "Supplier{" + "supplier_id=" + supplier_id + ", supplier_name=" + supplier_name + ", phone=" + phone + ", is_active=" + is_active + '}';
     }
-
 }
