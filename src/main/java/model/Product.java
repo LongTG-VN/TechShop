@@ -1,37 +1,68 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  *
  * @author CT
  */
 public class Product {
-    private int productId ;
-    private Category category ;
-    private Brand brand;
-    private String productName;
+
+    private int productId;
+    private String name;
+    private int categoryId;
+    private int brandId;
     private String description;
-    private int warranty_months;
-    private byte is_active;
-    private LocalDateTime created_at;
+    private String status;
+    private LocalDateTime createdAt;
+    private Integer createdBy;
+    private Integer updatedBy;
+    private LocalDateTime updatedAt;
+    private String categoryName;
+    private String brandName;
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
+    }
+
+    public String getBrandName() {
+        return brandName;
+    }
+
+    public void setBrandName(String brandName) {
+        this.brandName = brandName;
+    }
 
     public Product() {
     }
 
-    public Product(int productId, Category category, Brand brand, String productName, String description, int warranty_months, byte is_active, LocalDateTime created_at) {
-        this.productId = productId;
-        this.category = category;
-        this.brand = brand;
-        this.productName = productName;
-        this.description = description;
-        this.warranty_months = warranty_months;
-        this.is_active = is_active;
-        this.created_at = created_at;
+    public String getCreatedAt() {
+        if (this.createdAt == null) {
+            return "";
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return this.createdAt.format(formatter);
+    }
+
+    public String getUpdatedAt() {
+        if (this.updatedAt == null) {
+            return "";
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return this.updatedAt.format(formatter);
+    }
+
+    public LocalDateTime getCreatedAtRaw() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAtRaw() {
+        return updatedAt;
     }
 
     public int getProductId() {
@@ -42,28 +73,28 @@ public class Product {
         this.productId = productId;
     }
 
-    public Category getCategory() {
-        return category;
+    public String getName() {
+        return name;
     }
 
-    public void setCategory(Category category) {
-        this.category = category;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public Brand getBrand() {
-        return brand;
+    public int getCategoryId() {
+        return categoryId;
     }
 
-    public void setBrand(Brand brand) {
-        this.brand = brand;
+    public void setCategoryId(int categoryId) {
+        this.categoryId = categoryId;
     }
 
-    public String getProductName() {
-        return productName;
+    public int getBrandId() {
+        return brandId;
     }
 
-    public void setProductName(String productName) {
-        this.productName = productName;
+    public void setBrandId(int brandId) {
+        this.brandId = brandId;
     }
 
     public String getDescription() {
@@ -74,33 +105,40 @@ public class Product {
         this.description = description;
     }
 
-    public int getWarranty_months() {
-        return warranty_months;
+    public String getStatus() {
+        return status;
     }
 
-    public void setWarranty_months(int warranty_months) {
-        this.warranty_months = warranty_months;
+    public void setStatus(String status) {
+        this.status = status;
     }
 
-    public byte getIs_active() {
-        return is_active;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
-    public void setIs_active(byte is_active) {
-        this.is_active = is_active;
+    public Integer getCreatedBy() {
+        return createdBy;
     }
 
-    public LocalDateTime getCreated_at() {
-        return created_at;
+    public void setCreatedBy(Integer createdBy) {
+        this.createdBy = createdBy;
     }
 
-    public void setCreated_at(LocalDateTime created_at) {
-        this.created_at = created_at;
+    public Integer getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(Integer updatedBy) {
+        this.updatedBy = updatedBy;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     @Override
     public String toString() {
-        return "product{" + "productId=" + productId + ", category=" + category + ", brand=" + brand + ", productName=" + productName + ", description=" + description + ", warranty_months=" + warranty_months + ", is_active=" + is_active + ", created_at=" + created_at + '}';
+        return "Product{" + "id=" + productId + ", name=" + name + ", createdAt=" + getCreatedAt() + '}';
     }
-    
 }

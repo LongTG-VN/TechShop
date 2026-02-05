@@ -4,6 +4,9 @@
  */
 package controller.staff;
 
+import dao.BrandDAO;
+import dao.CategoryDAO;
+import dao.ProductDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -11,6 +14,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
  *
@@ -64,7 +68,7 @@ public class staffServlet extends HttpServlet {
         String action = request.getParameter("action");
         String page = "/pages/dashboardPage.jsp"; // Trang mặc định khi mới vào
 
-//        List<?> listData = null; // Dấu <?> cho phép gán bất kỳ List nào (Customer, Employee...)
+        List<?> listData = null; // Dấu <?> cho phép gán bất kỳ List nào (Customer, Employee...)
         // 3. Logic điều hướng (Switch-case sẽ sạch sẽ hơn if-else)
         if (action != null) {
             switch (action) {
@@ -84,8 +88,15 @@ public class staffServlet extends HttpServlet {
 //                    listData = new CustomerDAO().getAllCustomer();
                     break;
                 case "productManagement":
-                    page = "/pages/ProductManagementPage/productManagement.jsp"; // Bạn cần tạo file này
-//                    listData = new CustomerDAO().getAllCustomer();
+                    page = "/pages/ProductManagementPage/productManagement.jsp";
+                    ProductDAO productdao = new ProductDAO();
+                    CategoryDAO ccdao = new CategoryDAO(); 
+                    BrandDAO bdao = new BrandDAO();      
+
+                    request.setAttribute("categories", ccdao.getAllCategory()); 
+                    request.setAttribute("brands", bdao.getAllBrand());     
+
+                    listData = productdao.getAllProduct();
                     break;
                 case "reviewManagement":
                     page = "/pages/ReviewManagementPage/reviewManagement.jsp"; // Bạn cần tạo file này
@@ -98,7 +109,7 @@ public class staffServlet extends HttpServlet {
 
         // 4. Đẩy đường dẫn trang con vào Attribute để Template include
         request.setAttribute("contentPage", page);
-//        request.setAttribute("listdata", listData);
+        request.setAttribute("listdata", listData);
 
         // 5. Forward đến Template duy nhất
         request.getRequestDispatcher("/template/staffTemplate.jsp").forward(request, response);

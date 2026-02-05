@@ -9,21 +9,27 @@ import java.util.List;
 import model.Product;
 import utils.DBContext;
 
-/**
- * @author CT
- */
 public class ProductDAO extends DBContext {
 
-    private BrandDAO brandDAO = new BrandDAO();
-    private CategoryDAO categoryDAO = new CategoryDAO();
-
     // 1. Lấy tất cả sản phẩm
-    public List<Product> getAllproduct() {
+    // Trong ProductDAO.java
+    public List<Product> getAllProduct() {
         List<Product> list = new ArrayList<>();
-        String sql = "SELECT * FROM products";
-        try (PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+        // Thực hiện JOIN để lấy Category Name và Brand Name
+        String sql = "SELECT p.*, c.category_name, b.brand_name "
+                + "FROM products p "
+                + "LEFT JOIN categories c ON p.category_id = c.category_id "
+                + "LEFT JOIN brands b ON p.brand_id = b.brand_id "
+                + "ORDER BY p.product_id DESC";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                list.add(mapResultSetToProduct(rs));
+                Product p = mapResultSetToProduct(rs);
+                // Gán thêm tên từ kết quả JOIN
+                p.setCategoryName(rs.getString("category_name"));
+                p.setBrandName(rs.getString("brand_name"));
+                list.add(p);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -33,13 +39,22 @@ public class ProductDAO extends DBContext {
 
     // 2. Lấy sản phẩm theo ID
     public Product getProductById(int id) {
-        String sql = "SELECT * FROM products WHERE product_id = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        // SỬA: Phải JOIN với bảng categories và brands để lấy tên hiển thị
+        String sql = "SELECT p.*, c.category_name, b.brand_name "
+                + "FROM products p "
+                + "LEFT JOIN categories c ON p.category_id = c.category_id "
+                + "LEFT JOIN brands b ON p.brand_id = b.brand_id "
+                + "WHERE p.product_id = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToProduct(rs);
-                }
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                Product p = mapResultSetToProduct(rs);
+                // QUAN TRỌNG: Phải gán thêm tên từ kết quả truy vấn vào object
+                p.setCategoryName(rs.getString("category_name"));
+                p.setBrandName(rs.getString("brand_name"));
+                return p;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -47,120 +62,126 @@ public class ProductDAO extends DBContext {
         return null;
     }
 
-    // 3. Thêm mới sản phẩm
-    public boolean insertProduct(Product p) {
-        String sql = "INSERT INTO products (category_id, brand_id, name, description, "
-                + "warranty_months, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, p.getCategory().getCategoryId());
-            ps.setInt(2, p.getBrand().getBrandId());
-            ps.setString(3, p.getProductName());
-            ps.setString(4, p.getDescription());
-            ps.setInt(5, p.getWarranty_months());
-            ps.setByte(6, p.getIs_active());
-            ps.setTimestamp(7, Timestamp.valueOf(LocalDateTime.now()));
+    // 3. Kiểm tra sản phẩm đã có trong đơn hàng chưa (Để quyết định xóa mềm/cứng)
+    public int countProductInOrderDetails(int productId) {
+        String sql = "SELECT COUNT(*) FROM order_items oi "
+                + "JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
+                + "JOIN product_variants pv ON ii.variant_id = pv.variant_id "
+                + "WHERE pv.product_id = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, productId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 
-            return ps.executeUpdate() > 0;
+    // 4. Kiểm tra trùng tên
+    public boolean isProductDuplicate(String name, int categoryId, int brandId, int excludeId) {
+        // Câu lệnh SQL kiểm tra trùng tên + danh mục + thương hiệu
+        // nhưng bỏ qua bản ghi có ID hiện tại (dùng cho Update)
+        String sql = "SELECT COUNT(*) FROM products "
+                + "WHERE name = ? AND category_id = ? AND brand_id = ? AND product_id <> ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, name);
+            ps.setInt(2, categoryId);
+            ps.setInt(3, brandId);
+            ps.setInt(4, excludeId); // Nếu là Add, truyền vào số 0
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return false;
     }
 
-    // 4. Cập nhật sản phẩm
-    public boolean updateProduct(Product p) {
-        String sql = "UPDATE products SET category_id = ?, brand_id = ?, name = ?, "
-                + "description = ?, warranty_months = ?, is_active = ? WHERE product_id = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, p.getCategory().getCategoryId());
-            ps.setInt(2, p.getBrand().getBrandId());
-            ps.setString(3, p.getProductName());
+    // 5. Thêm mới sản phẩm
+    public void insertProduct(Product p) {
+        String sql = "INSERT INTO products (name, category_id, brand_id, description, status, created_at, created_by) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getCategoryId());
+            ps.setInt(3, p.getBrandId());
             ps.setString(4, p.getDescription());
-            ps.setInt(5, p.getWarranty_months());
-            ps.setByte(6, p.getIs_active());
+            ps.setString(5, p.getStatus());
+            ps.setTimestamp(6, java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
+            ps.setObject(7, p.getCreatedBy()); // ID của admin đang đăng nhập
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // 6. Cập nhật sản phẩm
+    public void updateProduct(Product p) {
+        String sql = "UPDATE products SET name=?, category_id=?, brand_id=?, description=?, status=?, updated_at=? WHERE product_id=?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getCategoryId());
+            ps.setInt(3, p.getBrandId());
+            ps.setString(4, p.getDescription());
+            ps.setString(5, p.getStatus());
+            ps.setTimestamp(6, Timestamp.valueOf(LocalDateTime.now()));
             ps.setInt(7, p.getProductId());
-
-            return ps.executeUpdate() > 0;
+            ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return false;
     }
 
-    // 5. Xóa sản phẩm
-    public boolean deleteProduct(int id) {
-        String sql = "UPDATE products SET is_active = 0 WHERE product_id = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    // 7. Xóa cứng
+    public void deleteProduct(int id) {
+        String sql = "DELETE FROM products WHERE product_id = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, id);
-            return ps.executeUpdate() > 0;
+            ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return false;
     }
 
-    // Hàm hỗ trợ map dữ liệu từ DB sang Object
-    private Product mapResultSetToProduct(ResultSet rs) throws Exception {
-        int productID = rs.getInt("product_id");
-        int categoryID = rs.getInt("category_id");
-        int brandID = rs.getInt("brand_id");
-        String productName = rs.getString("name");
-        String description = rs.getString("description");
-        int warrantyMonths = rs.getInt("warranty_months");
-        byte isActive = rs.getByte("is_active");
-
-        Timestamp ts = rs.getTimestamp("created_at");
-        LocalDateTime createdAt = (ts != null) ? ts.toLocalDateTime() : LocalDateTime.now();
-
-        return new Product(
-                productID,
-                categoryDAO.getCategoryById(categoryID),
-                brandDAO.getBrandById(brandID),
-                productName,
-                description,
-                warrantyMonths,
-                isActive,
-                createdAt
-        );
-    }
-
-    public static void main(String[] args) {
-        ProductDAO dao = new ProductDAO();
-        model.Category cat = new model.Category();
-        cat.setCategoryId(1);
-        model.Brand brand = new model.Brand();
-        brand.setBrandId(1);
-
-
-        // 1. TEST INSERT
-//        Product pNew = new Product(0, cat, brand, "Sản phẩm Test", "Mô tả test", 12, (byte) 1, LocalDateTime.now());
-//        boolean isIns = dao.insertProduct(pNew);
-//        System.out.println("1. Insert: " + (isIns ? "OK" : "FAIL"));
-
-        // Lấy ID vừa tạo (Giả sử là ID lớn nhất hoặc lấy từ danh sách)
-        List<Product> list = dao.getAllproduct();
-        int lastId = list.get(list.size() - 1).getProductId();
-
-        // 2. TEST GET BY ID
-        Product pGet = dao.getProductById(lastId);
-//        System.out.println("2. GetByID (" + lastId + "): " + (pGet != null ? "Tìm thấy: " + pGet.getProductName() : "FAIL"));
-
-        // 3. TEST UPDATE
-//        pGet.setProductName(
-//                "Sản phẩm đã Update");
-//        boolean isUpd = dao.updateProduct(new Product(11, cat, brand, "Sản phẩm Test", "Mô tả test 2", 12, (byte) 1, LocalDateTime.now()));
-//        System.out.println("3. Update: " + (isUpd ? "OK" : "FAIL"));
-
-        // 4. TEST DELETE (Hoặc Soft Delete tùy bạn cài đặt)
-//        boolean isDel = dao.deleteProduct(lastId);
-//        System.out.println("4. Delete: " + (isDel ? "OK" : "FAIL"));
-
-        // 5. TEST GET ALL
-        List<Product> listFinal = dao.getAllproduct();
-        for (Product object : listFinal) {
-            System.out.println(object);
+    // 8. Xóa mềm (Chuyển Inactive)
+    public void softDeleteProduct(int id) {
+        String sql = "UPDATE products SET status = 'Inactive', updated_at = ? WHERE product_id = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setInt(2, id);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+    }
 
-//        System.out.println("========== FINISH TESTING ==========");
+    private Product mapResultSetToProduct(ResultSet rs) throws Exception {
+        Product p = new Product();
+        p.setProductId(rs.getInt("product_id"));
+        p.setName(rs.getString("name"));
+        p.setCategoryId(rs.getInt("category_id"));
+        p.setBrandId(rs.getInt("brand_id"));
+        p.setDescription(rs.getString("description"));
+        p.setStatus(rs.getString("status"));
+        Timestamp ct = rs.getTimestamp("created_at");
+        if (ct != null) {
+            p.setCreatedAt(ct.toLocalDateTime());
+        }
+        Timestamp ut = rs.getTimestamp("updated_at");
+        if (ut != null) {
+            p.setUpdatedAt(ut.toLocalDateTime());
+        }
+        return p;
     }
 }
