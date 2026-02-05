@@ -71,10 +71,13 @@ public class categoryServlet extends HttpServlet {
                     page = "/pages/CategoryManagementPage/addCategory.jsp";
                     break;
                 case "delete":
-                    int idDelete = Integer.parseInt(request.getParameter("id"));
-                    cdao.deleteCategory(idDelete);
-                    response.sendRedirect("categoryServlet?action=all");
-                    return;
+                    int idDel = Integer.parseInt(request.getParameter("id"));
+                    Category cat = cdao.getCategoryById(idDel);
+                    int pCount = cdao.countProductsByCategoryId(idDel);
+                    request.setAttribute("category", cat);
+                    request.setAttribute("productCount", pCount); // Gửi số lượng sang JSP
+                    page = "/pages/CategoryManagementPage/deleteCategory.jsp";
+                    break;
                 case "edit":
                     int idEdit = Integer.parseInt(request.getParameter("id"));
                     Category c = cdao.getCategoryById(idEdit);
@@ -83,8 +86,13 @@ public class categoryServlet extends HttpServlet {
                     break;
                 case "detail":
                     int idDetail = Integer.parseInt(request.getParameter("id"));
-                    Category cd = cdao.getCategoryById(idDetail);
-                    request.setAttribute("category", cd);
+                    Category catDetail = cdao.getCategoryById(idDetail);
+
+                    // Lấy số lượng sản phẩm liên kết
+                    int productCount = cdao.countProductsByCategoryId(idDetail);
+
+                    request.setAttribute("category", catDetail);
+                    request.setAttribute("productCount", productCount); // Đẩy dữ liệu này sang JSP
                     page = "/pages/CategoryManagementPage/detailCategory.jsp";
                     break;
                 case "all":
@@ -115,18 +123,66 @@ public class categoryServlet extends HttpServlet {
         CategoryDAO cdao = new CategoryDAO();
 
         if ("add".equals(action)) {
-            String name = request.getParameter("categoryName");
-            String statusRaw = request.getParameter("isActive");
-            boolean status = "1".equals(statusRaw);
-            cdao.insertCategory(name, status);
-        }
-        if ("update".equals(action)) {
-            int id = Integer.parseInt(request.getParameter("categoryId"));
-            String name = request.getParameter("categoryName");
+            String name = request.getParameter("categoryName").trim();
             boolean status = "1".equals(request.getParameter("isActive"));
 
+            // Step 1: Check if name exists
+            if (cdao.isCategoryNameExists(name)) {
+                request.getSession().setAttribute("msg", "Error: Category name '" + name + "' already exists!");
+                request.getSession().setAttribute("msgType", "danger");
+                response.sendRedirect("categoryServlet?action=add");
+                return;
+            }
+
+            // Step 2: Insert and redirect to List
+            cdao.insertCategory(name, status);
+            request.getSession().setAttribute("msg", "Category '" + name + "' added successfully!");
+            request.getSession().setAttribute("msgType", "success");
+            response.sendRedirect("categoryServlet?action=all");
+            return;
+
+        } else if ("update".equals(action)) {
+            int id = Integer.parseInt(request.getParameter("categoryId"));
+            String name = request.getParameter("categoryName").trim();
+            boolean status = "1".equals(request.getParameter("isActive"));
+
+            // Step 1: Check if name is taken by ANOTHER category
+            if (cdao.isCategoryNameExists(name, id)) {
+                request.getSession().setAttribute("msg", "Error: Name '" + name + "' is already used by another category!");
+                request.getSession().setAttribute("msgType", "danger");
+                response.sendRedirect("categoryServlet?action=edit&id=" + id);
+                return;
+            }
+
+            // Step 2: Check if there are any actual changes
+            Category currentCat = cdao.getCategoryById(id);
+            if (currentCat.getCategoryName().equals(name) && currentCat.isIsActive() == status) {
+                request.getSession().setAttribute("msg", "No changes detected.");
+                request.getSession().setAttribute("msgType", "danger");
+                response.sendRedirect("categoryServlet?action=edit&id=" + id);
+                return;
+            }
+
+            // Step 3: Update and redirect to List
             Category c = new Category(id, name, status);
             cdao.updateCategory(c);
+            request.getSession().setAttribute("msg", "Category '" + name + "' updated successfully!");
+            request.getSession().setAttribute("msgType", "success");
+            response.sendRedirect("categoryServlet?action=all");
+            return;
+
+        } else if ("delete".equals(action)) {
+            int id = Integer.parseInt(request.getParameter("categoryId"));
+            int count = cdao.countProductsByCategoryId(id);
+
+            if (count > 0) {
+                cdao.deactivateCategory(id);
+                request.getSession().setAttribute("msg", "Category contains products. Switched to INACTIVE.");
+            } else {
+                cdao.deleteCategory(id);
+                request.getSession().setAttribute("msg", "Category deleted successfully!");
+            }
+            request.getSession().setAttribute("msgType", "success");
         }
 
         response.sendRedirect("categoryServlet?action=all");

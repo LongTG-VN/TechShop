@@ -1,13 +1,54 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
+<c:if test="${not empty sessionScope.msg}">
+    <div id="toast-notification" class="fixed top-10 left-1/2 -translate-x-1/2 z-[9999] min-w-[320px] transition-all duration-500">
+        <div class="flex items-center justify-center p-4 rounded-xl shadow-2xl border-2 animate-bounce
+            ${sessionScope.msgType == 'danger' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-green-50 text-green-800 border-green-200'}">
+            
+            <div class="flex-shrink-0 mr-3">
+                <c:choose>
+                    <c:when test="${sessionScope.msgType == 'danger'}">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                        </svg>
+                    </c:when>
+                    <c:otherwise>
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                    </c:otherwise>
+                </c:choose>
+            </div>
+            
+            <span class="font-bold uppercase tracking-wider text-sm">
+                ${sessionScope.msg}
+            </span>
+        </div>
+    </div>
+
+    <c:remove var="msg" scope="session" />
+    <c:remove var="msgType" scope="session" />
+
+    <script>
+        setTimeout(() => {
+            const toast = document.getElementById('toast-notification');
+            if (toast) {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, -20px)';
+                setTimeout(() => toast.remove(), 500);
+            }
+        }, 3000);
+    </script>
+</c:if>
+    
 <div class="flex justify-center items-start pt-10">
     <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
         <%-- HEADER --%>
         <div class="text-center mb-10">
             <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
                 <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
                 </svg>
             </div>
             <h2 class="text-3xl font-extrabold text-gray-900">Add New Category</h2>
@@ -43,12 +84,19 @@
 
             <%-- ACTION BUTTONS --%>
             <div class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-100">
-                <a href="adminservlet?action=categoryManagement" 
-                   class="text-gray-500 bg-white hover:bg-gray-100 border border-gray-300 font-medium rounded-lg text-sm px-6 py-2.5 transition-all">
+                <%-- Nút Cancel với Icon quay lại --%>
+                <a href="categoryServlet?action=all" 
+                   class="inline-flex items-center gap-2 text-gray-500 bg-white hover:bg-gray-100 border border-gray-300 font-medium rounded-lg text-sm px-6 py-2.5 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
                     Cancel
                 </a>
                 <button type="submit" 
-                        class="text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-10 py-2.5 shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-1">
+                        class="inline-flex items-center gap-2 text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-10 py-2.5 shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                    </svg>
                     Save Category
                 </button>
             </div>

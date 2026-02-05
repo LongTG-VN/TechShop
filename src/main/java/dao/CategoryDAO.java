@@ -26,9 +26,9 @@ public class CategoryDAO extends DBContext {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 list.add(new Category(
-                    rs.getInt("category_id"),
-                    rs.getString("category_name"),
-                    rs.getBoolean("is_active")
+                        rs.getInt("category_id"),
+                        rs.getString("category_name"),
+                        rs.getBoolean("is_active")
                 ));
             }
         } catch (Exception e) {
@@ -46,9 +46,9 @@ public class CategoryDAO extends DBContext {
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 return new Category(
-                    rs.getInt("category_id"),
-                    rs.getString("category_name"),
-                    rs.getBoolean("is_active")
+                        rs.getInt("category_id"),
+                        rs.getString("category_name"),
+                        rs.getBoolean("is_active")
                 );
             }
         } catch (Exception e) {
@@ -63,7 +63,7 @@ public class CategoryDAO extends DBContext {
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, name);
-            ps.setBoolean(2, is_active); 
+            ps.setBoolean(2, is_active);
             ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
@@ -94,6 +94,67 @@ public class CategoryDAO extends DBContext {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+// 1. Đếm số lượng sản phẩm thuộc danh mục
+    public int countProductsByCategoryId(int id) {
+        String sql = "SELECT COUNT(*) FROM products WHERE category_id = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+// 2. Chuyển trạng thái sang Inactive (Soft Delete)
+    public void deactivateCategory(int id) {
+        String sql = "UPDATE categories SET is_active = 0 WHERE category_id = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Kiểm tra tên đã tồn tại chưa (dùng cho Add)
+    public boolean isCategoryNameExists(String name) {
+        String sql = "SELECT COUNT(*) FROM categories WHERE category_name = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, name);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+// Kiểm tra tên đã tồn tại cho các ID khác chưa (dùng cho Update)
+    public boolean isCategoryNameExists(String name, int excludeId) {
+        String sql = "SELECT COUNT(*) FROM categories WHERE category_name = ? AND category_id <> ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, name);
+            ps.setInt(2, excludeId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     public static void main(String[] args) {
