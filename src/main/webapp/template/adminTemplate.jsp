@@ -60,9 +60,9 @@
                                 </svg>
                                 <span class="ms-3">Employee</span>
                             </a>
-                            
+
                         </div>
-                      
+
                     </li>
 
                     <c:set var="isCat" value="${param.action == 'categoryManagement'}" />
@@ -75,9 +75,9 @@
                                 </svg>
                                 <span class="ms-3">Category</span>
                             </a>
-                            
+
                         </div>
-                        
+
                     </li>
 
 
@@ -91,25 +91,38 @@
                                 </svg>
                                 <span class="ms-3 text-nowrap">Brand</span>
                             </a>
-                          
+
                         </div>
-                       
+
                     </li>
 
 
-                    <c:set var="isProd" value="${param.action == 'productManagement'}" />
+                    <c:set var="isSpcificationDefinition" value="${param.action == 'specificationDefinitionManagement'}" />
                     <li>
-                        <div class="flex items-center w-full rounded-lg group ${isProd ? 'bg-blue-50' : 'hover:bg-gray-100'}">
-                            <a href="adminservlet?action=productManagement" 
-                               class="flex-1 flex items-center p-2 ${isProd ? 'text-blue-600 font-bold' : 'text-gray-900 group-hover:text-blue-600'}">
-                                <svg class="w-5 h-5 transition duration-75 ${isProd ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-600'}" fill="currentColor" viewBox="0 0 20 20">
+                        <div class="flex items-center w-full rounded-lg group ${isSpecificationDefinition ? 'bg-blue-50' : 'hover:bg-gray-100'}">
+                            <a href="adminservlet?action=spcificationDefinitionManagement" 
+                               class="flex-1 flex items-center p-2 ${isSpecificationDefinition ? 'text-blue-600 font-bold' : 'text-gray-900 group-hover:text-blue-600'}">
+                                <svg class="w-5 h-5 transition duration-75 ${isSpecificationDefinition ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-600'}" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M17 5.923A1 1 0 0 0 16 5h-3V4a4 4 0 1 0-8 0v1H2a1 1 0 0 0-1 .923L.086 17.846A2 2 0 0 0 2.08 20h13.84a2 2 0 0 0 1.994-2.153L17 5.923ZM7 9a1 1 0 0 1-2 0V7h2v2Zm0-5a2 2 0 1 1 4 0v1H7V4Zm6 5a1 1 0 1 1-2 0V7h2v2Z"/>
                                 </svg>
-                                <span class="ms-3 text-nowrap">Product</span>
+                                <span class="ms-3 text-nowrap">Specification Definition</span>
                             </a>
-                            
+
                         </div>
-                       
+
+                    </li>
+
+                    <c:set var="isSpecificationValue" value="${param.action == 'specificationValueManagement'}" />
+                    <li>
+                        <div class="flex items-center w-full rounded-lg group ${isSpecificationValue ? 'bg-blue-50' : 'hover:bg-gray-100'}">
+                            <a href="adminservlet?action=spcificationValueManagement" 
+                               class="flex-1 flex items-center p-2 ${isSpecificationValue ? 'text-blue-600 font-bold' : 'text-gray-900 group-hover:text-blue-600'}">
+                                <svg class="w-5 h-5 transition duration-75 ${isSpecificationValue ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-600'}" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M17 5.923A1 1 0 0 0 16 5h-3V4a4 4 0 1 0-8 0v1H2a1 1 0 0 0-1 .923L.086 17.846A2 2 0 0 0 2.08 20h13.84a2 2 0 0 0 1.994-2.153L17 5.923ZM7 9a1 1 0 0 1-2 0V7h2v2Zm0-5a2 2 0 1 1 4 0v1H7V4Zm6 5a1 1 0 1 1-2 0V7h2v2Z"/>
+                                </svg>
+                                <span class="ms-3 text-nowrap">Specification Value</span>
+                            </a>
+                        </div>
                     </li>
 
                     <c:set var="isVouch" value="${param.action == 'voucherManagement'}" />
@@ -122,9 +135,9 @@
                                 </svg>
                                 <span class="ms-3">Voucher</span>
                             </a>
-                           
+
                         </div>
-                       
+
                     </li>
 
                     <c:set var="isPayment" value="${param.action == 'paymentMethodManagement'}" />
@@ -137,9 +150,9 @@
                                 </svg>
                                 <span class="ms-3">Payment method</span>
                             </a>
-                          
+
                         </div>
-                        
+
                     </li>
                 </ul>
 

@@ -103,9 +103,12 @@ public class adminServlet extends HttpServlet {
                     request.setAttribute("brandList", list);
                     page = "/pages/BrandManagementPage/brandManagement.jsp";
                     break;
-                case "productManagement":
-                    page = "/pages/productManagement.jsp";
+                case "specificationValueManagement":
+                    page = "/pages/SpecificationValueManagementPage/specificationValueManagement.jsp";
                     break;
+                case "specificationDefinitionManagement":
+                    page = "/pages/SpecificationDefinitionManagement/specificationDefinitionManagement.jsp";
+                    break;    
                 case "voucherManagement":
                     page = "/pages/voucherManagement.jsp";
                     break;
