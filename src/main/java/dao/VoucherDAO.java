@@ -167,21 +167,21 @@ public class VoucherDAO extends DBContext {
 //                "ACTIVE" // Trạng thái
 //        ));
         
-//        dao.updateVoucher(new Voucher(
-//                6, // ID (sẽ tự tăng trong DB)
-//                "SUMMER2026", // Code
-//                100, // 15%
-//                100000, // Max giảm 100k
-//                500000, // Đơn tối thiểu 500k
-//                startTime, // Ngày bắt đầu
-//                endTime, // Ngày kết thúc
-//                100, // Tổng số lượng 100 mã
-//                0, // Đã dùng 0 mã
-//                "ACTIVE" // Trạng thái
-//        ));
+        dao.updateVoucher(new Voucher(
+                5, // ID (sẽ tự tăng trong DB)
+                "SUMMER2026", // Code
+                100, // 15%
+                100000, // Max giảm 100k
+                500000, // Đơn tối thiểu 500k
+                startTime, // Ngày bắt đầu
+                endTime, // Ngày kết thúc
+                100, // Tổng số lượng 100 mã
+                0, // Đã dùng 0 mã
+                "ACTIVE" // Trạng thái
+        ));
         
 //        dao.deleteVoucher(6);
-System.out.println(   dao.getVoucherById(1));
+System.out.println(   dao.getVoucherById(5));
 //        dao.getVoucherById(1);
     }
 }

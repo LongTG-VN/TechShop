@@ -9,6 +9,7 @@ import dao.CategoryDAO;
 import dao.CustomerDAO;
 import dao.EmployeesDAO;
 import dao.PaymentMethodDAO;
+import dao.VoucherDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -110,7 +111,9 @@ public class adminServlet extends HttpServlet {
                     page = "/pages/SpecificationDefinitionManagement/specificationDefinitionManagement.jsp";
                     break;    
                 case "voucherManagement":
-                    page = "/pages/voucherManagement.jsp";
+                    page = "/pages/VoucherManagementPage/voucherManagement.jsp";
+                    VoucherDAO vdao = new VoucherDAO();
+                    listData = vdao.getAllVoucher();
                     break;
                 case "paymentMethodManagement":
                     page = "/pages/PaymentMethodManagementPage/paymentMethodManagement.jsp";
