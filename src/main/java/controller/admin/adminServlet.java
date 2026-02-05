@@ -99,10 +99,9 @@ public class adminServlet extends HttpServlet {
                     listData = cdao.getAllCategory();
                     break;
                 case "brandManagement":
-                    BrandDAO brandDAO = new BrandDAO();
-                    List<Brand> list = brandDAO.getAllBrand();
-                    request.setAttribute("brandList", list);
                     page = "/pages/BrandManagementPage/brandManagement.jsp";
+                    BrandDAO bdao = new BrandDAO();
+                    listData = bdao.getAllBrand();
                     break;
                 case "specificationValueManagement":
                     page = "/pages/SpecificationValueManagementPage/specificationValueManagement.jsp";

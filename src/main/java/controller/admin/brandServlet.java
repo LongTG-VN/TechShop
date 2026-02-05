@@ -1,19 +1,23 @@
 package controller.admin;
 
 import dao.BrandDAO;
+import java.io.IOException;
+import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import java.util.List;
 import model.Brand;
-import java.io.IOException;
-import java.io.PrintWriter;
 
-@WebServlet(name = "brandServlet", urlPatterns = {"/brand"})
+/**
+ *
+ * @author CaoTram
+ */
+@WebServlet(name = "brandServlet", urlPatterns = {"/brandServlet"})
 public class brandServlet extends HttpServlet {
-
-    private final BrandDAO brandDAO = new BrandDAO();
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -32,10 +36,10 @@ public class brandServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet adminServlet</title>");
+            out.println("<title>Servlet categoryServlet</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet adminServlet at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet categoryServlet at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -54,41 +58,46 @@ public class brandServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String action = request.getParameter("action");
-        String txtSearch = request.getParameter("txtSearch");
         String page = "/pages/BrandManagementPage/brandManagement.jsp";
+        List<?> listData = null;
+        BrandDAO bdao = new BrandDAO();
 
-        // Xử lý tìm kiếm
-        if (txtSearch != null && !txtSearch.trim().isEmpty()) {
-            txtSearch = txtSearch.trim();
-            request.setAttribute("brandList", brandDAO.searchBrandsByName(txtSearch));
-            request.setAttribute("searchValue", txtSearch);
-        } else if ("detail".equals(action)) {
-            int id = Integer.parseInt(request.getParameter("id"));
-            request.setAttribute("brandDetail", brandDAO.getBrandById(id));
-            request.setAttribute("brandList", brandDAO.getAllBrand());
-        } else if ("edit".equals(action)) {
-            int id = Integer.parseInt(request.getParameter("id"));
-            request.setAttribute("brandToEdit", brandDAO.getBrandById(id));
-            request.setAttribute("brandList", brandDAO.getAllBrand());
-        } else if ("add".equals(action)) {
-            request.setAttribute("showAddForm", true);
-            request.setAttribute("brandList", brandDAO.getAllBrand());
-        } else if ("softDelete".equals(action)) {
-            int id = Integer.parseInt(request.getParameter("id"));
-            brandDAO.softDeleteBrand(id);
-            response.sendRedirect("brand");
-            return;
-        } else if ("delete".equals(action)) {
-            int id = Integer.parseInt(request.getParameter("id"));
-            brandDAO.hardDeleteBrand(id);
-            response.sendRedirect("brand");
-            return;
-        } else {
-            // Mặc định load tất cả
-            request.setAttribute("brandList", brandDAO.getAllBrand());
+        if (action != null) {
+            switch (action) {
+                case "add":
+                    page = "/pages/BrandManagementPage/addBrand.jsp";
+                    break;
+                case "delete":
+                    int idDel = Integer.parseInt(request.getParameter("id"));
+                    Brand brand = bdao.getBrandById(idDel);
+                    int pCount = bdao.countProductsByBrandId(idDel);
+                    request.setAttribute("brand", brand);
+                    request.setAttribute("productCount", pCount);
+                    page = "/pages/BrandManagementPage/deleteBrand.jsp";
+                    break;
+                case "edit":
+                    int idEdit = Integer.parseInt(request.getParameter("id"));
+                    Brand b = bdao.getBrandById(idEdit);
+                    request.setAttribute("brand", b);
+                    page = "/pages/BrandManagementPage/editBrand.jsp";
+                    break;
+                case "detail":
+                    int idDetail = Integer.parseInt(request.getParameter("id"));
+                    Brand brandDetail = bdao.getBrandById(idDetail);
+                    int productCount = bdao.countProductsByBrandId(idDetail);
+                    request.setAttribute("brand", brandDetail);
+                    request.setAttribute("productCount", productCount);
+                    page = "/pages/BrandManagementPage/detailBrand.jsp";
+                    break;
+                case "all":
+                    page = "/pages/BrandManagementPage/brandManagement.jsp";
+                    listData = bdao.getAllBrand();
+                    break;
+            }
         }
 
         request.setAttribute("contentPage", page);
+        request.setAttribute("listdata", listData);
         request.getRequestDispatcher("/template/adminTemplate.jsp").forward(request, response);
     }
 
@@ -103,15 +112,79 @@ public class brandServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
+        BrandDAO bdao = new BrandDAO();
+        HttpSession session = request.getSession();
 
-        if ("addProcess".equals(action)) {
-            brandDAO.insertBrand(new Brand(request.getParameter("brandName"), request.getParameter("isActive") != null));
-        } else if ("updateProcess".equals(action)) {
+        if ("add".equals(action)) {
+            String name = request.getParameter("brandName").trim();
+            boolean status = "1".equals(request.getParameter("isActive"));
+
+            if (bdao.isBrandNameExists(name)) {
+                session.setAttribute("msg", "Error: Brand name '" + name + "' already exists!");
+                session.setAttribute("msgType", "danger");
+                response.sendRedirect("brandServlet?action=add");
+                return;
+            }
+
+            bdao.insertBrand(name, status);
+            session.setAttribute("msg", "Brand '" + name + "' added successfully!");
+            session.setAttribute("msgType", "success");
+            response.sendRedirect("brandServlet?action=all");
+            return;
+
+        } else if ("update".equals(action)) {
             int id = Integer.parseInt(request.getParameter("brandId"));
-            brandDAO.updateBrand(new Brand(id, request.getParameter("brandName"), request.getParameter("isActive") != null));
+            String name = request.getParameter("brandName").trim();
+            boolean status = "1".equals(request.getParameter("isActive"));
+
+            if (bdao.isBrandNameExists(name, id)) {
+                session.setAttribute("msg", "Error: Name '" + name + "' is already used by another brand!");
+                session.setAttribute("msgType", "danger");
+                response.sendRedirect("brandServlet?action=edit&id=" + id);
+                return;
+            }
+
+            Brand currentBrand = bdao.getBrandById(id);
+            if (currentBrand.getBrandName().equals(name) && currentBrand.isIsActive() == status) {
+                session.setAttribute("msg", "No changes detected.");
+                session.setAttribute("msgType", "danger");
+                response.sendRedirect("brandServlet?action=edit&id=" + id);
+                return;
+            }
+
+            Brand b = new Brand(id, name, status);
+            bdao.updateBrand(b);
+            session.setAttribute("msg", "Brand '" + name + "' updated successfully!");
+            session.setAttribute("msgType", "success");
+            response.sendRedirect("brandServlet?action=all");
+            return;
+
+        } else if ("delete".equals(action)) {
+            int id = Integer.parseInt(request.getParameter("brandId"));
+            int count = bdao.countProductsByBrandId(id);
+
+            if (count > 0) {
+                bdao.deactivateBrand(id);
+                session.setAttribute("msg", "Brand contains products. Switched to INACTIVE.");
+            } else {
+                bdao.deleteBrand(id);
+                session.setAttribute("msg", "Brand deleted successfully!");
+            }
+            session.setAttribute("msgType", "success");
         }
-        response.sendRedirect("adminservlet?action=brandManagement");
+
+        response.sendRedirect("brandServlet?action=all");
     }
+
+    /**
+     * Returns a short description of the servlet.
+     *
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo() {
+        return "Short description";
+    }// </editor-fold>
+
 }
