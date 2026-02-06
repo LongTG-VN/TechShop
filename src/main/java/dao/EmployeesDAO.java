@@ -1,5 +1,6 @@
 package dao;
 
+import java.security.MessageDigest;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
@@ -147,7 +148,7 @@ public class EmployeesDAO extends DBContext {
 
             // 2. Map the 7 parameters
             ps.setString(1, e.getUsername());
-            ps.setString(2, e.getPasswordHash());
+            ps.setString(2, hashMD5(e.getPasswordHash()));
             ps.setNString(3, e.getFullName()); // Use setNString for Vietnamese support
             ps.setString(4, e.getEmail());
             ps.setString(5, e.getPhoneNumber());
@@ -165,6 +166,60 @@ public class EmployeesDAO extends DBContext {
         }
     }
 
+    public String hashMD5(String str) {
+        try {
+            MessageDigest mes = MessageDigest.getInstance("MD5");
+            byte[] mesMD5 = mes.digest(str.getBytes());
+            //[0x0a, 0x7a, 0x12, 0x09, 0x3,....]
+            StringBuilder result = new StringBuilder();
+            for (byte b : mesMD5) {
+                //0x0a; 0x7a; 0x12; 0x09; 0x3
+                String c = String.format("%02x", b);
+                //0a; 7a;  12;  09; 03
+                result.append(c);
+            }
+            return result.toString();
+            //0a7a120903
+        } catch (Exception e) {
+        }
+        return "";
+    }
+
+    public Employees login(String user, String pass) {
+        Employees u = new Employees();
+        u.setEmployeeId(-1);
+        RoleDAO rdao = new RoleDAO();
+        //u.id = -1
+        // 123 -> hash -> so sanh -> tra ve doi tuong
+        String sql = "SELECT Employees.*\n"
+                + "FROM     Employees\n"
+                + "where username = ? and password_hash = ?;";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+
+            ps.setString(1, user);  // ac
+            ps.setString(2, hashMD5(pass)); // pas
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                u.setEmployeeId(rs.getInt("employee_id"));
+                u.setUsername(rs.getString("username"));
+                u.setPasswordHash(rs.getString("password_hash"));
+                u.setFullName(rs.getString("full_name"));
+                u.setEmail(rs.getString("email"));
+                u.setPhoneNumber(rs.getString("phone_number"));
+                int roleID = rs.getInt("role_id");
+                u.setRole(rdao.getRoleById(roleID));
+                u.setStatus(rs.getString("status"));
+                u.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+            }
+
+        } catch (Exception e) {
+        }
+
+        return u;
+    }
+
     // Test Main
     public static void main(String[] args) {
         EmployeesDAO dao = new EmployeesDAO();
@@ -180,7 +235,10 @@ public class EmployeesDAO extends DBContext {
         String phoneNumber = "0912345678";
         String status = "ACTIVE";
 
+        System.out.println(dao.login("test_staff_241", "123456"));
+
+//        dao.insertEmployee(new Employees(0, username, passwordHash, fullName, email, phoneNumber, aO.getRoleById(1), status, LocalDateTime.MAX));
 // 3. Gọi hàm DAO để chèn vào Database
-        System.out.println(dao.getEmployeeById(2));
+//        System.out.println(dao.getEmployeeById(2));
     }
 }

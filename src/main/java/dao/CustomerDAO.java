@@ -4,6 +4,7 @@
  */
 package dao;
 
+import java.security.MessageDigest;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
@@ -42,8 +43,7 @@ public class CustomerDAO extends DBContext {
         }
         return list;
     }
-    
-    
+
     public Customer getCustomerById(int id) {
         String sql = "SELECT * FROM customers WHERE customer_id = ?";
         try {
@@ -58,20 +58,20 @@ public class CustomerDAO extends DBContext {
         }
         return null;
     }
-    
+
     private Customer mapResultSetToCustomer(ResultSet rs) throws Exception {
         return new Customer(
-            rs.getInt("customer_id"),
-            rs.getString("username"),
-            rs.getString("password_hash"),
-            rs.getString("full_name"),
-            rs.getString("email"),
-            rs.getString("phone_number"),
-            rs.getString("status"),
-            rs.getTimestamp("created_at").toLocalDateTime()
+                rs.getInt("customer_id"),
+                rs.getString("username"),
+                rs.getString("password_hash"),
+                rs.getString("full_name"),
+                rs.getString("email"),
+                rs.getString("phone_number"),
+                rs.getString("status"),
+                rs.getTimestamp("created_at").toLocalDateTime()
         );
     }
-    
+
     public boolean deleteCustomer(int id) {
         String sql = "DELETE FROM customers WHERE customer_id = ?";
         try {
@@ -83,6 +83,7 @@ public class CustomerDAO extends DBContext {
         }
         return false;
     }
+
     public boolean updateCustomer(Customer c) {
         String sql = "UPDATE customers SET full_name = ?, email = ?, phone_number = ?, status = ? WHERE customer_id = ?";
         try {
@@ -98,14 +99,14 @@ public class CustomerDAO extends DBContext {
         }
         return false;
     }
-    
+
     public boolean addCustomer(Customer c) {
         String sql = "INSERT INTO customers (username, password_hash, full_name, email, phone_number, status, created_at) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, c.getUserName());
-            ps.setString(2, c.getPassword());
+            ps.setString(2, hashMD5(c.getPassword()));
             ps.setNString(3, c.getFullname()); // Dùng setNString cho dữ liệu có dấu (NVARCHAR)
             ps.setString(4, c.getEmail());
             ps.setString(5, c.getPhoneNumber());
@@ -117,13 +118,66 @@ public class CustomerDAO extends DBContext {
         }
         return false;
     }
-    
+
+    public String hashMD5(String str) {
+        try {
+            MessageDigest mes = MessageDigest.getInstance("MD5");
+            byte[] mesMD5 = mes.digest(str.getBytes());
+            //[0x0a, 0x7a, 0x12, 0x09, 0x3,....]
+            StringBuilder result = new StringBuilder();
+            for (byte b : mesMD5) {
+                //0x0a; 0x7a; 0x12; 0x09; 0x3
+                String c = String.format("%02x", b);
+                //0a; 7a;  12;  09; 03
+                result.append(c);
+            }
+            return result.toString();
+            //0a7a120903
+        } catch (Exception e) {
+        }
+        return "";
+    }
+
+    public Customer login(String user, String pass) {
+        Customer u = new Customer();
+        //u.id = -1
+        u.setCustomerID(-1);
+        // 123 -> hash -> so sanh -> tra ve doi tuong
+        String sql = "SELECT customers.*\n"
+                + "FROM     customers\n"
+                + "where username = ? and password_hash = ?;";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+
+            ps.setString(1, user);  // ac
+            ps.setString(2, hashMD5(pass)); // pas
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                u.setCustomerID(rs.getInt("customer_id"));
+                u.setUserName(rs.getString("username"));
+                u.setPassword(rs.getString("password_hash"));
+                u.setFullname(rs.getString("full_name"));
+                u.setEmail(rs.getString("email"));
+                u.setPhoneNumber(rs.getString("phone_number"));
+                u.setStatus(rs.getString("status"));
+                u.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+            }
+
+        } catch (Exception e) {
+        }
+
+        return u;
+    }
+
     public static void main(String[] args) {
         CustomerDAO a = new CustomerDAO();
-                List<Customer> list = a.getAllCustomer();
+        List<Customer> list = a.getAllCustomer();
 //        for (Customer customer : list) {
 //            System.out.println(customer);
 //        }
-a.addCustomer(new Customer(0, "L", "L", "L", "L", "L", "L", LocalDateTime.MAX));
+        System.out.println(a.login("L", "123"));
+       
+//        a.addCustomer(new Customer(0, "L", "123", "L", "L", "L", "L", LocalDateTime.MAX));
     }
 }

@@ -4,7 +4,6 @@
  */
 package controller.User;
 
-import dao.CustomerAddressDAO;
 import dao.CustomerDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -13,18 +12,14 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.List;
 import model.Customer;
-import model.CustomerAddress;
 
 /**
  *
  * @author ASUS
  */
-@WebServlet(name = "userServlet", urlPatterns = {"/userservlet"})
-public class userServlet extends HttpServlet {
+@WebServlet(name = "registerServlet", urlPatterns = {"/registerservlet"})
+public class registerServlet extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -43,10 +38,10 @@ public class userServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet userServlet</title>");
+            out.println("<title>Servlet registerServlet</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet userServlet at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet registerServlet at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -64,58 +59,7 @@ public class userServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
-        String headerComponent = "/components/navbar.jsp"; // Trang mặc định khi mới vào
-        String footerComponent = "/components/footer.jsp"; // Trang mặc định khi mới vào
-        String page = "/pages/MainPage/homePage.jsp"; // Trang mặc định khi mới vào
-        String action = request.getParameter("action");
-
-        if (action != null) {
-            switch (action) {
-                case "homePage":
-                    page = "/pages/MainPage/homePage.jsp";
-                    break;
-                case "loginPage":
-                    page = "/pages/MainPage/loginPage.jsp"; // Bạn cần tạo file này
-                    break;
-                case "registerPage":
-                    page = "/pages/MainPage/registerPage.jsp"; // Bạn cần tạo file này
-                    break;
-                case "userDashboard":
-                    page = "/pages/DashboardPage/userDashboard.jsp";
-                    int customerID = Integer.parseInt(request.getParameter("id"));
-                    CustomerDAO cdao = new CustomerDAO();
-                    CustomerAddressDAO cadd = new CustomerAddressDAO();
-                    List<CustomerAddress> listdata = cadd.getAddressesByCustomerId(customerID);
-                    Customer customer = cdao.getCustomerById(customerID);
-                    request.setAttribute("customer", customer);
-                    request.setAttribute("listAddress", listdata);
-                    break;
-                case "brandManagement":
-                    page = "/pages/brandManagement.jsp";
-                    break;
-                case "productManagement":
-                    page = "/pages/productManagement.jsp";
-                    break;
-                case "voucherManagement":
-                    page = "/pages/voucherManagement.jsp";
-                    break;
-                default:
-                    page = "/pages/dashboardPage.jsp";
-            }
-        }
-
-        request.setAttribute("HeaderComponent", headerComponent);
-        request.setAttribute("FooterComponent", footerComponent);
-        request.setAttribute("ContentPage", page);
-
-        // 5. Forward đến Template duy nhất
-        request.getRequestDispatcher("/template/userTemplate.jsp").forward(request, response);
-
         processRequest(request, response);
-
-
-    
     }
 
     /**
@@ -129,7 +73,44 @@ public class userServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        // 1. Set Encoding để nhận tiếng Việt không bị lỗi font
+        CustomerDAO cdao = new CustomerDAO();
+        request.setCharacterEncoding("UTF-8");
+
+        try {
+            // 2. Lấy dữ liệu từ Form (dựa theo thuộc tính name="")
+            String username = request.getParameter("username");
+            String fullName = request.getParameter("full_name");
+            String phone = request.getParameter("phone_number");
+            String email = request.getParameter("email");
+            String password = request.getParameter("password");
+        
+            // 5. Tạo đối tượng User mới
+            Customer u = new Customer();
+            u.setUserName(username);
+            u.setFullname(fullName);
+            u.setPhoneNumber(phone);
+            u.setEmail(email);
+            u.setPassword(password); // Thực tế nên mã hóa MD5/BCrypt trước khi set
+
+            // --- CÁC GIÁ TRỊ HỆ THỐNG TỰ GÁN CHO KHÁCH HÀNG ---
+       
+            u.setStatus("ACTIVE"); // Mặc định tài khoản kích hoạt luôn
+
+            // 6. Lưu vào Database
+            boolean isSuccess = cdao.addCustomer(u);
+
+            if (isSuccess) {
+                response.sendRedirect("userservlet?action=loginPage");
+            } else {
+                                response.sendRedirect("userservlet?action=registerPage");
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Điều hướng trang lỗi
+            response.sendRedirect("error.jsp");
+        }
     }
 
     /**
