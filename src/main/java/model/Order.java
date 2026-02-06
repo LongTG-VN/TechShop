@@ -14,7 +14,9 @@ import java.sql.Timestamp;
 public class Order {
 
     private int orderId;
+    private String orderName;
     private int customerId;
+    private String customerName;
     private Integer voucherId;
     private int paymentMethodId;
     private String shippingAddress;
@@ -22,6 +24,11 @@ public class Order {
     private String paymentStatus;
     private String status;
     private Timestamp createdAt;
+    private String phone;
+    private String email;
+
+    public Order() {
+    }
 
     //INSERT constructor
     public Order(int customerId, Integer voucherId, int paymentMethodId,
@@ -56,8 +63,24 @@ public class Order {
         this.orderId = orderId;
     }
 
+    public String getOrderName() {
+        return orderName;
+    }
+
+    public void setOrderName(String orderName) {
+        this.orderName = orderName;
+    }
+
     public int getCustomerId() {
         return customerId;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
     }
 
     public void setCustomerId(int customerId) {
@@ -118,6 +141,22 @@ public class Order {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     @Override

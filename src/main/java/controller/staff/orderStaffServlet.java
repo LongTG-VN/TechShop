@@ -4,12 +4,7 @@
  */
 package controller.staff;
 
-import dao.BrandDAO;
-import dao.CategoryDAO;
-import dao.CustomerDAO;
-import dao.ProductDAO;
 import dao.OrderDAO;
-import model.Order;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -17,19 +12,21 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Map;
+import model.Order;
 
 /**
  *
- * @author ASUS
+ * @author CaoTram
  */
-@WebServlet(name = "staffServlet", urlPatterns = {"/staffservlet"})
-public class staffServlet extends HttpServlet {
+@WebServlet(name = "orderStaffServlet", urlPatterns = {"/orderStaffServlet"})
+public class orderStaffServlet extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods. 
+     * methods.
      *
      * @param request servlet request
      * @param response servlet response
@@ -44,10 +41,10 @@ public class staffServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet staffServlet</title>");
+            out.println("<title>Servlet orderStaffServlet</title>");            
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet staffServlet at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet orderStaffServlet at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -65,62 +62,33 @@ public class staffServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setCharacterEncoding("UTF-8");
-        response.setContentType("text/html;charset=UTF-8");
-
-        // 2. Lấy tham số 'action' từ URL (ví dụ: adminservlet?action=dashboard)
         String action = request.getParameter("action");
-        String page = "/pages/dashboardPage.jsp"; // Trang mặc định khi mới vào
+        String page = "/pages/OrderManagementPage/processOrderManagement.jsp";
+        List<Order> listData = null;
+        
+        OrderDAO odao = new OrderDAO();
 
-        List<?> listData = null; // Dấu <?> cho phép gán bất kỳ List nào (Customer, Employee...)
-        // 3. Logic điều hướng (Switch-case sẽ sạch sẽ hơn if-else)
         if (action != null) {
             switch (action) {
-                case "dashboard":
-                    page = "/pages/dashboardPage.jsp";
-                    break;
-                // Trong switch (action) của Servlet:
-
-                case "supplierManagement":
-                    page = "/pages/SupplierManagementPage/supplierManagement.jsp"; // Bạn cần tạo file này
-                    listData = new CustomerDAO().getAllCustomer();
-                    break;
-                case "inventoryManagement":
-                    page = "/pages/InventoryManagementPage/inventoryManagement.jsp"; // Bạn cần tạo file này
-                    listData = new CustomerDAO().getAllCustomer();
-                    break;
-                case "productManagement":
-                    page = "/pages/ProductManagementPage/productManagement.jsp";
-                    ProductDAO productdao = new ProductDAO();
-                    CategoryDAO ccdao = new CategoryDAO();
-                    BrandDAO bdao = new BrandDAO();
-
-                    request.setAttribute("categories", ccdao.getAllCategory());
-                    request.setAttribute("brands", bdao.getAllBrand());
-
-                    listData = productdao.getAllProduct();
-                    break;
-                case "reviewManagement":
-                    page = "/pages/ReviewManagementPage/reviewManagement.jsp"; // Bạn cần tạo file này
-                    listData = new CustomerDAO().getAllCustomer();
-                    break;
-                case "processOrderManagement":
+                case "all":
+                    listData = odao.getAllOrdersWithFullInfo();
                     page = "/pages/OrderManagementPage/processOrderManagement.jsp";
-                    OrderDAO orderDao = new OrderDAO();
-                    List<Order> orderList = orderDao.getAllOrdersWithFullInfo();
-                    request.setAttribute("orderList", orderList);
                     break;
-
-                default:
-                    page = "/pages/dashboardPage.jsp";
+                    
+                case "orderDetail":
+                    int idDetail = Integer.parseInt(request.getParameter("id"));
+                    Order order = odao.getOrderById(idDetail);
+                    List<Map<String, Object>> items = odao.getOrderDetailsWithIMEI(idDetail);
+                    
+                    request.setAttribute("order", order);
+                    request.setAttribute("items", items);
+                    page = "/pages/OrderManagementPage/orderDetail.jsp";
+                    break;
             }
         }
 
-        // 4. Đẩy đường dẫn trang con vào Attribute để Template include
         request.setAttribute("contentPage", page);
-        request.setAttribute("listdata", listData);
-
-        // 5. Forward đến Template duy nhất
+        request.setAttribute("orderList", listData);
         request.getRequestDispatcher("/template/staffTemplate.jsp").forward(request, response);
     }
 
@@ -135,7 +103,20 @@ public class staffServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        String action = request.getParameter("action");
+        OrderDAO odao = new OrderDAO();
+        HttpSession session = request.getSession();
+
+        if ("updateStatus".equals(action)) {
+            // int orderId = Integer.parseInt(request.getParameter("orderId"));
+            // String newStatus = request.getParameter("status");
+            // odao.updateOrderStatus(orderId, newStatus);
+            
+            session.setAttribute("msg", "Order status updated successfully!");
+            session.setAttribute("msgType", "success");
+        }
+
+        response.sendRedirect("orderStaffServlet?action=all");
     }
 
     /**
@@ -145,7 +126,7 @@ public class staffServlet extends HttpServlet {
      */
     @Override
     public String getServletInfo() {
-        return "Short description";
+        return "Order Management Servlet for Staff";
     }// </editor-fold>
 
 }
