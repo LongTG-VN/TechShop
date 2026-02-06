@@ -20,10 +20,12 @@ public class SupplierDAO extends DBContext {
     // READ ALL
     public List<Supplier> getAllSuppliers() {
         List<Supplier> list = new ArrayList<>();
+        if (conn == null) {
+            return list;
+        }
         String sql = "SELECT * FROM suppliers";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery();
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 Supplier s = new Supplier(
                         rs.getInt("supplier_id"),
@@ -67,7 +69,7 @@ public class SupplierDAO extends DBContext {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, s.getSupplier_name());
             ps.setString(2, s.getPhone());
-            ps.setBoolean(3, s.isIs_active());
+            ps.setBoolean(3, s.Is_active());
             ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
@@ -81,8 +83,57 @@ public class SupplierDAO extends DBContext {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, s.getSupplier_name());
             ps.setString(2, s.getPhone());
-            ps.setBoolean(3, s.isIs_active());
+            ps.setBoolean(3, s.Is_active());
             ps.setInt(4, s.getSupplier_id());
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Search by name or phone
+    public List<Supplier> searchSuppliers(String keyword) {
+        List<Supplier> list = new ArrayList<>();
+        if (conn == null || keyword == null || keyword.trim().isEmpty()) {
+            return getAllSuppliers();
+        }
+        String sql = "SELECT * FROM suppliers WHERE supplier_name LIKE ? OR phone LIKE ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            String pattern = "%" + keyword.trim() + "%";
+            ps.setString(1, pattern);
+            ps.setString(2, pattern);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Supplier(
+                            rs.getInt("supplier_id"),
+                            rs.getString("supplier_name"),
+                            rs.getString("phone"),
+                            rs.getBoolean("is_active")
+                    ));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // Deactivate (soft delete)
+    public void deactivateSupplier(int id) {
+        String sql = "UPDATE suppliers SET is_active = 0 WHERE supplier_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Restore
+    public void restoreSupplier(int id) {
+        String sql = "UPDATE suppliers SET is_active = 1 WHERE supplier_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
             ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();

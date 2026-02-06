@@ -6,6 +6,7 @@ package dao;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import model.InventoryItem;
@@ -40,6 +41,49 @@ public class InventoryItemDAO extends DBContext {
         return list;
     }
 
+    // 1.1 SEARCH (by IMEI / status / IDs)
+    public List<InventoryItem> searchInventory(String keyword) {
+        List<InventoryItem> list = new ArrayList<>();
+        String k = (keyword == null) ? "" : keyword.trim();
+        if (k.isEmpty()) {
+            return getAllInventory();
+        }
+
+        String sql = """
+                     SELECT *
+                     FROM inventory_items
+                     WHERE CAST(inventory_id AS NVARCHAR(50)) LIKE ?
+                        OR CAST(variant_id AS NVARCHAR(50)) LIKE ?
+                        OR CAST(receipt_item_id AS NVARCHAR(50)) LIKE ?
+                        OR imei LIKE ?
+                        OR status LIKE ?
+                     ORDER BY inventory_id DESC
+                     """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            String like = "%" + k + "%";
+            ps.setString(1, like);
+            ps.setString(2, like);
+            ps.setString(3, like);
+            ps.setString(4, like);
+            ps.setString(5, like);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new InventoryItem(
+                            rs.getInt("inventory_id"),
+                            rs.getInt("variant_id"),
+                            rs.getInt("receipt_item_id"),
+                            rs.getString("imei"),
+                            rs.getDouble("import_price"),
+                            rs.getString("status")
+                    ));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     // 2. GET BY ID
     public InventoryItem getInventoryById(int id) {
         String sql = "SELECT * FROM inventory_items WHERE inventory_id = ?";
@@ -65,7 +109,7 @@ public class InventoryItemDAO extends DBContext {
 
     // 3. INSERT (Thêm sản phẩm vào kho)
     // Lưu ý: IMEI không được trùng
-    public void insertInventory(InventoryItem item) {
+    public boolean insertInventory(InventoryItem item) {
         String sql = "INSERT INTO inventory_items (variant_id, receipt_item_id, imei, import_price, status) VALUES (?, ?, ?, ?, ?)";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -76,15 +120,19 @@ public class InventoryItemDAO extends DBContext {
             // Nếu status null thì mặc định set là IN_STOCK
             ps.setString(5, (item.getStatus() == null || item.getStatus().isEmpty()) ? "IN_STOCK" : item.getStatus());
 
-            ps.executeUpdate();
-        } catch (Exception e) {
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
             // In ra lỗi nếu trùng IMEI hoặc sai khóa ngoại
             e.printStackTrace();
+            return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
     }
 
     // 4. UPDATE
-    public void updateInventory(InventoryItem item) {
+    public boolean updateInventory(InventoryItem item) {
         String sql = "UPDATE inventory_items SET variant_id=?, receipt_item_id=?, imei=?, import_price=?, status=? WHERE inventory_id=?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -92,23 +140,31 @@ public class InventoryItemDAO extends DBContext {
             ps.setInt(2, item.getReceipt_item_id());
             ps.setString(3, item.getImei());
             ps.setDouble(4, item.getImport_price());
-            ps.setString(5, item.getStatus());
+            ps.setString(5, (item.getStatus() == null || item.getStatus().isEmpty()) ? "IN_STOCK" : item.getStatus());
             ps.setInt(6, item.getInventory_id());
-            ps.executeUpdate();
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
     }
 
     // 5. DELETE
-    public void deleteInventory(int id) {
+    public boolean deleteInventory(int id) {
         String sql = "DELETE FROM inventory_items WHERE inventory_id = ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, id);
-            ps.executeUpdate();
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
     }
 

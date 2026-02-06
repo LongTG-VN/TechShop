@@ -6,7 +6,9 @@ package controller.staff;
 
 import dao.BrandDAO;
 import dao.CategoryDAO;
+import dao.InventoryItemDAO;
 import dao.ProductDAO;
+import dao.SupplierDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -15,6 +17,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
+import model.InventoryItem;
+import model.Supplier;
 
 /**
  *
@@ -80,12 +84,31 @@ public class staffServlet extends HttpServlet {
 //                    listData = new CustomerDAO().getAllCustomer();
                     break;
                 case "supplierManagement":
-                    page = "/pages/SupplierManagementPage/supplierManagement.jsp"; // Bạn cần tạo file này
-//                    listData = new CustomerDAO().getAllCustomer();
+                    page = "/pages/SupplierManagementPage/supplierManagement.jsp";
+                    try {
+                        SupplierDAO sdao = new SupplierDAO();
+                        String keyword = request.getParameter("keyword");
+                        List<Supplier> listSuppliers = (keyword != null && !keyword.trim().isEmpty())
+                                ? sdao.searchSuppliers(keyword) : sdao.getAllSuppliers();
+                        request.setAttribute("listSuppliers", listSuppliers != null ? listSuppliers : new java.util.ArrayList<>());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        request.setAttribute("listSuppliers", new java.util.ArrayList<>());
+                    }
                     break;
                 case "inventoryManagement":
-                    page = "/pages/InventoryManagementPage/inventoryManagement.jsp"; // Bạn cần tạo file này
-//                    listData = new CustomerDAO().getAllCustomer();
+                    page = "/pages/InventoryManagementPage/inventoryManagement.jsp";
+                    try {
+                        InventoryItemDAO idao = new InventoryItemDAO();
+                        String keyword = request.getParameter("keyword");
+                        List<InventoryItem> listInventory = (keyword != null && !keyword.trim().isEmpty())
+                                ? idao.searchInventory(keyword)
+                                : idao.getAllInventory();
+                        request.setAttribute("listInventory", listInventory != null ? listInventory : new java.util.ArrayList<>());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        request.setAttribute("listInventory", new java.util.ArrayList<>());
+                    }
                     break;
                 case "productManagement":
                     page = "/pages/ProductManagementPage/productManagement.jsp";
