@@ -11,6 +11,8 @@ import dao.ProductDAO;
 import dao.SupplierDAO;
 import dao.CustomerDAO;
 import dao.ProductDAO;
+import dao.CustomerDAO;
+import dao.ProductDAO;
 import dao.OrderDAO;
 import model.Order;
 import java.io.IOException;
@@ -23,6 +25,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import model.InventoryItem;
 import model.Supplier;
+import java.util.Map;
 import java.util.Map;
 
 
@@ -114,6 +117,10 @@ public class staffServlet extends HttpServlet {
                         request.setAttribute("listInventory", new java.util.ArrayList<>());
                     }
 
+                      page = "/pages/InventoryManagementPage/inventoryManagement.jsp"; // Bạn cần tạo file này
+                    listData = new CustomerDAO().getAllCustomer();
+                    break;
+            
                 case "productManagement":
                     page = "/pages/ProductManagementPage/productManagement.jsp";
                     ProductDAO productdao = new ProductDAO();
