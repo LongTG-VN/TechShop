@@ -44,7 +44,7 @@ public class SupplierServlet extends HttpServlet {
             if (idStr != null && !idStr.isEmpty()) {
                 try {
                     int id = Integer.parseInt(idStr);
-                    Supplier s = dao.getSupplierById(id);
+                    Supplier s = (Supplier) dao.getSupplierById(id);
                     request.setAttribute("supplier", s);
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
@@ -60,7 +60,7 @@ public class SupplierServlet extends HttpServlet {
             if (idStr != null && !idStr.isEmpty()) {
                 try {
                     int id = Integer.parseInt(idStr);
-                    Supplier s = dao.getSupplierById(id);
+                    Supplier s = (Supplier) dao.getSupplierById(id);
                     request.setAttribute("supplier", s);
                 } catch (NumberFormatException e) {
                     e.printStackTrace();

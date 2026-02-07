@@ -144,7 +144,7 @@ public class VoucherDAO extends DBContext {
     // ===== TEST MAIN =====
     public static void main(String[] args) {
         VoucherDAO dao = new VoucherDAO();
-        List<Voucher> list = dao.getAllVoucher();
+        dao.getAllVoucher();
         
 //        System.out.println("--- DANH SÁCH VOUCHER ---");
 //        for (Voucher v : list) {

@@ -114,7 +114,7 @@ public class OrderStatusHistoryDAO extends DBContext {
 // TEST
 
     public static void main(String[] args) {
-        OrderStatusHistoryDAO dao = new OrderStatusHistoryDAO();
+        // OrderStatusHistoryDAO dao = new OrderStatusHistoryDAO();
 
         // ===== CREATE =====
 //        dao.insertOrderStatusHistory(1, 1, 1); co test rieng biet thi tao id ao nhe

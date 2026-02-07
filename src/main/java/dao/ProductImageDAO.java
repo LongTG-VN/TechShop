@@ -138,7 +138,7 @@ public class ProductImageDAO extends DBContext {
     // ================= MAIN TEST CASE =================
     public static void main(String[] args) {
         ProductImageDAO dao = new ProductImageDAO();
-        ProductDAO pDao = new ProductDAO(); // Cần cái này để giả lập object Product khi thêm mới
+        // ProductDAO pDao = new ProductDAO(); // Cần cái này để giả lập object Product khi thêm mới
 
         System.out.println("--- TEST 1: LIST ALL IMAGES ---");
         List<ProductImage> list = dao.getAllProductImage();

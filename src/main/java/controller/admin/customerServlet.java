@@ -82,7 +82,6 @@ public class customerServlet extends HttpServlet {
                     break;
                 case "delete":
                     int idD = Integer.parseInt(request.getParameter("id"));
-                    Customer customerD = cdao.getCustomerById(idD);
                     cdao.deleteCustomer(idD);
                     page = "/pages/CustomerManagementPage/customerManagement.jsp";
                     listData = new CustomerDAO().getAllCustomer();

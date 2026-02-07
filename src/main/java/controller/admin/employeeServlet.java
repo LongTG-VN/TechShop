@@ -172,7 +172,7 @@ public class employeeServlet extends HttpServlet {
                     empUpdate.setRole(r);
 
                     // Gọi DAO cập nhật
-                    boolean isSuccess = edao.updateEmployee(empUpdate);
+                    edao.updateEmployee(empUpdate);
 
                     break;
             }

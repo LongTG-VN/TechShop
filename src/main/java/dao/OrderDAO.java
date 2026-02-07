@@ -4,7 +4,6 @@
  */
 package dao;
 
-import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Types;
@@ -121,7 +120,7 @@ public class OrderDAO extends DBContext {
 
     //Test
     public static void main(String[] args) {
-        OrderDAO dao = new OrderDAO();
+        // OrderDAO dao = new OrderDAO();
 
         // ===== 1. INSERT ORDER =====
 //        Order newOrder = new Order(

@@ -3,12 +3,10 @@ package dao;
 import java.security.MessageDigest;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import model.Employees;
-import model.Role;
 import utils.DBContext;
 
 public class EmployeesDAO extends DBContext {
@@ -223,17 +221,17 @@ public class EmployeesDAO extends DBContext {
     // Test Main
     public static void main(String[] args) {
         EmployeesDAO dao = new EmployeesDAO();
-        RoleDAO aO = new RoleDAO();
+        // RoleDAO aO = new RoleDAO();
 //        System.out.println("--- 1. TEST READ ---");
 //        dao.getAllEmployeeses().forEach(System.out::println);
 
 // 2. Khởi tạo Employee với các giá trị thực tế để test
-        String username = "test_staff_" + System.currentTimeMillis() % 1000; // Tạo username không trùng
-        String passwordHash = "123456"; // Mật khẩu mẫu
-        String fullName = "Nguyen Van Test";
-        String email = username + "@phonestore.com";
-        String phoneNumber = "0912345678";
-        String status = "ACTIVE";
+        // String username = "test_staff_" + System.currentTimeMillis() % 1000; // Tạo username không trùng
+        // String passwordHash = "123456"; // Mật khẩu mẫu
+        // String fullName = "Nguyen Van Test";
+        // String email = username + "@phonestore.com";
+        // String phoneNumber = "0912345678";
+        // String status = "ACTIVE";
 
         System.out.println(dao.login("test_staff_241", "123456"));
 

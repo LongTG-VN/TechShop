@@ -69,7 +69,7 @@ public class SupplierDAO extends DBContext {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, s.getSupplier_name());
             ps.setString(2, s.getPhone());
-            ps.setBoolean(3, s.Is_active());
+            ps.setBoolean(3, s.isIs_active());
             ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
@@ -83,7 +83,7 @@ public class SupplierDAO extends DBContext {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, s.getSupplier_name());
             ps.setString(2, s.getPhone());
-            ps.setBoolean(3, s.Is_active());
+            ps.setBoolean(3, s.isIs_active());
             ps.setInt(4, s.getSupplier_id());
             ps.executeUpdate();
         } catch (Exception e) {

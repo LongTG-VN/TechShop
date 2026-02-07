@@ -99,7 +99,7 @@ public class voucherServlet extends HttpServlet {
 
                 case "delete":
                     int idToDelete = Integer.parseInt(request.getParameter("id"));
-                    boolean isDelete = vdao.deleteVoucher(idToDelete);
+                    vdao.deleteVoucher(idToDelete);
                     page = "/pages/VoucherManagementPage/voucherManagement.jsp";
                     listData = new VoucherDAO().getAllVoucher();
                     break;
@@ -178,7 +178,7 @@ public class voucherServlet extends HttpServlet {
                     v.setUsedQuantity(0); // Mới tạo thì chưa ai dùng
                     v.setStatus(status);
 
-                    boolean isSuccess = dao.insertVoucher(v);
+                    dao.insertVoucher(v);
                     break;
                 case "edit":
                     // 1. Lấy ID (Bắt buộc phải có để biết sửa dòng nào)
