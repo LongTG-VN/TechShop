@@ -8,6 +8,7 @@ import dao.BrandDAO;
 import dao.CategoryDAO;
 import dao.CustomerDAO;
 import dao.EmployeesDAO;
+import dao.OrderStatusDAO;
 import dao.PaymentMethodDAO;
 import dao.VoucherDAO;
 import java.io.IOException;
@@ -27,8 +28,7 @@ import java.util.List;
 public class adminServlet extends HttpServlet {
 
     /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
      *
      * @param request servlet request
      * @param response servlet response
@@ -104,7 +104,7 @@ public class adminServlet extends HttpServlet {
                     break;
                 case "specificationDefinitionManagement":
                     page = "/pages/SpecificationDefinitionManagement/specificationDefinitionManagement.jsp";
-                    break;    
+                    break;
                 case "voucherManagement":
                     page = "/pages/VoucherManagementPage/voucherManagement.jsp";
                     VoucherDAO vdao = new VoucherDAO();
@@ -114,6 +114,11 @@ public class adminServlet extends HttpServlet {
                     page = "/pages/PaymentMethodManagementPage/paymentMethodManagement.jsp";
                     PaymentMethodDAO pdao = new PaymentMethodDAO();
                     listData = pdao.getAllPaymentMethods();
+                    break;
+                case "orderStatusManagement":
+                    page = "/pages/OrderStatusManagementPage/orderStatusManagement.jsp";
+                    OrderStatusDAO osdao = new OrderStatusDAO();
+                    listData = osdao.getAllOrderStatuses();
                     break;
 
                 default:

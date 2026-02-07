@@ -9,6 +9,10 @@ import dao.CategoryDAO;
 import dao.InventoryItemDAO;
 import dao.ProductDAO;
 import dao.SupplierDAO;
+import dao.CustomerDAO;
+import dao.ProductDAO;
+import dao.OrderDAO;
+import model.Order;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -19,6 +23,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import model.InventoryItem;
 import model.Supplier;
+import java.util.Map;
+
 
 /**
  *
@@ -29,7 +35,7 @@ public class staffServlet extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
+     * methods. 
      *
      * @param request servlet request
      * @param response servlet response
@@ -79,10 +85,8 @@ public class staffServlet extends HttpServlet {
                 case "dashboard":
                     page = "/pages/dashboardPage.jsp";
                     break;
-                case "processOrderManagement":
-                    page = "/pages/processOrderManagement.jsp"; // Bạn cần tạo file này
-//                    listData = new CustomerDAO().getAllCustomer();
-                    break;
+                // Trong switch (action) của Servlet:
+
                 case "supplierManagement":
                     page = "/pages/SupplierManagementPage/supplierManagement.jsp";
                     try {
@@ -109,22 +113,29 @@ public class staffServlet extends HttpServlet {
                         e.printStackTrace();
                         request.setAttribute("listInventory", new java.util.ArrayList<>());
                     }
-                    break;
+
                 case "productManagement":
                     page = "/pages/ProductManagementPage/productManagement.jsp";
                     ProductDAO productdao = new ProductDAO();
-                    CategoryDAO ccdao = new CategoryDAO(); 
-                    BrandDAO bdao = new BrandDAO();      
+                    CategoryDAO ccdao = new CategoryDAO();
+                    BrandDAO bdao = new BrandDAO();
 
-                    request.setAttribute("categories", ccdao.getAllCategory()); 
-                    request.setAttribute("brands", bdao.getAllBrand());     
+                    request.setAttribute("categories", ccdao.getAllCategory());
+                    request.setAttribute("brands", bdao.getAllBrand());
 
                     listData = productdao.getAllProduct();
                     break;
                 case "reviewManagement":
                     page = "/pages/ReviewManagementPage/reviewManagement.jsp"; // Bạn cần tạo file này
-//                    listData = new CustomerDAO().getAllCustomer();
+                    listData = new CustomerDAO().getAllCustomer();
                     break;
+                case "processOrderManagement":
+                    page = "/pages/OrderManagementPage/processOrderManagement.jsp";
+                    OrderDAO orderDao = new OrderDAO();
+                    List<Order> orderList = orderDao.getAllOrdersWithFullInfo();
+                    request.setAttribute("orderList", orderList);
+                    break;
+
                 default:
                     page = "/pages/dashboardPage.jsp";
             }

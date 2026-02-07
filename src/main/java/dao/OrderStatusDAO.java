@@ -60,6 +60,7 @@ public class OrderStatusDAO extends DBContext {
         }
         return null;
     }
+
     //insert order status
     public void insertOrderStatus(OrderStatus os) {
         String sql = """
@@ -94,19 +95,28 @@ public class OrderStatusDAO extends DBContext {
             e.printStackTrace();
         }
     }
-     // TEST
+    //Hard delete
+    public void deleteOrderStatus(int id) {
+        String sql = "DELETE FROM order_statuses WHERE status_id = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    // TEST
+
     public static void main(String[] args) {
         OrderStatusDAO dao = new OrderStatusDAO();
 
         // ===== CREATE =====
 //         dao.insertOrderStatus(new OrderStatus("CREATED", "Đã tạo đơn", 1, false));
-
         // ===== UPDATE =====
 //         dao.updateOrderStatus(new OrderStatus(1,"CREATED", "Đơn đã tạo", 1, false));
-
         // ===== GET BY ID =====
 //         System.out.println(dao.getOrderStatusById(1));
-
         // ===== GET ALL =====
         List<OrderStatus> list = dao.getAllOrderStatuses();
         for (OrderStatus os : list) {
