@@ -118,9 +118,10 @@ public class OrderDAO extends DBContext {
 
     // ===== READ BY ID =====
     public Order getOrderById(int id) {
-        String sql = "SELECT o.*, c.full_name, c.email, c.phone_number "
+        String sql = "SELECT o.*, c.full_name, c.email, c.phone_number, pm.method_name "
                 + "FROM orders o "
                 + "JOIN customers c ON o.customer_id = c.customer_id "
+                + "LEFT JOIN payment_methods pm ON o.payment_method_id = pm.method_id "
                 + "WHERE o.order_id = ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -134,6 +135,7 @@ public class OrderDAO extends DBContext {
                 order.setStatus(rs.getString("status"));
                 order.setCreatedAt(rs.getTimestamp("created_at"));
                 order.setPaymentStatus(rs.getString("payment_status"));
+                order.setPaymentMethodName(rs.getString("method_name"));
 
                 order.setCustomerName(rs.getNString("full_name"));
                 order.setEmail(rs.getString("email"));

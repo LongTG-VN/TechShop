@@ -22,10 +22,18 @@
                     <h3 class="text-gray-500 text-sm uppercase font-bold mt-4">Shipping To</h3>
                     <p class="text-gray-600">${order.shippingAddress}</p>
                 </div>
-                <div class="text-right">
-                    <h3 class="text-gray-500 text-sm uppercase font-bold">Order Date</h3>
-                    <p class="text-gray-800">${order.createdAt}</p>
+                <div class="text-right space-y-4">
+                    <div>
+                        <h3 class="text-gray-500 text-sm uppercase font-bold">Order Date</h3>
+                        <p class="text-gray-800 font-medium">${order.createdAt}</p>
+                    </div>
+
+                    <div>
+                        <h3 class="text-gray-500 text-sm uppercase font-bold">Payment Method</h3>
+                        <p class="text-gray-900 font-bold">${order.paymentMethodName != null ? order.paymentMethodName : 'N/A'}</p>
+                    </div>
                 </div>
+
             </div>
 
             <table class="w-full text-left border-collapse">

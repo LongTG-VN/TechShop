@@ -26,6 +26,7 @@ public class Order {
     private Timestamp createdAt;
     private String phone;
     private String email;
+    private String paymentMethodName;
 
     public Order() {
     }
@@ -157,6 +158,14 @@ public class Order {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPaymentMethodName() {
+        return paymentMethodName;
+    }
+
+    public void setPaymentMethodName(String paymentMethodName) {
+        this.paymentMethodName = paymentMethodName;
     }
 
     @Override
