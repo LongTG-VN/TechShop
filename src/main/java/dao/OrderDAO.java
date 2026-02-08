@@ -173,6 +173,24 @@ public class OrderDAO extends DBContext {
         return details;
     }
 
+    //get all order status
+    public List<Map<String, String>> getAllOrderStatuses() {
+        List<Map<String, String>> statusList = new ArrayList<>();
+        String sql = "SELECT status_code, status_name FROM order_statuses ORDER BY step_order";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Map<String, String> status = new HashMap<>();
+                status.put("code", rs.getString("status_code"));
+                status.put("name", rs.getNString("status_name"));
+                statusList.add(status);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return statusList;
+    }
+
     // ===== Update Order =====
     public void updateOrderCurrentStatus(int orderId, String status) {
         String sql = "UPDATE orders SET status = ? WHERE order_id = ?";
@@ -183,6 +201,21 @@ public class OrderDAO extends DBContext {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    // Update order
+    public boolean updateOrderFull(int id, String address, String status, String paymentStatus) {
+        String sql = "UPDATE orders SET shipping_address = ?, status = ?, payment_status = ? WHERE order_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setNString(1, address);
+            ps.setString(2, status);
+            ps.setString(3, paymentStatus);
+            ps.setInt(4, id);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
     //==== Update order's payment status ====
 

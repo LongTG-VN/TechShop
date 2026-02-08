@@ -28,7 +28,6 @@ import model.Supplier;
 import java.util.Map;
 import java.util.Map;
 
-
 /**
  *
  * @author ASUS
@@ -37,8 +36,7 @@ import java.util.Map;
 public class staffServlet extends HttpServlet {
 
     /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods. 
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
      *
      * @param request servlet request
      * @param response servlet response
@@ -117,10 +115,10 @@ public class staffServlet extends HttpServlet {
                         request.setAttribute("listInventory", new java.util.ArrayList<>());
                     }
 
-                      page = "/pages/InventoryManagementPage/inventoryManagement.jsp"; // Bạn cần tạo file này
+                    page = "/pages/InventoryManagementPage/inventoryManagement.jsp"; // Bạn cần tạo file này
                     listData = new CustomerDAO().getAllCustomer();
                     break;
-            
+
                 case "productManagement":
                     page = "/pages/ProductManagementPage/productManagement.jsp";
                     ProductDAO productdao = new ProductDAO();
@@ -141,6 +139,8 @@ public class staffServlet extends HttpServlet {
                     OrderDAO orderDao = new OrderDAO();
                     List<Order> orderList = orderDao.getAllOrdersWithFullInfo();
                     request.setAttribute("orderList", orderList);
+                    List<Map<String, String>> statusList = orderDao.getAllOrderStatuses();
+                    request.setAttribute("statusList", statusList);
                     break;
 
                 default:

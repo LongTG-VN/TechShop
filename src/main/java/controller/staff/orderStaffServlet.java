@@ -25,8 +25,7 @@ import model.Order;
 public class orderStaffServlet extends HttpServlet {
 
     /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
      *
      * @param request servlet request
      * @param response servlet response
@@ -41,7 +40,7 @@ public class orderStaffServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet orderStaffServlet</title>");            
+            out.println("<title>Servlet orderStaffServlet</title>");
             out.println("</head>");
             out.println("<body>");
             out.println("<h1>Servlet orderStaffServlet at " + request.getContextPath() + "</h1>");
@@ -65,24 +64,33 @@ public class orderStaffServlet extends HttpServlet {
         String action = request.getParameter("action");
         String page = "/pages/OrderManagementPage/processOrderManagement.jsp";
         List<Order> listData = null;
-        
+
         OrderDAO odao = new OrderDAO();
+        List<Map<String, String>> statusList = odao.getAllOrderStatuses();
 
         if (action != null) {
             switch (action) {
                 case "all":
                     listData = odao.getAllOrdersWithFullInfo();
+                    request.setAttribute("statusList", statusList);
                     page = "/pages/OrderManagementPage/processOrderManagement.jsp";
                     break;
-                    
+
                 case "orderDetail":
                     int idDetail = Integer.parseInt(request.getParameter("id"));
                     Order order = odao.getOrderById(idDetail);
                     List<Map<String, Object>> items = odao.getOrderDetailsWithIMEI(idDetail);
-                    
+
                     request.setAttribute("order", order);
                     request.setAttribute("items", items);
                     page = "/pages/OrderManagementPage/orderDetail.jsp";
+                    break;
+                case "editOrderPage":
+                    int idEdit = Integer.parseInt(request.getParameter("id"));
+                    Order orderToEdit = odao.getOrderById(idEdit);
+                    request.setAttribute("order", orderToEdit);
+                    request.setAttribute("statusList", statusList);
+                    page = "/pages/OrderManagementPage/editOrder.jsp";
                     break;
             }
         }
@@ -107,13 +115,20 @@ public class orderStaffServlet extends HttpServlet {
         OrderDAO odao = new OrderDAO();
         HttpSession session = request.getSession();
 
-        if ("updateStatus".equals(action)) {
-            // int orderId = Integer.parseInt(request.getParameter("orderId"));
-            // String newStatus = request.getParameter("status");
-            // odao.updateOrderStatus(orderId, newStatus);
-            
-            session.setAttribute("msg", "Order status updated successfully!");
-            session.setAttribute("msgType", "success");
+        if ("updateOrder".equals(action)) {
+            int orderId = Integer.parseInt(request.getParameter("orderId"));
+            String address = request.getParameter("shippingAddress");
+            String status = request.getParameter("status");
+            String paymentStatus = request.getParameter("paymentStatus");
+
+            boolean success = odao.updateOrderFull(orderId, address, status, paymentStatus);
+
+            if (success) {
+                session.setAttribute("msg", "Update order success !");
+                session.setAttribute("msgType", "success");
+            }
+            response.sendRedirect("orderStaffServlet?action=all");
+            return;
         }
 
         response.sendRedirect("orderStaffServlet?action=all");
