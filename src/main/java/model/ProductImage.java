@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
 
 /**
@@ -9,7 +5,8 @@ package model;
  * @author ASUS
  */
 public class ProductImage {
-    private  int imageID;
+
+    private int imageID;
     private Product product;
     private String imageUrl;
     private byte is_thumbnail;
@@ -40,8 +37,6 @@ public class ProductImage {
         this.product = product;
     }
 
-    
-
     public String getImageUrl() {
         return imageUrl;
     }
@@ -62,5 +57,5 @@ public class ProductImage {
     public String toString() {
         return "ProductImage{" + "imageID=" + imageID + ", productl=" + product + ", imageUrl=" + imageUrl + ", is_thumbnail=" + is_thumbnail + '}';
     }
-    
+
 }

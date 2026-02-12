@@ -1,13 +1,49 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
 
-/**
- *
- * @author ASUS
- */
 public class ProductSpecificationValues {
+
+    private int productId;
+    private int specId;
+    private String specValue;
+
+    private String productName;
+    private String specName;
     
+    public ProductSpecificationValues() {
+    }
+
+    public ProductSpecificationValues(int productId, int specId, String specValue) {
+        this.productId = productId;
+        this.specId = specId;
+        this.specValue = specValue;
+    }
+
+    public int getProductId() {
+        return productId;
+    }
+
+    public void setProductId(int productId) {
+        this.productId = productId;
+    }
+
+    public int getSpecId() {
+        return specId;
+    }
+
+    public void setSpecId(int specId) {
+        this.specId = specId;
+    }
+
+    public String getSpecValue() {
+        return specValue;
+    }
+
+    public void setSpecValue(String specValue) {
+        this.specValue = specValue;
+    }
+
+    @Override
+    public String toString() {
+        return "ProductSpecificationValues{" + "productId=" + productId + ", specId=" + specId + ", specValue=" + specValue + '}';
+    }
 }

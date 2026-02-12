@@ -12,31 +12,33 @@ public class ReviewDAO extends DBContext {
     // 1. Lấy tất cả đánh giá để Admin quản lý
     public List<Review> getAllReviews() {
         List<Review> list = new ArrayList<>();
-        String sql = "SELECT r.*, c.full_name as customer_name, p.name as product_name " +
-                     "FROM reviews r " +
-                     "JOIN customers c ON r.customer_id = c.customer_id " +
-                     "JOIN order_items oi ON r.order_item_id = oi.order_item_id " +
-                     "JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id " +
-                     "JOIN product_variants pv ON ii.variant_id = pv.variant_id " +
-                     "JOIN products p ON pv.product_id = p.product_id " +
-                     "ORDER BY r.created_at DESC";
+        String sql = "SELECT r.*, c.full_name as customer_name, p.name as product_name "
+                + "FROM reviews r "
+                + "JOIN customers c ON r.customer_id = c.customer_id "
+                + "JOIN order_items oi ON r.order_item_id = oi.order_item_id "
+                + "JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
+                + "JOIN product_variants pv ON ii.variant_id = pv.variant_id "
+                + "JOIN products p ON pv.product_id = p.product_id "
+                + "ORDER BY r.created_at DESC";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Review r = new Review(
-                    rs.getInt("review_id"),
-                    rs.getInt("customer_id"),
-                    rs.getInt("order_item_id"),
-                    rs.getInt("rating"),
-                    rs.getString("comment"),
-                    rs.getTimestamp("created_at")
+                        rs.getInt("review_id"),
+                        rs.getInt("customer_id"),
+                        rs.getInt("order_item_id"),
+                        rs.getInt("rating"),
+                        rs.getString("comment"),
+                        rs.getTimestamp("created_at")
                 );
                 r.setCustomerName(rs.getString("customer_name"));
                 r.setProductName(rs.getString("product_name"));
                 list.add(r);
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return list;
     }
 
@@ -47,30 +49,61 @@ public class ReviewDAO extends DBContext {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, id);
             ps.executeUpdate();
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     // 3. Lấy chi tiết một đánh giá
     public Review getReviewById(int id) {
-        String sql = "SELECT r.*, c.full_name as customer_name FROM reviews r " +
-                     "JOIN customers c ON r.customer_id = c.customer_id WHERE r.review_id = ?";
+        String sql = "SELECT r.*, c.full_name as customer_name FROM reviews r "
+                + "JOIN customers c ON r.customer_id = c.customer_id WHERE r.review_id = ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 Review r = new Review(
-                    rs.getInt("review_id"),
-                    rs.getInt("customer_id"),
-                    rs.getInt("order_item_id"),
-                    rs.getInt("rating"),
-                    rs.getString("comment"),
-                    rs.getTimestamp("created_at")
+                        rs.getInt("review_id"),
+                        rs.getInt("customer_id"),
+                        rs.getInt("order_item_id"),
+                        rs.getInt("rating"),
+                        rs.getString("comment"),
+                        rs.getTimestamp("created_at")
                 );
                 r.setCustomerName(rs.getString("customer_name"));
                 return r;
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return null;
+    }
+
+    // 4. ĐẾM TỔNG SỐ ĐÁNH GIÁ
+    public int countTotalReviews() {
+        String sql = "SELECT COUNT(*) FROM reviews";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    // Hàm map dữ liệu nội bộ để tái sử dụng, khớp kiểu int cho ID
+    private Review mapResultSet(ResultSet rs) throws Exception {
+        Review r = new Review();
+        r.setReviewId(rs.getInt("review_id"));
+        r.setCustomerId(rs.getInt("customer_id")); // ID khách hàng là int
+        r.setOrderItemId(rs.getInt("order_item_id")); // Order Item ID là int
+        r.setRating(rs.getInt("rating"));
+        r.setComment(rs.getString("comment"));
+        r.setCreatedAt(rs.getTimestamp("created_at"));
+        return r;
     }
 }
