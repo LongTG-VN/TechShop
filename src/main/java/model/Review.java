@@ -1,6 +1,7 @@
 package model;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class Review {
 
@@ -9,7 +10,7 @@ public class Review {
     private int orderItemId;
     private int rating;
     private String comment;
-    private Timestamp createdAt;
+    private LocalDateTime createdAt;
 
     private String customerName;
     private String productName;
@@ -17,7 +18,7 @@ public class Review {
     public Review() {
     }
 
-    public Review(int reviewId, int customerId, int orderItemId, int rating, String comment, Timestamp createdAt) {
+    public Review(int reviewId, int customerId, int orderItemId, int rating, String comment, LocalDateTime createdAt) {
         this.reviewId = reviewId;
         this.customerId = customerId;
         this.orderItemId = orderItemId;
@@ -66,11 +67,19 @@ public class Review {
         this.comment = comment;
     }
 
-    public Timestamp getCreatedAt() {
+    public String getFormattedDate() {
+        if (this.createdAt != null) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            return this.createdAt.format(formatter);
+        }
+        return "";
+    }
+
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Timestamp createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 

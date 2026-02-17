@@ -14,6 +14,7 @@ import dao.ProductDAO;
 import dao.CustomerDAO;
 import dao.ProductDAO;
 import dao.OrderDAO;
+import dao.ReviewDAO;
 import model.Order;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -36,7 +37,8 @@ import java.util.Map;
 public class staffServlet extends HttpServlet {
 
     /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
+     * methods.
      *
      * @param request servlet request
      * @param response servlet response
@@ -124,16 +126,19 @@ public class staffServlet extends HttpServlet {
                     ProductDAO productdao = new ProductDAO();
                     CategoryDAO ccdao = new CategoryDAO();
                     BrandDAO bdao = new BrandDAO();
-
                     request.setAttribute("categories", ccdao.getAllCategory());
                     request.setAttribute("brands", bdao.getAllBrand());
-
                     listData = productdao.getAllProduct();
                     break;
+                    
                 case "reviewManagement":
-                    page = "/pages/ReviewManagementPage/reviewManagement.jsp"; // Bạn cần tạo file này
-                    listData = new CustomerDAO().getAllCustomer();
+                    page = "/pages/ReviewManagementPage/reviewManagement.jsp";
+                    ReviewDAO rdao = new ReviewDAO();
+                    listData = rdao.getAllReviews(); 
+                    List<String> reviewedProducts = rdao.getReviewedProductNames();
+                    request.setAttribute("reviewedProducts", reviewedProducts);
                     break;
+                    
                 case "processOrderManagement":
                     page = "/pages/OrderManagementPage/processOrderManagement.jsp";
                     OrderDAO orderDao = new OrderDAO();

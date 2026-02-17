@@ -8,7 +8,7 @@ public class ProductSpecificationValues {
 
     private String productName;
     private String specName;
-    
+
     public ProductSpecificationValues() {
     }
 
@@ -40,6 +40,22 @@ public class ProductSpecificationValues {
 
     public void setSpecValue(String specValue) {
         this.specValue = specValue;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+
+    public String getSpecName() {
+        return specName;
+    }
+
+    public void setSpecName(String specName) {
+        this.specName = specName;
     }
 
     @Override
