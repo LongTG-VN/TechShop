@@ -23,9 +23,7 @@
 
             <div class="flex items-center gap-4 shrink-0">
 
-                <%-- ================================================================== --%>
-                <%-- LOGIC CHECK COOKIE: Kiểm tra xem Cookie tên là 'cookieID' có tồn tại không --%>
-                <%-- ================================================================== --%>
+          
 
                 <c:choose>
                     <%-- TRƯỜNG HỢP 1: CÓ COOKIE (Đã đăng nhập) --%>
@@ -106,8 +104,8 @@
                     </div>
                 </li>
 
-                <li><a href="#" class="text-gray-900 hover:text-blue-600 transition-colors">Công ty</a></li>
-                <li><a href="#" class="text-gray-900 hover:text-blue-600 transition-colors">Tính năng</a></li>
+                <li><a href="Infomationservlet" class="text-gray-900 hover:text-blue-600 transition-colors">Công ty</a></li>
+                <li><a href="contactservlet" class="text-gray-900 hover:text-blue-600 transition-colors">Contact</a></li>
             </ul>
 
         </div>

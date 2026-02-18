@@ -4,8 +4,6 @@
  */
 package controller.User;
 
-import dao.CustomerAddressDAO;
-import dao.CustomerDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -13,16 +11,13 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.List;
-import model.Customer;
-import model.CustomerAddress;
 
 /**
  *
  * @author ASUS
  */
-@WebServlet(name = "userServlet", urlPatterns = {"/userservlet"})
-public class userServlet extends HttpServlet {
+@WebServlet(name = "contactServlet", urlPatterns = {"/contactservlet"})
+public class contactServlet extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -41,10 +36,10 @@ public class userServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet userServlet</title>");
+            out.println("<title>Servlet contactServlet</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet userServlet at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet contactServlet at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -62,57 +57,15 @@ public class userServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         String headerComponent = "/components/navbar.jsp"; // Trang mặc định khi mới vào
         String footerComponent = "/components/footer.jsp"; // Trang mặc định khi mới vào
-        String page = "/pages/MainPage/homePage.jsp"; // Trang mặc định khi mới vào
-        String action = request.getParameter("action");
-
-        if (action != null) {
-            switch (action) {
-                case "homePage":
-                    page = "/pages/MainPage/homePage.jsp";
-                    break;
-                case "loginPage":
-                    page = "/pages/MainPage/loginPage.jsp"; // Bạn cần tạo file này
-                    break;
-                case "registerPage":
-                    page = "/pages/MainPage/registerPage.jsp"; // Bạn cần tạo file này
-                    break;
-                case "userDashboard":
-                    page = "/pages/DashboardPage/userDashboard.jsp";
-                    int customerID = Integer.parseInt(request.getParameter("id"));
-                    CustomerDAO cdao = new CustomerDAO();
-                    CustomerAddressDAO cadd = new CustomerAddressDAO();
-                    List<CustomerAddress> listdata = cadd.getAddressesByCustomerId(customerID);
-                    Customer customer = cdao.getCustomerById(customerID);
-                    request.setAttribute("customer", customer);
-                    request.setAttribute("listAddress", listdata);
-                    break;
-                case "brandManagement":
-                    page = "/pages/brandManagement.jsp";
-                    break;
-                case "productManagement":
-                    page = "/pages/productManagement.jsp";
-                    break;
-                case "voucherManagement":
-                    page = "/pages/voucherManagement.jsp";
-                    break;
-                default:
-                    page = "/pages/dashboardPage.jsp";
-            }
-        }
-
+        String page = "/pages/MainPage/contactPage.jsp"; // Trang mặc định khi mới vào
         request.setAttribute("HeaderComponent", headerComponent);
         request.setAttribute("FooterComponent", footerComponent);
         request.setAttribute("ContentPage", page);
 
         // 5. Forward đến Template duy nhất
         request.getRequestDispatcher("/template/userTemplate.jsp").forward(request, response);
-
-
-
-    
     }
 
     /**
