@@ -86,7 +86,7 @@ public class staffServlet extends HttpServlet {
         if (action != null) {
             switch (action) {
                 case "dashboard":
-                    page = "/pages/dashboardPage.jsp";
+                    page = "/pages/DashboardPage/dashboardPage.jsp";
                     break;
                 // Trong switch (action) của Servlet:
 
@@ -149,7 +149,7 @@ public class staffServlet extends HttpServlet {
                     break;
 
                 default:
-                    page = "/pages/dashboardPage.jsp";
+                    page = "/pages/DashboardPage/dashboardPage.jsp";
             }
         }
 

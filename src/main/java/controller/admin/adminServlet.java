@@ -71,7 +71,7 @@ public class adminServlet extends HttpServlet {
 
         // 2. Lấy tham số 'action' từ URL (ví dụ: adminservlet?action=dashboard)
         String action = request.getParameter("action");
-        String page = "/pages/dashboardPage.jsp"; // Trang mặc định khi mới vào
+        String page = "/pages/DashboardPage/dashboardPage.jsp"; // Trang mặc định khi mới vào
 
         List<?> listData = null; // Dấu <?> cho phép gán bất kỳ List nào (Customer, Employee...)
 
@@ -79,7 +79,7 @@ public class adminServlet extends HttpServlet {
         if (action != null) {
             switch (action) {
                 case "dashboard":
-                    page = "/pages/dashboardPage.jsp";
+                    page = "/pages/DashboardPage/dashboardPage.jsp";
                     break;
                 case "customerManagement":
                     page = "/pages/CustomerManagementPage/customerManagement.jsp";
@@ -122,7 +122,7 @@ public class adminServlet extends HttpServlet {
                     break;
 
                 default:
-                    page = "/pages/dashboardPage.jsp";
+                    page = "/pages/DashboardPage/dashboardPage.jsp";
             }
         }
 
