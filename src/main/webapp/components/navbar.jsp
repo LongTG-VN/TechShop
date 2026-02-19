@@ -11,25 +11,31 @@
             </a>
 
             <div class="flex-1 max-w-lg mx-auto hidden md:block">
-                <div class="relative">
+                <form action="searchservlet" method="GET" class="relative w-full block">
+
                     <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
                         <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
                         </svg>
                     </div>
-                    <input type="search" class="block w-full p-2.5 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500" placeholder="Tìm kiếm sản phẩm...">
-                </div>
+
+                    <input type="search" 
+                           name="keyword" 
+                           class="block w-full p-2.5 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500" 
+                           placeholder="Tìm kiếm sản phẩm..." 
+                           required>
+                </form>
             </div>
 
             <div class="flex items-center gap-4 shrink-0">
 
-          
+
 
                 <c:choose>
                     <%-- TRƯỜNG HỢP 1: CÓ COOKIE (Đã đăng nhập) --%>
                     <c:when test="${not empty cookie.cookieID.value}">
 
-                        <a href="cart" class="relative group p-2 text-gray-700 hover:text-blue-600 transition-colors">
+                        <a href="cartservlet" class="relative group p-2 text-gray-700 hover:text-blue-600 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
@@ -50,7 +56,7 @@
 
                             <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 border border-gray-100">
                                 <a href="userservlet?action=userDashboard&id=${cookie.cookieID.value}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Thông tin tài khoản</a>
-                                <a href="order?action=history" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Lịch sử đơn hàng</a>
+                                <a href="orderhistorypageservlet" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Lịch sử đơn hàng</a>
                                 <div class="border-t border-gray-100 my-1"></div>
                                 <a href="userservlet?action=logout" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Đăng xuất</a>
                             </div>
@@ -84,24 +90,24 @@
                 </li>
 
                 <li class="relative group">
-                    <button class="flex items-center text-gray-900 hover:text-blue-600 focus:outline-none transition-colors">
+                    <a href="productpageservlet" class="flex items-center text-gray-900 hover:text-blue-600 focus:outline-none transition-colors">
                         Sản phẩm 
-                        <svg class="w-2.5 h-2.5 ms-2 transition-transform duration-200 group-hover:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
-                        </svg>
-                    </button>
+                        <!--                        <svg class="w-2.5 h-2.5 ms-2 transition-transform duration-200 group-hover:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+                                                </svg>-->
+                    </a>
 
-                    <div class="absolute left-1/2 -translate-x-1/2 top-full mt-3 z-50 hidden group-hover:block w-48 bg-white divide-y divide-gray-100 rounded-lg shadow-xl border border-gray-100">
-
-                        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-gray-100 transform rotate-45"></div>
-
-                        <ul class="relative py-2 text-sm text-gray-700 bg-white rounded-lg">
-                            <li><a href="#" class="block px-4 py-2 hover:bg-blue-50 hover:text-blue-600">Điện thoại</a></li>
-                            <li><a href="#" class="block px-4 py-2 hover:bg-blue-50 hover:text-blue-600">Laptop</a></li>
-                            <li><a href="#" class="block px-4 py-2 hover:bg-blue-50 hover:text-blue-600">Máy tính bảng</a></li>
-                            <li><a href="#" class="block px-4 py-2 hover:bg-blue-50 hover:text-blue-600">Phụ kiện</a></li>
-                        </ul>
-                    </div>
+                    <!--                    <div class="absolute left-1/2 -translate-x-1/2 top-full mt-3 z-50 hidden group-hover:block w-48 bg-white divide-y divide-gray-100 rounded-lg shadow-xl border border-gray-100">
+                    
+                                            <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-gray-100 transform rotate-45"></div>
+                    
+                                            <ul class="relative py-2 text-sm text-gray-700 bg-white rounded-lg">
+                                                <li><a href="#" class="block px-4 py-2 hover:bg-blue-50 hover:text-blue-600">Điện thoại</a></li>
+                                                <li><a href="#" class="block px-4 py-2 hover:bg-blue-50 hover:text-blue-600">Laptop</a></li>
+                                                <li><a href="#" class="block px-4 py-2 hover:bg-blue-50 hover:text-blue-600">Máy tính bảng</a></li>
+                                                <li><a href="#" class="block px-4 py-2 hover:bg-blue-50 hover:text-blue-600">Phụ kiện</a></li>
+                                            </ul>
+                                        </div>-->
                 </li>
 
                 <li><a href="Infomationservlet" class="text-gray-900 hover:text-blue-600 transition-colors">Công ty</a></li>
