@@ -105,7 +105,7 @@
 
                     <ul class="pt-4 mt-4 space-y-2 font-medium border-t border-gray-200">
                         <li>
-                            <a href="logout" class="flex items-center p-2 text-red-600 rounded-lg hover:bg-red-50 group">
+                            <a href="logoutservlet" class="flex items-center p-2 text-red-600 rounded-lg hover:bg-red-50 group">
                                 <svg class="w-5 h-5 transition duration-75 text-red-500 group-hover:text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                                 <span class="ms-3">Logout</span>
                             </a>

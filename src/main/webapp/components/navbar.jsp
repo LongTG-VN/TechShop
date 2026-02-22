@@ -58,7 +58,13 @@
                                 <a href="userservlet?action=userDashboard&id=${cookie.cookieID.value}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Thông tin tài khoản</a>
                                 <a href="orderhistorypageservlet" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Lịch sử đơn hàng</a>
                                 <div class="border-t border-gray-100 my-1"></div>
-                                <a href="userservlet?action=logout" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Đăng xuất</a>
+                                <c:if test="${cookie.cookieRole.value eq 'ADMIN' }">
+                                    <a href="adminservlet?action=dashboard" class="block px-4 py-2 text-sm text-blue-600 hover:bg-gray-100 font-medium">Quản lý hệ thống</a>
+                                </c:if>
+                                <c:if test="${ cookie.cookieRole.value eq 'STAFF'}">
+                                    <a href="staffservlet?action=dashboard" class="block px-4 py-2 text-sm text-blue-600 hover:bg-gray-100 font-medium">Quản lý hệ thống</a>
+                                </c:if>
+                                <a href="logoutservlet" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Đăng xuất</a>
                             </div>
                         </div>
 

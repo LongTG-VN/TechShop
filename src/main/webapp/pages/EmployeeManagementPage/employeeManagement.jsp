@@ -133,3 +133,19 @@
         </nav>
     </div>
 </div>
+        
+        <c:if test="${not empty errorMessage}">
+    <script>
+        setTimeout(function() {
+            alert("${errorMessage}");
+        }, 100);
+    </script>
+</c:if>
+
+<c:if test="${not empty successMessage}">
+    <script>
+        setTimeout(function() {
+            alert("${successMessage}");
+        }, 100);
+    </script>
+</c:if>

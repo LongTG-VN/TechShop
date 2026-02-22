@@ -82,9 +82,19 @@ public class employeeServlet extends HttpServlet {
                     break;
                 case "delete":
                     int idD = Integer.parseInt(request.getParameter("id"));
-                    edao.deleteEmployee(idD);
+
+                    // Hứng kết quả true/false từ DAO
+                    boolean isDeleted = edao.deleteEmployee(idD);
+
+                    // Xét điều kiện để gửi thông báo
+                    if (isDeleted) {
+                        request.setAttribute("successMessage", "Đã xóa nhân viên thành công!");
+                    } else {
+                        request.setAttribute("errorMessage", "Xóa thất bại! Nhân viên này đang dính líu đến dữ liệu khác trong hệ thống nên không thể xóa.");
+                    }
+
                     page = "/pages/EmployeeManagementPage/employeeManagement.jsp";
-                    listData = edao.getAllEmployeeses();
+                    listData = edao.getAllEmployeeses(); // Nhớ giữ dòng load lại list này nhé
                     break;
                 case "detail":
                     int idDE = Integer.parseInt(request.getParameter("id"));

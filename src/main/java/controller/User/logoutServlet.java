@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,8 +17,8 @@ import jakarta.servlet.http.HttpServletResponse;
  *
  * @author ASUS
  */
-@WebServlet(name = "searchServlet", urlPatterns = {"/searchservlet"})
-public class searchServlet extends HttpServlet {
+@WebServlet(name = "logoutServlet", urlPatterns = {"/logoutservlet"})
+public class logoutServlet extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -36,10 +37,10 @@ public class searchServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet searchServlet</title>");
+            out.println("<title>Servlet logoutServlet</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet searchServlet at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet logoutServlet at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -57,15 +58,21 @@ public class searchServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String headerComponent = "/components/navbar.jsp"; // Trang mặc định khi mới vào
-        String footerComponent = "/components/footer.jsp"; // Trang mặc định khi mới vào
-        String page = "/pages/MainPage/searchPage.jsp"; // Trang mặc định khi mới vào
-        request.setAttribute("HeaderComponent", headerComponent);
-        request.setAttribute("FooterComponent", footerComponent);
-        request.setAttribute("ContentPage", page);
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie c : cookies) {
+                if (c.getName().equalsIgnoreCase("cookieID")
+                        || c.getName().equalsIgnoreCase("cookieUser")
+                        || c.getName().equalsIgnoreCase("cookieRole")) {
+                    c.setMaxAge(0);
+                    response.addCookie(c);
+                }
+            }
 
-        // 5. Forward đến Template duy nhất
-        request.getRequestDispatcher("/template/userTemplate.jsp").forward(request, response);
+        }
+
+        response.sendRedirect("userservlet?action=homePage");
+
     }
 
     /**

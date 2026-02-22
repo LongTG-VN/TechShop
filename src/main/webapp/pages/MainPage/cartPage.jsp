@@ -79,20 +79,14 @@
                 <div class="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm sticky top-6">
                     <h2 class="text-xl font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">Tóm tắt đơn hàng</h2>
                     
-                    <div class="mb-6 flex gap-2">
-                        <input type="text" placeholder="Nhập mã giảm giá..." class="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-gray-50">
-                        <button class="bg-gray-900 text-white px-5 py-3 rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors">Áp dụng</button>
-                    </div>
+                   
 
                     <div class="space-y-4 text-sm text-gray-600 mb-6 border-b border-gray-100 pb-6">
                         <div class="flex justify-between items-center">
                             <span>Tạm tính:</span>
                             <span class="font-semibold text-gray-900 text-base">41.470.000đ</span>
                         </div>
-                        <div class="flex justify-between items-center text-green-600">
-                            <span>Khuyến mãi:</span>
-                            <span class="font-semibold">-0đ</span>
-                        </div>
+                        
                         <div class="flex justify-between items-center">
                             <span>Phí vận chuyển:</span>
                             <span class="font-semibold text-gray-900 text-base">Miễn phí</span>

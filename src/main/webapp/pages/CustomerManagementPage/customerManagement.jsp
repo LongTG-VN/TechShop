@@ -133,4 +133,19 @@
     </div>
 </div>
 
+<c:if test="${not empty errorMessage}">
+    <script>
+        // Đợi 100ms để trình duyệt vẽ xong giao diện rồi mới hiện alert
+        setTimeout(function () {
+            alert("${errorMessage}");
+        }, 100);
+    </script>
+</c:if>
 
+<c:if test="${not empty successMessage}">
+    <script>
+        setTimeout(function () {
+            alert("${successMessage}");
+        }, 100);
+    </script>
+</c:if>

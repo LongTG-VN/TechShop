@@ -37,7 +37,7 @@
             <tbody class="divide-y divide-gray-200">
                 <c:forEach items="${listdata}" var="v">
                     <tr class="hover:bg-gray-50 transition-colors group">
-                        
+
                         <td class="px-4 py-3 font-medium text-gray-900">
                             <span class="font-mono text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">${v.code}</span>
                             <div class="text-xs text-gray-500 mt-1">
@@ -111,8 +111,8 @@
                             </c:choose>
                         </td>
 
-                       
-                         <td class="px-4 py-3">
+
+                        <td class="px-4 py-3">
                             <div class="flex items-center justify-center space-x-3">
                                 <a href="voucherservlet?action=detail&id=${v.voucherId}" 
                                    class="inline-flex items-center p-1.5 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-200" 
@@ -146,7 +146,7 @@
                         </td>
                     </tr>
                 </c:forEach>
-                
+
                 <c:if test="${empty listdata}">
                     <tr>
                         <td colspan="6" class="px-4 py-12 text-center">
@@ -162,22 +162,41 @@
         </table>
     </div>
 </div>
-    <div class="flex flex-col md:flex-row justify-between items-center gap-3 mt-5">
-        <p class="text-sm text-gray-500">
-           voucher
-        </p>
+<div class="flex flex-col md:flex-row justify-between items-center gap-3 mt-5">
+    <p class="text-sm text-gray-500">
+        voucher
+    </p>
 
-        <nav class="inline-flex rounded-lg shadow-sm isolate">
-            <a href="#" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-50">Trước</a>
-            <a href="#" class="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-gray-300">1</a>
-            <a href="#" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-50">Sau</a>
-        </nav>
-    </div>
+    <nav class="inline-flex rounded-lg shadow-sm isolate">
+        <a href="#" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-50">Trước</a>
+        <a href="#" class="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-gray-300">1</a>
+        <a href="#" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-50">Sau</a>
+    </nav>
+</div>
 </div>
 
+
+<c:if test="${not empty errorMessage}">
+    <script>
+        setTimeout(function () {
+            alert("${errorMessage}");
+        }, 100);
+    </script>
+</c:if>
+
+<c:if test="${not empty successMessage}">
+    <script>
+        setTimeout(function () {
+            alert("${successMessage}");
+        }, 100);
+    </script>
+</c:if>
+
 <script>
-  function confirmDelete(id) {
-        if(confirm("Are you sure you want to delete Voucher ID #" + id + "?\nThis action cannot be undone.")) {
+
+
+    function confirmDelete(id) {
+        if (confirm("Are you sure you want to delete Voucher ID #" + id + "?\nThis action cannot be undone.")) {
             window.location.href = "voucher?action=delete&id=" + id;
         }
     }

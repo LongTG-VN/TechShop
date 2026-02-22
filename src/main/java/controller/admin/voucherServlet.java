@@ -99,18 +99,20 @@ public class voucherServlet extends HttpServlet {
 
                 case "delete":
                     int idToDelete = Integer.parseInt(request.getParameter("id"));
-                    vdao.deleteVoucher(idToDelete);
+
+                    // Hứng kết quả true/false từ DAO
+                    boolean isDeleted = vdao.deleteVoucher(idToDelete);
+
+                    // Gửi thông báo tương ứng
+                    if (isDeleted) {
+                        request.setAttribute("successMessage", "Đã xóa mã giảm giá (Voucher) thành công!");
+                    } else {
+                        request.setAttribute("errorMessage", "Xóa thất bại! Voucher này đã được áp dụng trong đơn hàng nên không thể xóa.");
+                    }
+
                     page = "/pages/VoucherManagementPage/voucherManagement.jsp";
                     listData = new VoucherDAO().getAllVoucher();
                     break;
-//                case "detail":
-//                    int idDE = Integer.parseInt(request.getParameter("id"));
-//                    Customer customerDE = cdao.getCustomerById(idDE);
-//                    List<CustomerAddress> listCustomerAddress = addressDAO.getAddressesByCustomerId(idDE);
-//                    request.setAttribute("customer", customerDE);
-//                    request.setAttribute("customerAddress", listCustomerAddress);
-//                    page = "/pages/CustomerManagementPage/detailCustomer.jsp";
-//                    break;
                 case "all":
                     page = "/pages/VoucherManagementPage/voucherManagement.jsp";
                     listData = new VoucherDAO().getAllVoucher();

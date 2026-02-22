@@ -82,9 +82,18 @@ public class customerServlet extends HttpServlet {
                     break;
                 case "delete":
                     int idD = Integer.parseInt(request.getParameter("id"));
-                    cdao.deleteCustomer(idD);
+                    boolean isDeleted = cdao.deleteCustomer(idD); // Mình đổi tên biến Delete thành isDeleted cho đúng chuẩn Java nhé
+
+                    if (!isDeleted) {
+                        // Nếu xóa thất bại
+                        request.setAttribute("errorMessage", "Xóa thất bại! Khách hàng này đang có dữ liệu liên quan (địa chỉ, đơn hàng...) nên không thể xóa.");
+                    } else {
+                        // Nêu xóa thành công (bạn có thể thêm để thông báo cho rõ ràng)
+                        request.setAttribute("successMessage", "Đã xóa khách hàng thành công!");
+                    }
+
                     page = "/pages/CustomerManagementPage/customerManagement.jsp";
-                    listData = new CustomerDAO().getAllCustomer();
+                    listData = new CustomerDAO().getAllCustomer(); // Load lại danh sách mới
                     break;
                 case "deleteAddress":
                     int addressId = Integer.parseInt(request.getParameter("addressId"));
@@ -142,17 +151,16 @@ public class customerServlet extends HttpServlet {
                     String password = request.getParameter("password");
                     String phone = request.getParameter("phone_number");
                     String status = request.getParameter("status");
-                    cdao.addCustomer(new Customer(0, username, password, fullName, email, phone, status, LocalDateTime.now()));      
+                    cdao.addCustomer(new Customer(0, username, password, fullName, email, phone, status, LocalDateTime.now()));
                     break;
-                case "edit":                
-                    int id = Integer.parseInt(request.getParameter("customerID"));                
+                case "edit":
+                    int id = Integer.parseInt(request.getParameter("customerID"));
                     String usernameE = request.getParameter("username");
                     String fullNameE = request.getParameter("full_name");
                     String emailE = request.getParameter("email");
                     String phoneE = request.getParameter("phone_number");
                     String statusE = request.getParameter("status");
 
-              
                     Customer updatedCus = cdao.getCustomerById(id);
                     updatedCus.setCustomerID(id);
                     updatedCus.setUserName(usernameE);
@@ -161,7 +169,7 @@ public class customerServlet extends HttpServlet {
                     updatedCus.setPhoneNumber(phoneE);
                     updatedCus.setStatus(statusE);
 
-                    cdao.updateCustomer(updatedCus); 
+                    cdao.updateCustomer(updatedCus);
                     break;
             }
         }

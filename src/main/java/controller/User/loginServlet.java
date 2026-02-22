@@ -90,12 +90,12 @@ public class loginServlet extends HttpServlet {
         // Phải dùng && (VÀ). Chỉ khi CẢ 2 đều không tìm thấy thì mới là lỗi.
         if (customer.getCustomerID() == -1 && employee.getEmployeeId() == -1) {
             // Đăng nhập thất bại
-            response.sendRedirect("login");
+            response.sendRedirect("userservlet?action=loginPage");
         } // 3. Trường hợp là Nhân viên (Employee)
         else if (employee.getEmployeeId() != -1) {
 
             // Tạo Cookie cho Employee
-            Cookie cookieId = new Cookie("cookieId", String.valueOf(employee.getEmployeeId()));
+            Cookie cookieId = new Cookie("cookieID", String.valueOf(employee.getEmployeeId()));
             Cookie cookieUser = new Cookie("cookieUser", employee.getUsername());
             Cookie cookieRole = new Cookie("cookieRole", employee.getRole().getRole_name()); // Lưu thêm role để dễ phân biệt
 
@@ -136,7 +136,7 @@ public class loginServlet extends HttpServlet {
             response.addCookie(cookieUser);
             response.addCookie(cookieRole);
 
-            response.sendRedirect("userservlet");
+            response.sendRedirect("userservlet?action=homePage");
 
         }
 

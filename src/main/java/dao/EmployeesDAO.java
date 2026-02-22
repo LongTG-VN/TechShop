@@ -221,21 +221,21 @@ public class EmployeesDAO extends DBContext {
     // Test Main
     public static void main(String[] args) {
         EmployeesDAO dao = new EmployeesDAO();
-        // RoleDAO aO = new RoleDAO();
+         RoleDAO aO = new RoleDAO();
 //        System.out.println("--- 1. TEST READ ---");
 //        dao.getAllEmployeeses().forEach(System.out::println);
 
 // 2. Khởi tạo Employee với các giá trị thực tế để test
-        // String username = "test_staff_" + System.currentTimeMillis() % 1000; // Tạo username không trùng
-        // String passwordHash = "123456"; // Mật khẩu mẫu
-        // String fullName = "Nguyen Van Test";
-        // String email = username + "@phonestore.com";
-        // String phoneNumber = "0912345678";
-        // String status = "ACTIVE";
+         String username = "test_staff_" + System.currentTimeMillis() % 1000; // Tạo username không trùng
+         String passwordHash = "123456"; // Mật khẩu mẫu
+         String fullName = "Nguyen Van Test";
+         String email = username + "@phonestore.com";
+         String phoneNumber = "0912345678";
+         String status = "ACTIVE";
 
         System.out.println(dao.login("test_staff_241", "123456"));
 
-//        dao.insertEmployee(new Employees(0, username, passwordHash, fullName, email, phoneNumber, aO.getRoleById(1), status, LocalDateTime.MAX));
+        dao.insertEmployee(new Employees(0, username, passwordHash, fullName, email, phoneNumber, aO.getRoleById(2), status, LocalDateTime.MAX));
 // 3. Gọi hàm DAO để chèn vào Database
 //        System.out.println(dao.getEmployeeById(2));
     }

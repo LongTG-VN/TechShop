@@ -80,7 +80,9 @@ public class staffServlet extends HttpServlet {
         // 2. Lấy tham số 'action' từ URL (ví dụ: adminservlet?action=dashboard)
         String action = request.getParameter("action");
         String page = "/pages/dashboardPage.jsp"; // Trang mặc định khi mới vào
-
+        if (action == null || action.trim().isEmpty()) {
+            action = "dashboard";
+        }
         List<?> listData = null; // Dấu <?> cho phép gán bất kỳ List nào (Customer, Employee...)
         // 3. Logic điều hướng (Switch-case sẽ sạch sẽ hơn if-else)
         if (action != null) {
@@ -130,15 +132,15 @@ public class staffServlet extends HttpServlet {
                     request.setAttribute("brands", bdao.getAllBrand());
                     listData = productdao.getAllProduct();
                     break;
-                    
+
                 case "reviewManagement":
                     page = "/pages/ReviewManagementPage/reviewManagement.jsp";
                     ReviewDAO rdao = new ReviewDAO();
-                    listData = rdao.getAllReviews(); 
+                    listData = rdao.getAllReviews();
                     List<String> reviewedProducts = rdao.getReviewedProductNames();
                     request.setAttribute("reviewedProducts", reviewedProducts);
                     break;
-                    
+
                 case "processOrderManagement":
                     page = "/pages/OrderManagementPage/processOrderManagement.jsp";
                     OrderDAO orderDao = new OrderDAO();
