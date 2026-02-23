@@ -10,6 +10,7 @@ import dao.CustomerDAO;
 import dao.EmployeesDAO;
 import dao.OrderStatusDAO;
 import dao.PaymentMethodDAO;
+import dao.SpecificationDefinitionDAO;
 import dao.VoucherDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -28,7 +29,8 @@ import java.util.List;
 public class adminServlet extends HttpServlet {
 
     /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
+     * methods.
      *
      * @param request servlet request
      * @param response servlet response
@@ -103,8 +105,13 @@ public class adminServlet extends HttpServlet {
                     page = "/pages/SpecificationValueManagementPage/specificationValueManagement.jsp";
                     break;
                 case "specificationDefinitionManagement":
-                    page = "/pages/SpecificationDefinitionManagement/specificationDefinitionManagement.jsp";
+                    SpecificationDefinitionDAO sdao = new SpecificationDefinitionDAO();
+                    CategoryDAO speccdao = new CategoryDAO();
+                    request.setAttribute("categories", speccdao.getAllCategory());
+                    listData = sdao.getAllSpecs();
+                    page = "/pages/SpecificationDefinitionManagementPage/specificationDefinitionManagement.jsp";
                     break;
+
                 case "voucherManagement":
                     page = "/pages/VoucherManagementPage/voucherManagement.jsp";
                     VoucherDAO vdao = new VoucherDAO();
