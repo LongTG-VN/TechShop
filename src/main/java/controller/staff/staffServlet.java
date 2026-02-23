@@ -132,6 +132,9 @@ public class staffServlet extends HttpServlet {
                     request.setAttribute("brands", bdao.getAllBrand());
                     listData = productdao.getAllProduct();
                     break;
+                case "productVariantManagement":
+                    page = "/pages/ProductVariantManagementPage/productVariantManagement.jsp";
+                    break;
 
                 case "reviewManagement":
                     page = "/pages/ReviewManagementPage/reviewManagement.jsp";
