@@ -4,11 +4,14 @@ import dao.BrandDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
+import java.io.File;
 import java.util.List;
 import model.Brand;
 
@@ -17,6 +20,11 @@ import model.Brand;
  * @author CaoTram
  */
 @WebServlet(name = "brandServlet", urlPatterns = {"/brandServlet"})
+@MultipartConfig(
+        fileSizeThreshold = 1024 * 1024 * 2, // 2MB
+        maxFileSize = 1024 * 1024 * 10, // 10MB (tối đa 1 file)
+        maxRequestSize = 1024 * 1024 * 50 // 50MB (tối đa cả request)
+)
 public class brandServlet extends HttpServlet {
 
     /**
@@ -44,6 +52,7 @@ public class brandServlet extends HttpServlet {
             out.println("</html>");
         }
     }
+    private static final String UPLOAD_DIR = "assest/img/brands";
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**
@@ -116,55 +125,95 @@ public class brandServlet extends HttpServlet {
         BrandDAO bdao = new BrandDAO();
         HttpSession session = request.getSession();
 
-        if ("add".equals(action)) {
+        if ("add".equals(action) || "update".equals(action)) {
             String name = request.getParameter("brandName").trim();
             boolean status = "1".equals(request.getParameter("isActive"));
 
-            if (bdao.isBrandNameExists(name)) {
-                session.setAttribute("msg", "Error: Brand name '" + name + "' already exists!");
-                session.setAttribute("msgType", "danger");
-                response.sendRedirect("brandServlet?action=add");
-                return;
-            }
+            // 1. XỬ LÝ FILE UPLOAD (Sử dụng đường dẫn tương đối từ Server)
+            Part filePart = request.getPart("brandLogo");
+            String fileName = filePart.getSubmittedFileName();
+            String imagePath = null;
 
-            bdao.insertBrand(name, status);
-            session.setAttribute("msg", "Brand '" + name + "' added successfully!");
+            // Trong doPost của brandServlet.java
+            if (fileName != null && !fileName.isEmpty()) {
+                // 1. Tạo tên file duy nhất với Timestamp
+                fileName = System.currentTimeMillis() + "_" + fileName;
+
+                // 2. Lấy đường dẫn thư mục CHẠY TẠM (Deploy Path) để hiện ảnh ngay lập tức
+                String deployPath = request.getServletContext().getRealPath("") + File.separator + UPLOAD_DIR;
+
+                // 3. Lấy đường dẫn thư mục GỐC (Source Path) để lưu vĩnh viễn (không bị Clean làm mất)
+                // Nó sẽ tìm thư mục project của bạn và trỏ vào src/main/webapp/assest/img/brands
+                String realPath = request.getServletContext().getRealPath("");
+                String sourcePath = realPath.substring(0, realPath.indexOf("target"))
+                        + "src" + File.separator + "main" + File.separator + "webapp" + File.separator + UPLOAD_DIR;
+
+                // 4. Tạo thư mục nếu chưa có
+                File uploadDirDeploy = new File(deployPath);
+                File uploadDirSource = new File(sourcePath);
+                if (!uploadDirDeploy.exists()) {
+                    uploadDirDeploy.mkdirs();
+                }
+                if (!uploadDirSource.exists()) {
+                    uploadDirSource.mkdirs();
+                }
+
+                // 5. Ghi file vào thư mục CHẠY TẠM (để trình duyệt thấy ngay)
+                filePart.write(deployPath + File.separator + fileName);
+
+                // 6. Copy file sang thư mục GỐC (để lưu vĩnh viễn và gửi cho nhóm)
+                try {
+                    java.nio.file.Files.copy(
+                            new File(deployPath + File.separator + fileName).toPath(),
+                            new File(sourcePath + File.separator + fileName).toPath(),
+                            java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                    );
+                } catch (IOException e) {
+                    System.out.println("Lưu vào source lỗi: " + e.getMessage());
+                }
+
+                // 7. Lưu đường dẫn vào DB (Chuẩn: assest/img/brands/tên_file)
+                imagePath = UPLOAD_DIR + "/" + fileName;
+            }
+            // 2. XỬ LÝ ACTION: ADD
+            if ("add".equals(action)) {
+                if (bdao.isBrandNameExists(name)) {
+                    session.setAttribute("msg", "Error: Brand name '" + name + "' already exists!");
+                    session.setAttribute("msgType", "danger");
+                    response.sendRedirect("brandServlet?action=add");
+                    return;
+                }
+                bdao.insertBrand(name, imagePath, status);
+                session.setAttribute("msg", "Brand '" + name + "' added successfully!");
+
+                // 3. XỬ LÝ ACTION: UPDATE
+            } else if ("update".equals(action)) {
+                int id = Integer.parseInt(request.getParameter("brandId"));
+
+                // Sử dụng hàm số 6 trong DAO để loại trừ chính mình khi check trùng tên
+                if (bdao.isBrandNameExists(name, id)) {
+                    session.setAttribute("msg", "Error: Name '" + name + "' is already used by another brand!");
+                    session.setAttribute("msgType", "danger");
+                    response.sendRedirect("brandServlet?action=edit&id=" + id);
+                    return;
+                }
+
+                Brand current = bdao.getBrandById(id);
+                // Nếu người dùng không chọn ảnh mới, giữ lại đường dẫn ảnh cũ
+                if (imagePath == null) {
+                    imagePath = current.getImageUrl();
+                }
+
+                Brand b = new Brand(id, name, imagePath, status);
+                bdao.updateBrand(b);
+                session.setAttribute("msg", "Brand '" + name + "' updated successfully!");
+            }
             session.setAttribute("msgType", "success");
-            response.sendRedirect("brandServlet?action=all");
-            return;
 
-        } else if ("update".equals(action)) {
-            int id = Integer.parseInt(request.getParameter("brandId"));
-            String name = request.getParameter("brandName").trim();
-            boolean status = "1".equals(request.getParameter("isActive"));
-
-            if (bdao.isBrandNameExists(name, id)) {
-                session.setAttribute("msg", "Error: Name '" + name + "' is already used by another brand!");
-                session.setAttribute("msgType", "danger");
-                response.sendRedirect("brandServlet?action=edit&id=" + id);
-                return;
-            }
-
-            Brand currentBrand = bdao.getBrandById(id);
-            if (currentBrand.getBrandName().equals(name) && currentBrand.isIsActive() == status) {
-                session.setAttribute("msg", "No changes detected.");
-                session.setAttribute("msgType", "danger");
-                response.sendRedirect("brandServlet?action=edit&id=" + id);
-                return;
-            }
-
-            Brand b = new Brand(id, name, status);
-            bdao.updateBrand(b);
-            session.setAttribute("msg", "Brand '" + name + "' updated successfully!");
-            session.setAttribute("msgType", "success");
-            response.sendRedirect("brandServlet?action=all");
-            return;
-
+            // 4. XỬ LÝ ACTION: DELETE
         } else if ("delete".equals(action)) {
             int id = Integer.parseInt(request.getParameter("brandId"));
-            int count = bdao.countProductsByBrandId(id);
-
-            if (count > 0) {
+            if (bdao.countProductsByBrandId(id) > 0) {
                 bdao.deactivateBrand(id);
                 session.setAttribute("msg", "Brand contains products. Switched to INACTIVE.");
             } else {

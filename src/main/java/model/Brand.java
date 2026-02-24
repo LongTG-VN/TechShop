@@ -1,32 +1,29 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
 
-/**
- *
- * @author CT
- */
 public class Brand {
+
     private int brandId;
     private String brandName;
+    private String imageUrl;
     private boolean isActive;
 
     public Brand() {
     }
 
-    public Brand(int brandId, String brandName, boolean isActive) {
+    public Brand(int brandId, String brandName, String imageUrl, boolean isActive) {
         this.brandId = brandId;
         this.brandName = brandName;
+        this.imageUrl = imageUrl;
         this.isActive = isActive;
     }
 
-    public Brand(String brandName, boolean isActive) {
+    public Brand(String brandName, String imageUrl, boolean isActive) {
         this.brandName = brandName;
+        this.imageUrl = imageUrl;
         this.isActive = isActive;
     }
 
+    // Getters and Setters
     public int getBrandId() {
         return brandId;
     }
@@ -43,16 +40,19 @@ public class Brand {
         this.brandName = brandName;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     public boolean isIsActive() {
         return isActive;
     }
 
     public void setIsActive(boolean isActive) {
         this.isActive = isActive;
-    }
-
-    @Override
-    public String toString() {
-        return "Brand{" + "brandId=" + brandId + ", brandName=" + brandName + ", isActive=" + isActive + '}';
     }
 }

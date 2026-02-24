@@ -49,15 +49,15 @@
         <div class="text-center mb-10">
             <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
                 <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
             </div>
-            <h2 class="text-3xl font-extrabold text-gray-900">Add New Brand</h2>
-            <p class="text-gray-500 mt-2">Create a new brand partner for your store.</p>
+            <h2 class="text-3xl font-extrabold text-gray-900 uppercase">Add New Brand</h2>
+            <p class="text-gray-500 mt-2">Upload a logo and create a new brand partner.</p>
         </div>
 
-        <%-- FORM --%>
-        <form action="brandServlet" method="POST" class="space-y-6">
+        <%-- FORM: Thêm enctype="multipart/form-data" để upload file --%>
+        <form action="brandServlet" method="POST" enctype="multipart/form-data" class="space-y-6">
             <input type="hidden" name="action" value="add">
             
             <%-- Brand Name Input --%>
@@ -66,8 +66,25 @@
                        class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
                        placeholder=" " required />
                 <label for="brandName" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
-                    Brand Name (e.g., Apple, Samsung, Dell)
+                    Brand Name (e.g., Apple, Samsung)
                 </label>
+            </div>
+
+            <%-- Brand Logo Upload --%>
+            <div class="w-full mb-6 group">
+                <label class="block mb-2 text-sm font-medium text-gray-500">Brand Logo</label>
+                <div class="flex items-center justify-center w-full">
+                    <label for="brandLogo" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-all">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                            <svg class="w-8 h-8 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                            </svg>
+                            <p class="mb-2 text-sm text-gray-500 font-semibold" id="fileNameDisp">Click to upload brand logo</p>
+                            <p class="text-xs text-gray-400 uppercase">PNG, JPG or SVG</p>
+                        </div>
+                        <input id="brandLogo" name="brandLogo" type="file" accept="image/*" class="hidden" required onchange="displayFileName(this)" />
+                    </label>
+                </div>
             </div>
 
             <%-- Visibility Status --%>
@@ -87,7 +104,6 @@
 
             <%-- ACTION BUTTONS --%>
             <div class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-100">
-                <%-- Nút Cancel quay lại danh sách Brand --%>
                 <a href="brandServlet?action=all" 
                    class="inline-flex items-center gap-2 text-gray-500 bg-white hover:bg-gray-100 border border-gray-300 font-medium rounded-lg text-sm px-6 py-2.5 transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,7 +112,6 @@
                     Cancel
                 </a>
                 
-                <%-- Nút Save Brand --%>
                 <button type="submit" 
                         class="inline-flex items-center gap-2 text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-10 py-2.5 shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-1">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,3 +123,13 @@
         </form>
     </div>
 </div>
+
+<script>
+    function displayFileName(input) {
+        const disp = document.getElementById('fileNameDisp');
+        if (input.files && input.files[0]) {
+            disp.textContent = "Selected: " + input.files[0].name;
+            disp.classList.add('text-blue-600');
+        }
+    }
+</script>

@@ -5,18 +5,18 @@
 <c:if test="${not empty sessionScope.msg}">
     <div id="toast-notification" class="fixed top-10 left-1/2 -translate-x-1/2 z-[9999] min-w-[320px] transition-all duration-500">
         <div class="flex items-center justify-center p-4 rounded-xl shadow-2xl border-2 animate-bounce
-            ${sessionScope.msgType == 'danger' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-green-50 text-green-800 border-green-200'}">
-            
+             ${sessionScope.msgType == 'danger' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-green-50 text-green-800 border-green-200'}">
+
             <div class="flex-shrink-0 mr-3">
                 <c:choose>
                     <c:when test="${sessionScope.msgType == 'danger'}">
                         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
                         </svg>
                     </c:when>
                     <c:otherwise>
                         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                         </svg>
                     </c:otherwise>
                 </c:choose>
@@ -37,7 +37,7 @@
         }, 3000);
     </script>
 </c:if>
-    
+
 <div class="bg-white rounded-xl shadow-lg p-5">
     <%-- 2. TIÊU ĐỀ & NÚT THÊM --%>
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
@@ -45,7 +45,7 @@
         <a href="brandServlet?action=add"
            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-md transition-all transform hover:-translate-y-0.5">
             <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
             </svg>
             Add New Brand
         </a>
@@ -56,7 +56,7 @@
         <div class="relative flex-1 w-full">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
             </span>
             <input type="text" id="searchInput"
@@ -77,7 +77,8 @@
             <thead class="text-xs uppercase bg-gray-50 text-gray-700 font-bold">
                 <tr>
                     <th class="px-4 py-3 w-16 text-center">ID</th>
-                    <th class="px-6 py-3">Brand Name</th>
+                    <th class="px-6 py-3 w-1/3">Brand Name</th>
+                    <th class="px-2 py-3 text-left w-20">Logo</th>
                     <th class="px-6 py-3 text-center">Status</th>
                     <th class="px-6 py-3 text-center w-44">Actions</th>
                 </tr>
@@ -87,6 +88,22 @@
                     <tr class="brand-row hover:bg-gray-50 transition-colors" data-status="${brand.isActive ? 'active' : 'inactive'}">
                         <td class="px-4 py-3 text-center font-medium text-gray-500">#${brand.brandId}</td>
                         <td class="px-6 py-4 font-bold text-gray-900 brand-name">${brand.brandName}</td>
+
+                        <%-- Cột Logo --%>
+                        <td class="px-2 py-3 text-left">
+                            <c:choose>
+                                <c:when test="${not empty brand.imageUrl}">
+                                    <img src="${pageContext.request.contextPath}/${brand.imageUrl}" alt="logo" 
+                                         class="w-10 h-10 object-contain rounded-lg border border-gray-100 bg-white p-1 shadow-sm ">
+                                </c:when>
+                                <c:otherwise>
+                                    <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200 [cite: 46]">
+                                        <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
+                        </td>
+
                         <td class="px-6 py-4 text-center">
                             <c:choose>
                                 <c:when test="${brand.isActive}">
@@ -101,17 +118,17 @@
                             <div class="flex items-center justify-center gap-4">
                                 <a href="brandServlet?action=detail&id=${brand.brandId}" class="text-blue-500 hover:text-blue-700 transition-transform hover:scale-110">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                     </svg>
                                 </a>
                                 <a href="brandServlet?action=edit&id=${brand.brandId}" class="text-orange-500 hover:text-orange-700 transition-transform hover:scale-110">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                     </svg>
                                 </a>
                                 <a href="brandServlet?action=delete&id=${brand.brandId}" class="text-red-500 hover:text-red-700 transition-transform hover:scale-110">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
                                 </a>
                             </div>
@@ -164,7 +181,8 @@
                 }
             }
             const countDisplay = document.getElementById('visibleCount');
-            if(countDisplay) countDisplay.innerText = visibleCount;
+            if (countDisplay)
+                countDisplay.innerText = visibleCount;
         }
 
         searchInput.addEventListener('keyup', filterTable);

@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dao;
 
 import java.sql.PreparedStatement;
@@ -11,25 +7,17 @@ import java.util.List;
 import model.Brand;
 import utils.DBContext;
 
-/**
- *
- * @author CT
- */
 public class BrandDAO extends DBContext {
 
-    // Lấy tất cả danh mục
+    // 1. Lấy tất cả Brand
     public List<Brand> getAllBrand() {
         List<Brand> list = new ArrayList<>();
-        String sql = "SELECT brand_id, brand_name, is_active FROM brands";
+        String sql = "SELECT * FROM brands ORDER BY brand_id DESC";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                list.add(new Brand(
-                        rs.getInt("brand_id"),
-                        rs.getString("brand_name"),
-                        rs.getBoolean("is_active")
-                ));
+                list.add(mapResultSet(rs));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -37,19 +25,15 @@ public class BrandDAO extends DBContext {
         return list;
     }
 
-    // Lấy danh mục theo ID
+    // 2. Lấy Brand theo ID
     public Brand getBrandById(int id) {
-        String sql = "SELECT brand_id, brand_name, is_active FROM brands WHERE brand_id = ?";
+        String sql = "SELECT * FROM brands WHERE brand_id = ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return new Brand(
-                        rs.getInt("brand_id"),
-                        rs.getString("brand_name"),
-                        rs.getBoolean("is_active")
-                );
+                return mapResultSet(rs);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -57,74 +41,36 @@ public class BrandDAO extends DBContext {
         return null;
     }
 
-    // Thêm danh mục mới
-    public void insertBrand(String name, boolean is_active) {
-        String sql = "INSERT INTO brands (brand_name, is_active) VALUES (?, ?)";
+    // 3. Thêm mới Brand
+    public void insertBrand(String name, String imageUrl, boolean status) {
+        String sql = "INSERT INTO brands (brand_name, image_url, is_active) VALUES (?, ?, ?)";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, name);
-            ps.setBoolean(2, is_active);
+            ps.setString(2, imageUrl);
+            ps.setBoolean(3, status);
             ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    // Cập nhật danh mục
+    // 4. Cập nhật Brand
     public void updateBrand(Brand b) {
-        String sql = "UPDATE brands SET brand_name = ?, is_active = ? WHERE brand_id = ?";
+        String sql = "UPDATE brands SET brand_name = ?, image_url = ?, is_active = ? WHERE brand_id = ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, b.getBrandName());
-            ps.setBoolean(2, b.isIsActive());
-            ps.setInt(3, b.getBrandId());
+            ps.setString(2, b.getImageUrl());
+            ps.setBoolean(3, b.isIsActive());
+            ps.setInt(4, b.getBrandId());
             ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    // Xóa danh mục
-    public void deleteBrand(int id) {
-        String sql = "DELETE FROM brands WHERE brand_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, id);
-            ps.executeUpdate();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-// 1. Đếm số lượng sản phẩm thuộc danh mục
-    public int countProductsByBrandId(int id) {
-        String sql = "SELECT COUNT(*) FROM products WHERE brand_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return 0;
-    }
-
-// 2. Chuyển trạng thái sang Inactive (Soft Delete)
-    public void deactivateBrand(int id) {
-        String sql = "UPDATE brands SET is_active = 0 WHERE brand_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, id);
-            ps.executeUpdate();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Kiểm tra tên đã tồn tại chưa (dùng cho Add)
+    // 5. Kiểm tra tên tồn tại (Cho Add)
     public boolean isBrandNameExists(String name) {
         String sql = "SELECT COUNT(*) FROM brands WHERE brand_name = ?";
         try {
@@ -140,13 +86,13 @@ public class BrandDAO extends DBContext {
         return false;
     }
 
-// Kiểm tra tên đã tồn tại cho các ID khác chưa (dùng cho Update)
-    public boolean isBrandNameExists(String name, int excludeId) {
+    // 6. Kiểm tra tên tồn tại (Cho Update - loại trừ ID hiện tại)
+    public boolean isBrandNameExists(String name, int id) {
         String sql = "SELECT COUNT(*) FROM brands WHERE brand_name = ? AND brand_id <> ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, name);
-            ps.setInt(2, excludeId);
+            ps.setInt(2, id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 return rs.getInt(1) > 0;
@@ -157,10 +103,51 @@ public class BrandDAO extends DBContext {
         return false;
     }
 
-    public static void main(String[] args) {
-        BrandDAO dao = new BrandDAO();
-        for (Brand b : dao.getAllBrand()) {
-            System.out.println(b);
+    // 7. Các hàm xóa
+    public void deactivateBrand(int id) {
+        String sql = "UPDATE brands SET is_active = 0 WHERE brand_id = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+    }
+
+    public void deleteBrand(int id) {
+        String sql = "DELETE FROM brands WHERE brand_id = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public int countProductsByBrandId(int id) {
+        String sql = "SELECT COUNT(*) FROM products WHERE brand_id = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    // Hàm Map dữ liệu chuẩn Template
+    private Brand mapResultSet(ResultSet rs) throws Exception {
+        Brand b = new Brand();
+        b.setBrandId(rs.getInt("brand_id"));
+        b.setBrandName(rs.getString("brand_name"));
+        b.setImageUrl(rs.getString("image_url")); // Lấy đường dẫn ảnh từ DB
+        b.setIsActive(rs.getBoolean("is_active"));
+        return b;
     }
 }
