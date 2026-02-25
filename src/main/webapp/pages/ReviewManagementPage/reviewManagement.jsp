@@ -28,9 +28,8 @@
         <h2 class="text-xl font-bold text-gray-800 uppercase tracking-tight">Review Management</h2>
     </div>
 
-    <%-- 2. BỘ LỌC ĐA NĂNG (Đã trả lại thanh tìm kiếm) --%>
+    <%-- 2. BỘ LỌC ĐA NĂNG --%>
     <div class="flex flex-col md:flex-row gap-3 mb-6 items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
-        <%-- Thanh tìm kiếm tự do (Search) --%>
         <div class="relative flex-1 w-full">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,7 +41,6 @@
                    placeholder="Search product name...">
         </div>
 
-        <%-- Dropdown chọn sản phẩm nhanh --%>
         <select id="productSelect" onchange="filterReviews()" 
                 class="w-full md:w-56 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer shadow-sm">
             <option value="">All Products</option>
@@ -51,7 +49,6 @@
             </c:forEach>
         </select>
 
-        <%-- Dropdown lọc Rating --%>
         <select id="ratingFilter" onchange="filterReviews()" 
                 class="w-full md:w-44 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer shadow-sm">
             <option value="">All Ratings</option>
@@ -61,7 +58,6 @@
             <option value="2">2 Stars</option>
             <option value="1">1 Star</option>
         </select>
-
     </div>
 
     <%-- 3. BẢNG DỮ LIỆU --%>
@@ -70,8 +66,8 @@
             <thead class="text-xs uppercase bg-gray-50 text-gray-700 font-bold">
                 <tr>
                     <th class="px-4 py-3 w-16 text-center">ID</th>
-                    <th class="px-4 py-3">Customer</th>
-                    <th class="px-4 py-3">Product</th>
+                    <th class="px-4 py-3">Product Name</th>
+                    <th class="px-4 py-3">Content</th>
                     <th class="px-4 py-3 text-center">Rating</th>
                     <th class="px-4 py-3">Date</th>
                     <th class="px-4 py-3 text-center w-32">Actions</th>
@@ -81,8 +77,9 @@
                 <c:forEach items="${listdata}" var="r">
                     <tr class="review-row hover:bg-gray-50 transition-colors">
                         <td class="px-4 py-3 text-center font-medium text-gray-500">#${r.reviewId}</td>
-                        <td class="px-4 py-3 font-bold text-gray-900">${r.customerName}</td>
-                        <td class="px-4 py-3 product-name-cell">${r.productName}</td>
+                        <td class="px-4 py-3 font-bold text-gray-900 product-name-cell">${r.productName}</td>
+                        <%-- Cột Content thay thế cho Customer --%>
+                        <td class="px-4 py-3 text-gray-600 italic truncate max-w-xs">"${r.comment}"</td>
                         <td class="px-4 py-3 text-center rating-cell">
                             <span class="inline-block px-2.5 py-0.5 text-xs font-bold text-yellow-700 bg-yellow-50 rounded border border-yellow-100 uppercase">
                                 ${r.rating} ⭐
@@ -121,7 +118,6 @@
     </div>
 </div>
 
-<%-- 4. SCRIPT LỌC (Kết hợp cả Search và Select) --%>
 <script>
     function filterReviews() {
         const searchVal = document.getElementById('nameSearch').value.toLowerCase();
@@ -136,7 +132,6 @@
             const productName = row.querySelector('.product-name-cell').innerText.toLowerCase();
             const ratingText = row.querySelector('.rating-cell').innerText.trim().charAt(0);
 
-            // Điều kiện lọc kết hợp
             const matchesSearch = productName.includes(searchVal);
             const matchesSelect = selectVal === "" || productName === selectVal;
             const matchesRating = ratingVal === "" || ratingText === ratingVal;
@@ -150,6 +145,5 @@
         if (noResultsRow) {
             noResultsRow.style.display = (visibleCount === 0 && rows.length > 0) ? "" : "none";
         }
-        document.getElementById('visibleCount').innerText = visibleCount;
     }
 </script>

@@ -134,6 +134,10 @@ public class staffServlet extends HttpServlet {
                     break;
                 case "productVariantManagement":
                     page = "/pages/ProductVariantManagementPage/productVariantManagement.jsp";
+                    dao.ProductVariantDAO vdao = new dao.ProductVariantDAO();
+                    dao.ProductDAO pdao = new dao.ProductDAO();
+                    listData = vdao.getAllVariant();
+                    request.setAttribute("products", pdao.getAllProduct());
                     break;
 
                 case "reviewManagement":

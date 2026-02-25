@@ -7,25 +7,20 @@ import java.util.List;
 import model.ProductVariant;
 import utils.DBContext;
 
-/**
- *
- * @author CT
- */
 public class ProductVariantDAO extends DBContext {
 
-    // 1. Lấy tất cả biến thể
-    public List<ProductVariant> getAllVariants() {
+    // 1. Lấy tất cả biến thể (JOIN với bảng products để lấy tên sản phẩm)
+    public List<ProductVariant> getAllVariant() {
         List<ProductVariant> list = new ArrayList<>();
-        String sql = "SELECT v.*, p.name as product_name FROM product_variants v "
-                + "JOIN products p ON v.product_id = p.product_id "
-                + "ORDER BY v.variant_id DESC";
+        String sql = "SELECT pv.*, p.name AS product_name "
+                + "FROM product_variants pv "
+                + "JOIN products p ON pv.product_id = p.product_id "
+                + "ORDER BY pv.variant_id DESC";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                ProductVariant v = mapResultSet(rs);
-                v.setProductName(rs.getString("product_name"));
-                list.add(v);
+                list.add(mapResultSet(rs));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -33,19 +28,18 @@ public class ProductVariantDAO extends DBContext {
         return list;
     }
 
-    // 2. Lấy theo ID
+    // 2. Lấy biến thể theo ID
     public ProductVariant getVariantById(int id) {
-        String sql = "SELECT v.*, p.name as product_name FROM product_variants v "
-                + "JOIN products p ON v.product_id = p.product_id "
-                + "WHERE v.variant_id = ?";
+        String sql = "SELECT pv.*, p.name AS product_name "
+                + "FROM product_variants pv "
+                + "JOIN products p ON pv.product_id = p.product_id "
+                + "WHERE pv.variant_id = ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                ProductVariant v = mapResultSet(rs);
-                v.setProductName(rs.getString("product_name"));
-                return v;
+                return mapResultSet(rs);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -53,25 +47,7 @@ public class ProductVariantDAO extends DBContext {
         return null;
     }
 
-    // 3. Kiểm tra biến thể đã có đơn hàng chưa (Chặn xóa cứng)
-    public int countVariantInOrderDetails(int variantId) {
-        String sql = "SELECT COUNT(*) FROM order_items oi "
-                + "JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
-                + "WHERE ii.variant_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, variantId);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return 0;
-    }
-
-    // 4. Thêm mới
+    // 3. Thêm mới biến thể
     public void insertVariant(ProductVariant v) {
         String sql = "INSERT INTO product_variants (product_id, sku, selling_price, is_active) VALUES (?, ?, ?, ?)";
         try {
@@ -86,9 +62,9 @@ public class ProductVariantDAO extends DBContext {
         }
     }
 
-    // 5. Cập nhật (Sửa biến thể)
+    // 4. Cập nhật biến thể
     public void updateVariant(ProductVariant v) {
-        String sql = "UPDATE product_variants SET product_id=?, sku=?, selling_price=?, is_active=? WHERE variant_id=?";
+        String sql = "UPDATE product_variants SET product_id = ?, sku = ?, selling_price = ?, is_active = ? WHERE variant_id = ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, v.getProductId());
@@ -102,7 +78,39 @@ public class ProductVariantDAO extends DBContext {
         }
     }
 
-    // 6. Xóa cứng (Hard Delete)
+    // 5. Kiểm tra trùng SKU (Tương tự kiểm tra trùng tên sản phẩm)
+    public boolean isSkuDuplicate(String sku, int excludeId) {
+        String sql = "SELECT COUNT(*) FROM product_variants WHERE sku = ? AND variant_id <> ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, sku);
+            ps.setInt(2, excludeId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // 6. Kiểm tra tồn kho (Để quyết định xóa mềm hay cứng)
+    public int countInventoryByVariantId(int variantId) {
+        String sql = "SELECT COUNT(*) FROM inventory_items WHERE variant_id = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, variantId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     public void deleteVariant(int id) {
         String sql = "DELETE FROM product_variants WHERE variant_id = ?";
         try {
@@ -114,7 +122,6 @@ public class ProductVariantDAO extends DBContext {
         }
     }
 
-    // 7. Xóa mềm (Soft Delete)
     public void softDeleteVariant(int id) {
         String sql = "UPDATE product_variants SET is_active = 0 WHERE variant_id = ?";
         try {
@@ -127,12 +134,13 @@ public class ProductVariantDAO extends DBContext {
     }
 
     private ProductVariant mapResultSet(ResultSet rs) throws Exception {
-        return new ProductVariant(
-                rs.getInt("variant_id"),
-                rs.getInt("product_id"),
-                rs.getString("sku"),
-                rs.getLong("selling_price"),
-                rs.getBoolean("is_active")
-        );
+        ProductVariant v = new ProductVariant();
+        v.setVariantId(rs.getInt("variant_id"));
+        v.setProductId(rs.getInt("product_id"));
+        v.setSku(rs.getString("sku"));
+        v.setSellingPrice(rs.getLong("selling_price"));
+        v.setIsActive(rs.getBoolean("is_active"));
+        v.setProductName(rs.getString("product_name"));
+        return v;
     }
 }
