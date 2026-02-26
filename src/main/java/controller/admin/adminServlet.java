@@ -10,6 +10,7 @@ import dao.CustomerDAO;
 import dao.EmployeesDAO;
 import dao.OrderStatusDAO;
 import dao.PaymentMethodDAO;
+import dao.ProductSpecificationValueDAO;
 import dao.SpecificationDefinitionDAO;
 import dao.VoucherDAO;
 import java.io.IOException;
@@ -102,6 +103,10 @@ public class adminServlet extends HttpServlet {
                     listData = bdao.getAllBrand();
                     break;
                 case "specificationValueManagement":
+                    ProductSpecificationValueDAO svdao = new ProductSpecificationValueDAO();
+                    listData = svdao.getAllProductSpecs();
+                    SpecificationDefinitionDAO specDefDao = new SpecificationDefinitionDAO();
+                    request.setAttribute("specs", specDefDao.getAllSpecs());
                     page = "/pages/SpecificationValueManagementPage/specificationValueManagement.jsp";
                     break;
                 case "specificationDefinitionManagement":

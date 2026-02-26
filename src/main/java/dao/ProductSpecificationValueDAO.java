@@ -7,13 +7,12 @@ import java.util.List;
 import model.ProductSpecificationValues;
 import utils.DBContext;
 
-public class ProductSpecificationValuesDAO extends DBContext {
+public class ProductSpecificationValueDAO extends DBContext {
 
-    // 1. LẤY TẤT CẢ (JOIN lấy tên để hiện bảng Admin)
     public List<ProductSpecificationValues> getAllProductSpecs() {
         List<ProductSpecificationValues> list = new ArrayList<>();
         String sql = "SELECT v.*, p.name as product_name, s.spec_name "
-                + "FROM product_specification_values v "
+                + "FROM product_spec_values v "
                 + "JOIN products p ON v.product_id = p.product_id "
                 + "JOIN specification_definitions s ON v.spec_id = s.spec_id "
                 + "ORDER BY p.product_id DESC";
@@ -22,9 +21,8 @@ public class ProductSpecificationValuesDAO extends DBContext {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 ProductSpecificationValues v = mapResultSet(rs);
-                // Gán tên hiển thị từ lệnh JOIN
-                // v.setProductName(rs.getString("product_name"));
-                // v.setSpecName(rs.getString("spec_name"));
+                v.setProductName(rs.getString("product_name"));
+                v.setSpecName(rs.getString("spec_name"));
                 list.add(v);
             }
         } catch (Exception e) {
@@ -33,16 +31,22 @@ public class ProductSpecificationValuesDAO extends DBContext {
         return list;
     }
 
-    // 2. LẤY THEO KHÓA KÉP (Dùng cho trang Edit/Detail)
     public ProductSpecificationValues getSpecValueById(int productId, int specId) {
-        String sql = "SELECT * FROM product_specification_values WHERE product_id = ? AND spec_id = ?";
+        String sql = "SELECT v.*, p.name as product_name, s.spec_name "
+                + "FROM product_spec_values v "
+                + "JOIN products p ON v.product_id = p.product_id "
+                + "JOIN specification_definitions s ON v.spec_id = s.spec_id "
+                + "WHERE v.product_id = ? AND v.spec_id = ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, productId);
             ps.setInt(2, specId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return mapResultSet(rs);
+                ProductSpecificationValues v = mapResultSet(rs);
+                v.setProductName(rs.getString("product_name"));
+                v.setSpecName(rs.getString("spec_name"));
+                return v;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -52,7 +56,7 @@ public class ProductSpecificationValuesDAO extends DBContext {
 
     // 3. THÊM MỚI
     public void insertProductSpec(ProductSpecificationValues v) {
-        String sql = "INSERT INTO product_specification_values (product_id, spec_id, spec_value) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO product_spec_values (product_id, spec_id, spec_value) VALUES (?, ?, ?)";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, v.getProductId());
@@ -66,7 +70,7 @@ public class ProductSpecificationValuesDAO extends DBContext {
 
     // 4. CẬP NHẬT
     public void updateProductSpec(ProductSpecificationValues v) {
-        String sql = "UPDATE product_specification_values SET spec_value = ? WHERE product_id = ? AND spec_id = ?";
+        String sql = "UPDATE product_spec_values SET spec_value = ? WHERE product_id = ? AND spec_id = ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, v.getSpecValue());
@@ -80,7 +84,7 @@ public class ProductSpecificationValuesDAO extends DBContext {
 
     // 5. XÓA CỨNG (Vì không có is_active nên xóa thẳng)
     public void deleteProductSpec(int productId, int specId) {
-        String sql = "DELETE FROM product_specification_values WHERE product_id = ? AND spec_id = ?";
+        String sql = "DELETE FROM product_spec_values WHERE product_id = ? AND spec_id = ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, productId);
@@ -93,7 +97,7 @@ public class ProductSpecificationValuesDAO extends DBContext {
 
     // 6. XÓA TẤT CẢ THÔNG SỐ CỦA 1 SẢN PHẨM (Dùng khi xóa Product)
     public void deleteAllSpecsByProduct(int productId) {
-        String sql = "DELETE FROM product_specification_values WHERE product_id = ?";
+        String sql = "DELETE FROM product_spec_values WHERE product_id = ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, productId);
