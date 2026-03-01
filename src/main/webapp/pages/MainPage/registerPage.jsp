@@ -9,17 +9,20 @@
             <input type="hidden" name="action" value="register">
 
             <div class="relative z-0 w-full mb-5 group">
-                <input type="text" name="username" id="username" 
+                <input type="text" name="username" id="username" value="${oldUsername}" 
                        class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
                        placeholder=" " required />
                 <label for="username" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
                     Username
                 </label>
+                <c:if test="${not empty errorUsername}">
+                    <p class="mt-2 text-sm text-red-600 font-medium">${errorUsername}</p>
+                </c:if>
             </div>
 
             <div class="grid md:grid-cols-2 md:gap-6">
                 <div class="relative z-0 w-full mb-5 group">
-                    <input type="text" name="full_name" id="full_name" 
+                    <input type="text" name="full_name" id="full_name"  value="${oldFullName}"
                            class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
                            placeholder=" " required />
                     <label for="full_name" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
@@ -27,28 +30,34 @@
                     </label>
                 </div>
                 <div class="relative z-0 w-full mb-5 group">
-                    <input type="tel" name="phone_number" id="phone_number" pattern="[0-9]{10}"
+                    <input type="tel" name="phone_number" id="phone_number" pattern="^0(3|5|7|8|9)[0-9]{8}$"  title="Số điện thoại phải bắt đầu bằng 0, theo sau là 3, 5, 7, 8, 9 và đủ 10 chữ số." value="${oldPhone}"
                            class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
                            placeholder=" " required />
                     <label for="phone_number" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
                         Phone (10 digits)
                     </label>
+                    <c:if test="${not empty errorPhone}">
+                        <p class="mt-2 text-sm text-red-600 font-medium">${errorPhone}</p>
+                    </c:if>
                 </div>
             </div>
 
             <div class="relative z-0 w-full mb-5 group">
-                <input type="email" name="email" id="email" 
+                <input type="email" name="email" id="email"  value="${oldEmail}"
                        class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
                        placeholder=" " required />
                 <label for="email" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
                     Email address
                 </label>
+                <c:if test="${not empty errorEmail}">
+                    <p class="mt-2 text-sm text-red-600 font-medium">${errorEmail}</p>
+                </c:if>
             </div>
 
 
 
             <div class="relative z-0 w-full mb-5 group">
-                <input type="password" name="password" id="password" 
+                <input type="password" name="password" id="password" value="${oldPassword}"
                        class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
                        placeholder=" " required />
                 <label for="password" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">

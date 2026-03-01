@@ -84,7 +84,11 @@ public class registerServlet extends HttpServlet {
             String phone = request.getParameter("phone_number");
             String email = request.getParameter("email");
             String password = request.getParameter("password");
-        
+
+            String errorUsername = utils.IO.CheckDuplicationUsername(username) ? "" : "Username already exists!";
+            String errorNumber = utils.IO.CheckNumber(phone) ? "" : "Invalid phone (10 digits required)";
+            String errorEmail = utils.IO.checkDuplicationGmail(email) ? "" : "Gmail already exists";
+
             // 5. Tạo đối tượng User mới
             Customer u = new Customer();
             u.setUserName(username);
@@ -94,18 +98,36 @@ public class registerServlet extends HttpServlet {
             u.setPassword(password); // Thực tế nên mã hóa MD5/BCrypt trước khi set
 
             // --- CÁC GIÁ TRỊ HỆ THỐNG TỰ GÁN CHO KHÁCH HÀNG ---
-       
             u.setStatus("ACTIVE"); // Mặc định tài khoản kích hoạt luôn
 
             // 6. Lưu vào Database
             boolean isSuccess = cdao.addCustomer(u);
 
-            if (isSuccess) {
+            if (errorUsername.isEmpty() && errorNumber.isEmpty() && errorEmail.isEmpty() && isSuccess) {
                 response.sendRedirect("userservlet?action=loginPage");
             } else {
-                                response.sendRedirect("userservlet?action=registerPage");
+                request.setAttribute("errorUsername", errorUsername);
+                request.setAttribute("errorPhone", errorNumber);
+                request.setAttribute("errorEmail", errorEmail);
+
+                request.setAttribute("oldUsername", username);
+                request.setAttribute("oldFullName", fullName);
+                request.setAttribute("oldEmail", email);
+                request.setAttribute("oldPhone", phone);
+                request.setAttribute("oldPassword", password);
+
+                String headerComponent = "/components/navbar.jsp"; // Trang mặc định khi mới vào
+                String footerComponent = "/components/footer.jsp"; // Trang mặc định khi mới vào
+
+                request.setAttribute("HeaderComponent", headerComponent);
+                request.setAttribute("FooterComponent", footerComponent);
+                request.setAttribute("ContentPage", "/pages/MainPage/registerPage.jsp");
+
+                // 5. Forward đến Template duy nhất
+                request.getRequestDispatcher("/template/userTemplate.jsp").forward(request, response);
 
             }
+
         } catch (Exception e) {
             e.printStackTrace();
             // Điều hướng trang lỗi

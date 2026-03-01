@@ -110,6 +110,22 @@ public class CustomerAddressDAO extends DBContext {
         return false;
     }
 
+    public CustomerAddress getAddressById(int addressId) {
+        String sql = "SELECT * FROM customer_addresses WHERE address_id = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, addressId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                // Tận dụng luôn hàm mapResultSetToAddress bạn đã viết sẵn cho gọn
+                return mapResultSetToAddress(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static void main(String[] args) {
         CustomerAddressDAO dao = new CustomerAddressDAO();
         int testCustomerId = 1; // Đảm bảo ID này tồn tại trong bảng customers

@@ -45,6 +45,7 @@
                     <label for="discount_percent" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
                         Discount Percentage (%)
                     </label>
+                    
                 </div>
             </div>
 
@@ -64,6 +65,9 @@
                     <label for="valid_to" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
                         Valid To
                     </label>
+                       <c:if test="${not empty errorValidTo}">
+                        <p class="mt-1 text-xs text-red-600 font-medium">${errorValidTo}</p>
+                    </c:if>
                 </div>
             </div>
 
@@ -83,6 +87,9 @@
                     <label for="max_discount_amount" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
                         Max Discount Amount (VND)
                     </label>
+                    <c:if test="${not empty errorMaxDiscountAmount}">
+                        <p class="mt-1 text-xs text-red-600 font-medium">${errorMaxDiscountAmount}</p>
+                    </c:if>
                 </div>
             </div>
 

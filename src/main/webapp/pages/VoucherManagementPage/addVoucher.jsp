@@ -14,15 +14,18 @@
 
             <div class="grid md:grid-cols-2 md:gap-8">
                 <div class="relative z-0 w-full group">
-                    <input type="text" name="code" id="code" 
+                    <input type="text" name="code" id="code" value="${oldCode}"
                            class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
                            placeholder=" " required style="text-transform: uppercase;" />
                     <label for="code" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
                         Voucher Code (e.g. SALE2026)
                     </label>
+                    <c:if test="${not empty errorCode}">
+                        <p class="mt-1 text-xs text-red-600 font-medium">${errorCode}</p>
+                    </c:if>
                 </div>
                 <div class="relative z-0 w-full group">
-                    <input type="number" name="discount_percent" id="discount_percent" min="1" max="100"
+                    <input type="number" name="discount_percent" id="discount_percent" value="${oldDiscountPercent}" min="1" max="100"
                            class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
                            placeholder=" " required />
                     <label for="discount_percent" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
@@ -34,55 +37,63 @@
             <div class="grid md:grid-cols-2 md:gap-8">
                 <div class="relative z-0 w-full group">
                     <input type="datetime-local" name="valid_from" id="valid_from" 
-                           class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
+                           value="${oldValidFromStr}" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
                            placeholder=" " required />
                     <label for="valid_from" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
                         Valid From
                     </label>
+
                 </div>
                 <div class="relative z-0 w-full group">
-                    <input type="datetime-local" name="valid_to" id="valid_to" 
+                    <input type="datetime-local" name="valid_to" id="valid_to"  value="${oldValidToStr}"
                            class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
                            placeholder=" " required />
                     <label for="valid_to" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
                         Valid To (Expiration Date)
                     </label>
+                    <c:if test="${not empty errorValidTo}">
+                        <p class="mt-1 text-xs text-red-600 font-medium">${errorValidTo}</p>
+                    </c:if>
                 </div>
             </div>
 
             <div class="grid md:grid-cols-2 md:gap-8">
                 <div class="relative z-0 w-full group">
-                    <input type="number" name="min_order_value" id="min_order_value" min="0" step="1000"
+                    <input type="number" name="min_order_value" id="min_order_value" min="0" step="1000" value="${oldMinOrderValueStr}"
                            class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
                            placeholder=" " required />
                     <label for="min_order_value" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
                         Min Order Value (VND)
                     </label>
+
                 </div>
                 <div class="relative z-0 w-full group">
-                    <input type="number" name="max_discount_amount" id="max_discount_amount" min="0" step="1000"
+                    <input type="number" name="max_discount_amount" id="max_discount_amount" min="0" step="1000" value="${oldMaxDiscountStr}"
                            class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
                            placeholder=" " />
                     <label for="max_discount_amount" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
                         Max Discount Amount (VND) - Optional
                     </label>
+                    <c:if test="${not empty errorMaxDiscountAmount}">
+                        <p class="mt-1 text-xs text-red-600 font-medium">${errorMaxDiscountAmount}</p>
+                    </c:if>
                 </div>
             </div>
 
             <div class="grid md:grid-cols-2 md:gap-8">
                 <div class="relative z-0 w-full group">
-                    <input type="number" name="total_quantity" id="total_quantity" min="1"
+                    <input type="number" name="total_quantity" id="total_quantity" min="1" value="${oldTotalQuantity}"
                            class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
                            placeholder=" " required />
                     <label for="total_quantity" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
                         Total Quantity
                     </label>
                 </div>
-                
+
                 <div class="relative z-0 w-full group">
                     <select name="status" id="status" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 focus:outline-none focus:ring-0 focus:border-blue-600 peer">
-                        <option value="ACTIVE" selected>Active</option>
-                        <option value="LOCKED">Locked (Inactive)</option>
+                        <option value="ACTIVE" ${empty oldStatus or oldStatus == 'ACTIVE' ? 'selected' : ''} selected>Active</option>
+                        <option value="LOCKED" ${oldStatus == 'LOCKED' ? 'selected' : ''}>Locked (Inactive)</option>
                     </select>
                     <label for="status" class="absolute text-xs text-blue-600 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0]">
                         Initial Status

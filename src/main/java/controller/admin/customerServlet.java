@@ -139,6 +139,7 @@ public class customerServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
         String action = request.getParameter("action");
         CustomerDAO cdao = new CustomerDAO();
         if (action != null) {
@@ -151,26 +152,70 @@ public class customerServlet extends HttpServlet {
                     String password = request.getParameter("password");
                     String phone = request.getParameter("phone_number");
                     String status = request.getParameter("status");
-                    cdao.addCustomer(new Customer(0, username, password, fullName, email, phone, status, LocalDateTime.now()));
-                    break;
+
+                    String errorUsername = utils.IO.CheckDuplicationUsername(username) ? "" : "Username already exists!";
+                    String errorNumber = utils.IO.CheckNumber(phone) ? "" : "Invalid phone (10 digits required)";
+                    String errorEmail = utils.IO.checkDuplicationGmail(email) ? "" : "Gmail already exists";
+                    if (errorUsername.isEmpty() && errorNumber.isEmpty() && errorEmail.isEmpty()) {
+                        // OK -> Thêm vào DB
+                        cdao.addCustomer(new Customer(0, username, password, fullName, email, phone, status, LocalDateTime.now()));
+                        response.sendRedirect("customerservlet?action=all");
+                    } else {
+                        // Lỗi -> Forward về trang Add kèm theo dữ liệu đã nhập
+                        request.setAttribute("errorUsername", errorUsername);
+                        request.setAttribute("errorNumber", errorNumber);
+                        request.setAttribute("errorEmail", errorEmail);
+
+                        // Gửi lại các giá trị cũ để hiển thị trên input (value="${oldUsername}")
+                        request.setAttribute("oldUsername", username);
+                        request.setAttribute("oldFullName", fullName);
+                        request.setAttribute("oldEmail", email);
+                        request.setAttribute("oldPhone", phone);
+                        request.setAttribute("oldPassword", password);
+                        request.setAttribute("oldRoleId", request.getParameter("role_id"));
+
+                        request.setAttribute("contentPage", "/pages/CustomerManagementPage/addCustomer.jsp");
+                        request.getRequestDispatcher("/template/adminTemplate.jsp").forward(request, response);
+                    }
+                    return; // Đừng quên return để không chạy xuống Redirect phía dưới
                 case "edit":
-                    int id = Integer.parseInt(request.getParameter("customerID"));
+                    int idE = Integer.parseInt(request.getParameter("customerID"));
+                    Customer customer = cdao.getCustomerById(idE);
+                    request.setAttribute("customer", customer);
                     String usernameE = request.getParameter("username");
                     String fullNameE = request.getParameter("full_name");
                     String emailE = request.getParameter("email");
                     String phoneE = request.getParameter("phone_number");
                     String statusE = request.getParameter("status");
+                    String passwordE = request.getParameter("password");
+                    String errorEmailE = utils.IO.checkDuplicationGmailInEdit(emailE, customer.getEmail()) ? "" : "Gmail already exists";
 
-                    Customer updatedCus = cdao.getCustomerById(id);
-                    updatedCus.setCustomerID(id);
-                    updatedCus.setUserName(usernameE);
-                    updatedCus.setFullname(fullNameE);
-                    updatedCus.setEmail(emailE);
-                    updatedCus.setPhoneNumber(phoneE);
-                    updatedCus.setStatus(statusE);
+                    String errorNumberE = utils.IO.CheckNumber(phoneE) ? "" : "Invalid phone (10 digits required)";
 
-                    cdao.updateCustomer(updatedCus);
-                    break;
+                    if (errorNumberE.isEmpty() && errorEmailE.isEmpty()) {
+                        // OK -> Thêm vào DB
+                        Customer updatedCus = cdao.getCustomerById(idE);
+                        updatedCus.setCustomerID(idE);
+                        updatedCus.setUserName(usernameE);
+                        updatedCus.setFullname(fullNameE);
+                        updatedCus.setEmail(emailE);
+                        updatedCus.setPhoneNumber(phoneE);
+                        updatedCus.setStatus(statusE);
+                        updatedCus.setPassword(passwordE);
+                        cdao.updateCustomer(updatedCus);
+                        response.sendRedirect("customerservlet?action=all");
+                    } else {
+                        // Lỗi -> Forward về trang Add kèm theo dữ liệu đã nhập
+
+                        request.setAttribute("errorNumber", errorNumberE);
+                        request.setAttribute("errorEmail", errorEmailE);
+                        request.setAttribute("customer", customer);
+
+                        request.setAttribute("contentPage", "/pages/CustomerManagementPage/editCustomer.jsp");
+                        request.getRequestDispatcher("/template/adminTemplate.jsp").forward(request, response);
+                    }
+
+                    return;
             }
         }
         response.sendRedirect("customerservlet?action=all");

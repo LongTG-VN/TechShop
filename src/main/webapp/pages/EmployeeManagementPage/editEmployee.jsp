@@ -7,7 +7,7 @@
         <div class="text-center mb-10">
             <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-50 text-blue-600 rounded-full mb-4">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                 </svg>
             </div>
             <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Update Staff Profile</h2>
@@ -37,6 +37,9 @@
                 <input type="email" name="emailE" id="email" value="${employee.email}" 
                        class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
                 <label for="email" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Work Email</label>
+                <c:if test="${not empty errorEmail}">
+                    <p class="mt-1 text-xs text-red-600 font-medium">${errorEmail}</p>
+                </c:if>
             </div>
 
             <div class="grid md:grid-cols-2 md:gap-8">
@@ -44,6 +47,9 @@
                     <input type="tel" name="phoneE" id="phone_number" value="${employee.phoneNumber}" 
                            class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
                     <label for="phone_number" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Phone Number</label>
+                    <c:if test="${not empty errorNumber}">
+                        <p class="mt-1 text-xs text-red-600 font-medium">${errorNumber}</p>
+                    </c:if>
                 </div>
 
                 <%-- Employee Specific: Role Selection --%>
@@ -68,7 +74,7 @@
             </div>
 
             <div class="flex items-center justify-end space-x-3 pt-6 border-t border-gray-50">
-                <a href="user?action=all" 
+                <a href="employeeservlet?action=all" 
                    class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-red-600 transition-all">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     Discard

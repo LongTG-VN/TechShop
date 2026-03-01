@@ -138,6 +138,36 @@ public class CustomerDAO extends DBContext {
         return "";
     }
 
+    // 1. Hàm cập nhật thông tin cá nhân (không đụng đến mật khẩu)
+    public boolean updateCustomerNopassword(Customer c) {
+        String sql = "UPDATE customers SET full_name = ?, email = ?, phone_number = ? WHERE customer_id = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setNString(1, c.getFullname());
+            ps.setString(2, c.getEmail());
+            ps.setString(3, c.getPhoneNumber());
+            ps.setInt(4, c.getCustomerID());
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+// 2. Hàm riêng để đổi mật khẩu (có thực hiện Hash MD5)
+    public boolean changePassword(int customerId, String newPassword) {
+        String sql = "UPDATE customers SET password_hash = ? WHERE customer_id = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, hashMD5(newPassword)); // Hash mật khẩu mới ở đây
+            ps.setInt(2, customerId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     public Customer login(String user, String pass) {
         Customer u = new Customer();
         //u.id = -1
@@ -168,6 +198,7 @@ public class CustomerDAO extends DBContext {
         }
 
         return u;
+
     }
 
     public static void main(String[] args) {
@@ -176,8 +207,8 @@ public class CustomerDAO extends DBContext {
 //        for (Customer customer : list) {
 //            System.out.println(customer);
 //        }
-        System.out.println(a.login("L", "123"));
-       
-//        a.addCustomer(new Customer(0, "L", "123", "L", "L", "L", "L", LocalDateTime.MAX));
+//        System.out.println(a.login("L", "123"));
+
+        a.addCustomer(new Customer(0, "222", "123", "L", "L", "L", "L", LocalDateTime.MAX));
     }
 }

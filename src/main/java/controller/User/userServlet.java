@@ -89,15 +89,6 @@ public class userServlet extends HttpServlet {
                     request.setAttribute("customer", customer);
                     request.setAttribute("listAddress", listdata);
                     break;
-                case "brandManagement":
-                    page = "/pages/brandManagement.jsp";
-                    break;
-                case "productManagement":
-                    page = "/pages/productManagement.jsp";
-                    break;
-                case "voucherManagement":
-                    page = "/pages/voucherManagement.jsp";
-                    break;
                 default:
                     page = "/pages/dashboardPage.jsp";
             }

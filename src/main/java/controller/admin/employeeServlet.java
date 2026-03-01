@@ -145,6 +145,10 @@ public class employeeServlet extends HttpServlet {
                     // Lấy role_id từ <select> và ép kiểu sang int
                     int roleId = Integer.parseInt(request.getParameter("role_id"));
 
+                    String errorUsername = utils.IO.CheckDuplicationUsername(username) ? "" : "Username already exists!";
+                    String errorNumber = utils.IO.CheckNumber(phone) ? "" : "Invalid phone (10 digits required)";
+                    String errorEmail = utils.IO.checkDuplicationGmail(email) ? "" : "Gmail already exists";
+
                     // 2. Khởi tạo đối tượng Employees (Model mới của bạn)
                     Employees newEmp = new Employees();
                     newEmp.setUsername(username);
@@ -155,9 +159,29 @@ public class employeeServlet extends HttpServlet {
                     newEmp.setRole(rdao.getRoleById(roleId));
                     newEmp.setStatus(status);
 
-                    // 3. Gọi hàm insert từ EmployeesDAO
-                    edao.insertEmployee(newEmp);
-                    break;
+                    if (errorUsername.isEmpty() && errorNumber.isEmpty() && errorEmail.isEmpty()) {
+                        // OK -> Thêm vào DB
+                        edao.insertEmployee(newEmp);
+                        response.sendRedirect("employeeservlet?action=all");
+                    } else {
+                        // Lỗi -> Forward về trang Add kèm theo dữ liệu đã nhập
+                        request.setAttribute("errorUsername", errorUsername);
+                        request.setAttribute("errorNumber", errorNumber);
+                        request.setAttribute("errorEmail", errorEmail);
+
+                        // Gửi lại các giá trị cũ để hiển thị trên input (value="${oldUsername}")
+                        request.setAttribute("oldUsername", username);
+                        request.setAttribute("oldFullName", fullName);
+                        request.setAttribute("oldEmail", email);
+                        request.setAttribute("oldPhone", phone);
+                        request.setAttribute("oldPassword", password);
+                        request.setAttribute("oldRoleId", request.getParameter("role_id"));
+
+                        request.setAttribute("contentPage", "/pages/EmployeeManagementPage/addEmployee.jsp");
+                        request.getRequestDispatcher("/template/adminTemplate.jsp").forward(request, response);
+                    }
+
+                    return;
                 case "edit":
 // 1. Lấy dữ liệu từ các input name trong Form Edit
                     int employeeId = Integer.parseInt(request.getParameter("employeeId"));
@@ -165,6 +189,7 @@ public class employeeServlet extends HttpServlet {
                     String emailE = request.getParameter("emailE");       // Thêm E
                     String phoneE = request.getParameter("phoneE");       // Đổi thành phoneE
                     String statusE = request.getParameter("statusE");     // Thêm E
+                    String passwordE = request.getParameter("passwordE");
 
                     // Lấy role_id từ select name="role_idE"
                     int roleIdE = Integer.parseInt(request.getParameter("role_idE")); // Thêm E
@@ -181,13 +206,33 @@ public class employeeServlet extends HttpServlet {
                     r.setRole_id(roleIdE);
                     empUpdate.setRole(r);
 
-                    // Gọi DAO cập nhật
-                    edao.updateEmployee(empUpdate);
+                    Employees emp = edao.getEmployeeById(employeeId);
 
-                    break;
+                    String errorNumberE = utils.IO.CheckNumber(phoneE) ? "" : "Invalid phone (10 digits required)";
+                    String errorEmailE = utils.IO.checkDuplicationGmailInEdit(emailE, emp.getEmail()) ? "" : "Gmail already exists";
+
+                    if (errorNumberE.isEmpty() && errorEmailE.isEmpty()) {
+                        // OK -> Thêm vào DB
+                        edao.updateEmployee(empUpdate);
+                        response.sendRedirect("employeeservlet?action=all");
+                    } else {
+                        // Lỗi -> Forward về trang Add kèm theo dữ liệu đã nhập
+
+                        request.setAttribute("errorNumber", errorNumberE);
+                        request.setAttribute("errorEmail", errorEmailE);
+
+                        // Gửi lại các giá trị cũ để hiển thị trên input (value="${oldUsername}")
+                        List<Role> roles = rdao.getAllRole(); // Fetch all roles for the dropdown
+                        request.setAttribute("employee", emp);
+                        request.setAttribute("roleList", roles);
+
+                        request.setAttribute("contentPage", "/pages/EmployeeManagementPage/editEmployee.jsp");
+                        request.getRequestDispatcher("/template/adminTemplate.jsp").forward(request, response);
+                    }
+
+                    return;
             }
         }
-        response.sendRedirect("employeeservlet?action=all");
     }
 
     /**

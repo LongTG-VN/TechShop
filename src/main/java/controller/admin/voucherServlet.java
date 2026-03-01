@@ -145,47 +145,64 @@ public class voucherServlet extends HttpServlet {
         if (action != null) {
             switch (action) {
                 case "add":
-                    String code = request.getParameter("code").toUpperCase(); // Code nên viết hoa
-                    int discountPercent = Integer.parseInt(request.getParameter("discount_percent"));
-
-                    // Xử lý ngày tháng: Input 'datetime-local' trả về dạng "yyyy-MM-ddTHH:mm"
-                    // LocalDateTime.parse mặc định hiểu định dạng này, không cần Formatter
+                    String code = request.getParameter("code").toUpperCase();
+                    String discountPercentStr = request.getParameter("discount_percent");
                     String validFromStr = request.getParameter("valid_from");
                     String validToStr = request.getParameter("valid_to");
-
-                    LocalDateTime validFrom = LocalDateTime.parse(validFromStr);
-                    LocalDateTime validTo = LocalDateTime.parse(validToStr);
-
-                    double minOrderValue = Double.parseDouble(request.getParameter("min_order_value"));
-
-                    // Max discount amount có thể để trống (Optional)
+                    String minOrderValueStr = request.getParameter("min_order_value");
                     String maxDiscountStr = request.getParameter("max_discount_amount");
-                    double maxDiscountAmount = (maxDiscountStr != null && !maxDiscountStr.isEmpty())
-                            ? Double.parseDouble(maxDiscountStr) : 0;
-
-                    int totalQuantity = Integer.parseInt(request.getParameter("total_quantity"));
+                    String totalQuantityStr = request.getParameter("total_quantity");
                     String status = request.getParameter("status");
 
-                    // B. Validate logic cơ bản
-                    // 1. Ngày kết thúc phải sau ngày bắt đầu
-                    // C. Tạo đối tượng Voucher
-                    Voucher v = new Voucher();
-                    v.setCode(code);
-                    v.setDiscountPercent(discountPercent);
-                    v.setValidFrom(validFrom);
-                    v.setValidTo(validTo);
-                    v.setMinOrderValue(minOrderValue);
-                    v.setMaxDiscountAmount(maxDiscountAmount);
-                    v.setTotalQuantity(totalQuantity);
-                    v.setUsedQuantity(0); // Mới tạo thì chưa ai dùng
-                    v.setStatus(status);
+                    // 1. CHẠY VALIDATE TRƯỚC TIÊN (Chỉ check String, không ép kiểu vội)
+                    String errorCode = utils.IO.checkCodeDuplicate(code) ? "" : "This voucher code already exists!";
+                    String errorValidTo = utils.IO.checkValidDates(validFromStr, validToStr) ? "" : "Invalid date range. End date must be after the start date!";
+                    String errorMaxDiscountAmount = utils.IO.checkVoucherConditions(minOrderValueStr, maxDiscountStr) ? "" : "Invalid input. Values must be numbers and cannot be negative!";
 
-                    dao.insertVoucher(v);
-                    break;
+                    // Thêm check an toàn cho số lượng và phần trăm để tránh lỗi 500
+                    if (discountPercentStr == null || discountPercentStr.isEmpty() || totalQuantityStr == null || totalQuantityStr.isEmpty()) {
+                        errorCode = "Vui lòng nhập đầy đủ các trường bắt buộc!"; // Hoặc một biến error chung
+                    }
+
+                    if (errorCode.isEmpty() && errorValidTo.isEmpty() && errorMaxDiscountAmount.isEmpty()) {
+                        // 2. KHI MỌI THỨ AN TOÀN -> BẮT ĐẦU PARSE VÀ INSERT
+                        Voucher v = new Voucher();
+                        v.setCode(code);
+                        v.setDiscountPercent(Integer.parseInt(discountPercentStr));
+                        v.setValidFrom(LocalDateTime.parse(validFromStr));
+                        v.setValidTo(LocalDateTime.parse(validToStr));
+                        v.setMinOrderValue(Double.parseDouble(minOrderValueStr));
+                        v.setMaxDiscountAmount((maxDiscountStr != null && !maxDiscountStr.isEmpty()) ? Double.parseDouble(maxDiscountStr) : 0);
+                        v.setTotalQuantity(Integer.parseInt(totalQuantityStr));
+                        v.setUsedQuantity(0);
+                        v.setStatus(status);
+
+                        dao.insertVoucher(v);
+                        response.sendRedirect("voucherservlet?action=all");
+                    } else {
+                        // 3. CÓ LỖI -> TRẢ VỀ FORM (Code này của bạn đã chuẩn rồi)
+                        request.setAttribute("errorCode", errorCode);
+                        request.setAttribute("errorValidTo", errorValidTo);
+                        request.setAttribute("errorMaxDiscountAmount", errorMaxDiscountAmount);
+
+                        request.setAttribute("oldCode", code);
+                        request.setAttribute("oldDiscountPercent", discountPercentStr);
+                        request.setAttribute("oldValidFromStr", validFromStr);
+                        request.setAttribute("oldValidToStr", validToStr);
+                        request.setAttribute("oldMinOrderValueStr", minOrderValueStr);
+                        request.setAttribute("oldMaxDiscountStr", maxDiscountStr);
+                        request.setAttribute("oldTotalQuantity", totalQuantityStr);
+                        request.setAttribute("oldStatus", status);
+
+                        request.setAttribute("contentPage", "/pages/VoucherManagementPage/addVoucher.jsp");
+                        request.getRequestDispatcher("/template/adminTemplate.jsp").forward(request, response);
+                    }
+                    return;
+
                 case "edit":
                     // 1. Lấy ID (Bắt buộc phải có để biết sửa dòng nào)
                     String codeE = request.getParameter("code").toUpperCase(); // Code nên viết hoa
-                    int id = Integer.parseInt(request.getParameter("voucher_id"));
+                    int idE = Integer.parseInt(request.getParameter("voucher_id"));
                     // 2. Lấy dữ liệu từ form (Y hệt phần Add)
                     int discountPercentE = Integer.parseInt(request.getParameter("discount_percent"));
                     // Parse ngày tháng
@@ -205,7 +222,7 @@ public class voucherServlet extends HttpServlet {
                     // 3. Đóng gói vào object Voucher
                     Voucher vEdit = new Voucher();
                     vEdit.setCode(codeE);
-                    vEdit.setVoucherId(id); // Quan trọng nhất
+                    vEdit.setVoucherId(idE); // Quan trọng nhất
                     vEdit.setDiscountPercent(discountPercentE);
                     vEdit.setValidFrom(validFromE);
                     vEdit.setValidTo(validToE);
@@ -214,12 +231,26 @@ public class voucherServlet extends HttpServlet {
                     vEdit.setTotalQuantity(totalQuantityE);
                     vEdit.setStatus(statusE);
 
-                    dao.updateVoucher(vEdit);
+                    String errorValidToE = utils.IO.checkValidDates(request.getParameter("valid_from"), request.getParameter("valid_to")) ? "" : "Invalid date range. End date must be after the start date!";
+                    String errorMaxDiscountAmountE = utils.IO.checkVoucherConditions(request.getParameter("min_order_value"), maxDiscountStrE) ? "" : "Invalid input. Values must be numbers and cannot be negative!";
 
-                    break;
+                    if (errorValidToE.isEmpty() && errorMaxDiscountAmountE.isEmpty()) {
+                        dao.updateVoucher(vEdit);
+                        response.sendRedirect("voucherservlet?action=all");
+                    } else {
+                        request.setAttribute("errorValidTo", errorValidToE);
+                        request.setAttribute("errorMaxDiscountAmount", errorMaxDiscountAmountE);
+
+                        Voucher voucher = dao.getVoucherById(idE);
+                        request.setAttribute("voucher", voucher);
+                        request.setAttribute("contentPage", "/pages/VoucherManagementPage/editVoucher.jsp");
+                        request.getRequestDispatcher("/template/adminTemplate.jsp").forward(request, response);
+                    }
+
+                    return;
             }
         }
-        response.sendRedirect("voucherservlet?action=all");
+
     }
 
     /**

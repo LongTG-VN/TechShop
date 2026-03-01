@@ -76,8 +76,12 @@ public class loginServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        String headerComponent = "/components/navbar.jsp"; // Trang mặc định khi mới vào
+        String footerComponent = "/components/footer.jsp"; // Trang mặc định khi mới vào
         String username = request.getParameter("username");
         String password = request.getParameter("password");
+        request.setAttribute("HeaderComponent", headerComponent);
+        request.setAttribute("FooterComponent", footerComponent);
 
         // 1. Băm mật khẩu ra MD5 trước khi kiểm tra trong DB
         CustomerDAO Cdao = new CustomerDAO();
@@ -89,8 +93,11 @@ public class loginServlet extends HttpServlet {
         // 2. SỬA LỖI LOGIC QUAN TRỌNG:
         // Phải dùng && (VÀ). Chỉ khi CẢ 2 đều không tìm thấy thì mới là lỗi.
         if (customer.getCustomerID() == -1 && employee.getEmployeeId() == -1) {
+
+            request.setAttribute("error", "Invalid username or password!");
             // Đăng nhập thất bại
-            response.sendRedirect("userservlet?action=loginPage");
+            request.setAttribute("ContentPage", "/pages/MainPage/loginPage.jsp");
+            request.getRequestDispatcher("/template/userTemplate.jsp").forward(request, response);
         } // 3. Trường hợp là Nhân viên (Employee)
         else if (employee.getEmployeeId() != -1) {
 

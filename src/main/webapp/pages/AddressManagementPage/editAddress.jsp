@@ -7,15 +7,17 @@
             <a href="userservlet?action=addressBook" class="text-gray-400 hover:text-blue-600 transition-colors">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             </a>
-            <h3 class="text-lg leading-6 font-medium text-gray-900">Thêm Địa Chỉ Mới</h3>
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Cập Nhật Địa Chỉ</h3>
         </div>
     </div>
 
     <div class="px-6 py-6 bg-white">
         <form action="addresssuserservlet" method="POST" class="space-y-6">
+            <input type="hidden" name="addressId" value="${addressId}">
+
             <input type="hidden" name="provinceName" id="provinceName" value="${provinceName}">
             <input type="hidden" name="wardName" id="wardName" value="${wardName}">
-            <input type="hidden" name="action" id="action" value="add">
+            <input type="hidden" name="action" id="action" value="update">
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -69,24 +71,22 @@
                 </div>
             </div>
 
-
-
             <div class="flex items-center mt-4">
                 <input type="checkbox" name="isDefault" id="isDefault" value="true"
-                       ${hasDefaultAddress == true || hasDefaultAddress == 'true' ? 'disabled' : (isDefault == 'true' ? 'checked' : '')}
-                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded 
-                       ${hasDefaultAddress == true || hasDefaultAddress == 'true' ? 'cursor-not-allowed opacity-50 bg-gray-200' : 'cursor-pointer'}">
+                       ${(isCurrentDefault == true || isCurrentDefault == 'true' || isDefault == 'true') ? 'checked' : ''}
+                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer hover:ring-2 transition-all">
 
-                <label for="isDefault" class="ml-2 block text-sm text-gray-900 ${hasDefaultAddress == true || hasDefaultAddress == 'true' ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}">
+                <label for="isDefault" class="ml-2 block text-sm text-gray-900 cursor-pointer">
                     Đặt làm địa chỉ mặc định 
 
-                    <c:if test="${hasDefaultAddress == true || hasDefaultAddress == 'true'}">
-                        <span class="text-xs text-red-500 italic ml-1">
-                            (Bạn đã có địa chỉ mặc định. Vui lòng vào danh sách để thay đổi nếu cần)
+                    <c:if test="${!(isCurrentDefault == true || isCurrentDefault == 'true')}">
+                        <span class="text-xs text-gray-500 italic ml-1">
+                            (Địa chỉ mặc định cũ sẽ tự động bị thay thế)
                         </span>
                     </c:if>
                 </label>
             </div>
+
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
                 <a href="userdashboardservlet" 
                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
@@ -94,8 +94,7 @@
                 </a>
                 <button type="submit" 
                         class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-sm">
-                    Lưu Địa Chỉ
-                </button>
+                    Cập Nhật Địa Chỉ </button>
             </div>
         </form>
     </div>
@@ -109,7 +108,7 @@
     let provincesData = [];
     let wardsData = [];
 
-    // Lấy tên đã lưu từ backend (nếu có lỗi submit)
+    // Nhờ các biến này mà khi load trang, JS sẽ tự động chọn đúng Tỉnh/Xã cũ của người dùng
     const savedProvinceName = "${provinceName}";
     const savedWardName = "${wardName}";
 
@@ -131,14 +130,12 @@
                         opt.value = p.code;
                         opt.textContent = p.name_with_type;
 
-                        // Tự động chọn lại tỉnh nếu đã có dữ liệu trước đó
                         if (p.name_with_type === savedProvinceName) {
                             opt.selected = true;
                         }
                         provinceSelect.appendChild(opt);
                     });
 
-                    // Nếu đã có tỉnh được chọn sẵn (do form repopulation), kích hoạt load Phường/Xã
                     if (provinceSelect.value) {
                         provinceSelect.dispatchEvent(new Event('change'));
                 }
@@ -166,7 +163,6 @@
                         opt.value = w.code;
                         opt.textContent = w.name_with_type;
 
-                        // Tự động chọn lại xã nếu đã có dữ liệu trước đó
                         if (w.name_with_type === savedWardName) {
                             opt.selected = true;
                         }
