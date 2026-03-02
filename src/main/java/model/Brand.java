@@ -60,5 +60,5 @@ public class Brand {
     public String toString() {
         return "Brand{" + "brandId=" + brandId + ", brandName=" + brandName + ", imageUrl=" + imageUrl + ", isActive=" + isActive + '}';
     }
-    //test
+    //test commit
 }
