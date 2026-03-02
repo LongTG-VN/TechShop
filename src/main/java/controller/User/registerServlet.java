@@ -12,6 +12,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import model.Customer;
 
 /**
@@ -76,9 +77,7 @@ public class registerServlet extends HttpServlet {
         // 1. Set Encoding để nhận tiếng Việt không bị lỗi font
         CustomerDAO cdao = new CustomerDAO();
         request.setCharacterEncoding("UTF-8");
-     
-        
-        
+
         try {
             // 2. Lấy dữ liệu từ Form (dựa theo thuộc tính name="")
             String username = request.getParameter("username");
@@ -103,13 +102,27 @@ public class registerServlet extends HttpServlet {
             u.setStatus("ACTIVE"); // Mặc định tài khoản kích hoạt luôn
 
             // 6. Lưu vào Database
-            boolean isSuccess = cdao.addCustomer(u);
+//            boolean isSuccess = cdao.addCustomer(u);
+            if (errorUsername.isEmpty() && errorNumber.isEmpty() && errorEmail.isEmpty()) {
+                HttpSession session = request.getSession();
+                String code = utils.EmailUtils.generateToken();
+                session.setMaxInactiveInterval(300);
+                session.setAttribute("code", code);
+                session.setAttribute("customer", u);
 
-            if (errorUsername.isEmpty() && errorNumber.isEmpty() && errorEmail.isEmpty() && isSuccess) {
-                
-                
-                
-                response.sendRedirect("userservlet?action=loginPage");
+                try {
+                    utils.EmailUtils.sendEmail(email, "TechShop", "OTP : " + code);
+                } catch (Exception e) {
+                }
+
+                String headerComponent = "/components/navbar.jsp"; // Trang mặc định khi mới vào
+                String footerComponent = "/components/footer.jsp"; // Trang mặc định khi mới vào
+
+                request.setAttribute("HeaderComponent", headerComponent);
+                request.setAttribute("FooterComponent", footerComponent);
+                request.setAttribute("ContentPage", "/pages/MainPage/verification.jsp");
+                request.getRequestDispatcher("/template/userTemplate.jsp").forward(request, response);
+
             } else {
                 request.setAttribute("errorUsername", errorUsername);
                 request.setAttribute("errorPhone", errorNumber);

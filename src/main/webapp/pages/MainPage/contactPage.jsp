@@ -59,7 +59,7 @@
             <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 h-full">
                 <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-4">Gửi Yêu Cầu Cho Chúng Tôi</h2>
                 
-                <form action="ContactServlet" method="POST" class="space-y-5">
+                <form action="contactservlet" method="POST" class="space-y-5">
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>

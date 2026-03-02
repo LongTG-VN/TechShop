@@ -79,7 +79,38 @@ public class contactServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        request.setCharacterEncoding("UTF-8");
+
+        // 1. Lấy dữ liệu từ Form
+        String name = request.getParameter("fullName");
+        String phone = request.getParameter("phone");
+        String email = request.getParameter("email");
+        String subject = request.getParameter("subject");
+        String message = request.getParameter("message");
+
+        // 2. Gửi Email thông báo cho Admin (Bạn)
+        // Dùng class EmailUtils bạn đã viết ở trên
+        String adminEmail = "gialong.game@gmail.com";
+        String emailContent = "<h3>Yêu cầu liên hệ mới từ TechShop</h3>"
+                + "<p><b>Họ tên:</b> " + name + "</p>"
+                + "<p><b>SĐT:</b> " + phone + "</p>"
+                + "<p><b>Chủ đề:</b> " + subject + "</p>"
+                + "<p><b>Nội dung:</b> " + message + "</p>";
+
+        try {
+            // Gửi mail cho bạn để bạn biết có khách ngay lập tức
+            utils.EmailUtils.sendEmail(adminEmail, "Liên hệ mới: " + subject, emailContent);
+
+            // 3. (Tùy chọn) Gọi DAO để insert vào Database
+            // contactDAO.insertContact(name, phone, email, subject, message);
+            // 4. Thông báo thành công và quay lại trang contact
+            response.sendRedirect("userservlet?action=homepage");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.getWriter().print("Có lỗi xảy ra: " + e.getMessage());
+        }
+
     }
 
     /**

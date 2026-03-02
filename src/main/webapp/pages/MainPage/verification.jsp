@@ -1,5 +1,5 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+<div class="min-h-screen flex items-center justify-center to-indigo-100 ">
     
     <div class="w-full max-w-md bg-white shadow-2xl rounded-2xl p-8 space-y-6">
         
@@ -10,7 +10,7 @@
             </p>
         </div>
 
-        <form action="VerifyControl" method="post" class="space-y-4">
+        <form action="verificationservlet" method="post" class="space-y-4">
             
             <input 
                 type="text" 
