@@ -18,22 +18,21 @@ import utils.DBContext;
  */
 public class InventoryItemDAO extends DBContext {
 
-    // 1. GET ALL
+    // 1. GET ALL (kèm tên sản phẩm từ product_variants + products)
     public List<InventoryItem> getAllInventory() {
         List<InventoryItem> list = new ArrayList<>();
-        String sql = "SELECT * FROM inventory_items";
+        String sql = """
+                     SELECT ii.*, p.name AS product_name
+                     FROM inventory_items ii
+                     LEFT JOIN product_variants pv ON ii.variant_id = pv.variant_id
+                     LEFT JOIN products p ON pv.product_id = p.product_id
+                     ORDER BY ii.inventory_id DESC
+                     """;
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                list.add(new InventoryItem(
-                        rs.getInt("inventory_id"),
-                        rs.getInt("variant_id"),
-                        rs.getInt("receipt_item_id"),
-                        rs.getString("imei"),
-                        rs.getDouble("import_price"),
-                        rs.getString("status")
-                ));
+                list.add(mapRow(rs));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -50,32 +49,30 @@ public class InventoryItemDAO extends DBContext {
         }
 
         String sql = """
-                     SELECT *
-                     FROM inventory_items
-                     WHERE CAST(inventory_id AS NVARCHAR(50)) LIKE ?
-                        OR CAST(variant_id AS NVARCHAR(50)) LIKE ?
-                        OR CAST(receipt_item_id AS NVARCHAR(50)) LIKE ?
-                        OR imei LIKE ?
-                        OR status LIKE ?
-                     ORDER BY inventory_id DESC
+                     SELECT ii.*, p.name AS product_name
+                     FROM inventory_items ii
+                     LEFT JOIN product_variants pv ON ii.variant_id = pv.variant_id
+                     LEFT JOIN products p ON pv.product_id = p.product_id
+                     WHERE CAST(ii.inventory_id AS NVARCHAR(50)) LIKE ?
+                        OR CAST(ii.variant_id AS NVARCHAR(50)) LIKE ?
+                        OR ii.imei LIKE ?
+                        OR UPPER(ISNULL(ii.status,'')) LIKE ?
+                        OR LOWER(ISNULL(p.name,'')) LIKE ?
+                     ORDER BY ii.inventory_id DESC
                      """;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             String like = "%" + k + "%";
+            String likeUpper = "%" + k.toUpperCase() + "%";
+            // Product name: flexible pattern (e.g. "iPhone 15 Pro Max" -> "%iphone%15%pro%max%") to handle spacing/formatting
+            String productNameLike = "%" + k.toLowerCase().trim().replaceAll("\\s+", "%") + "%";
             ps.setString(1, like);
             ps.setString(2, like);
             ps.setString(3, like);
-            ps.setString(4, like);
-            ps.setString(5, like);
+            ps.setString(4, likeUpper);
+            ps.setString(5, productNameLike);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    list.add(new InventoryItem(
-                            rs.getInt("inventory_id"),
-                            rs.getInt("variant_id"),
-                            rs.getInt("receipt_item_id"),
-                            rs.getString("imei"),
-                            rs.getDouble("import_price"),
-                            rs.getString("status")
-                    ));
+                    list.add(mapRow(rs));
                 }
             }
         } catch (Exception e) {
@@ -84,22 +81,36 @@ public class InventoryItemDAO extends DBContext {
         return list;
     }
 
+    private InventoryItem mapRow(ResultSet rs) throws SQLException {
+        InventoryItem item = new InventoryItem(
+                rs.getInt("inventory_id"),
+                rs.getInt("variant_id"),
+                rs.getInt("receipt_item_id"),
+                rs.getString("imei"),
+                rs.getDouble("import_price"),
+                rs.getString("status")
+        );
+        try {
+            item.setProductName(rs.getString("product_name"));
+        } catch (Exception ignored) { /* cột product_name không có khi SELECT * từ 1 bảng */ }
+        return item;
+    }
+
     // 2. GET BY ID
     public InventoryItem getInventoryById(int id) {
-        String sql = "SELECT * FROM inventory_items WHERE inventory_id = ?";
+        String sql = """
+                     SELECT ii.*, p.name AS product_name
+                     FROM inventory_items ii
+                     LEFT JOIN product_variants pv ON ii.variant_id = pv.variant_id
+                     LEFT JOIN products p ON pv.product_id = p.product_id
+                     WHERE ii.inventory_id = ?
+                     """;
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return new InventoryItem(
-                        rs.getInt("inventory_id"),
-                        rs.getInt("variant_id"),
-                        rs.getInt("receipt_item_id"),
-                        rs.getString("imei"),
-                        rs.getDouble("import_price"),
-                        rs.getString("status")
-                );
+                return mapRow(rs);
             }
         } catch (Exception e) {
             e.printStackTrace();

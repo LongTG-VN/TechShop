@@ -16,6 +16,8 @@ public class InventoryItem {
     private String imei;
     private double import_price;
     private String status;
+    /** Tên sản phẩm (từ JOIN với product_variants + products), dùng cho hiển thị. */
+    private String productName;
 
     public InventoryItem() {
     }
@@ -75,6 +77,14 @@ public class InventoryItem {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
     }
 
     @Override
