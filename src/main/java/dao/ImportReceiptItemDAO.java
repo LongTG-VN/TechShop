@@ -39,6 +39,17 @@ public class ImportReceiptItemDAO extends DBContext {
         return list;
     }
 
+    /** Returns first receipt_item_id for default use (e.g. add inventory without choosing receipt). 0 if none. */
+    public int getFirstReceiptItemId() {
+        String sql = "SELECT TOP 1 receipt_item_id FROM import_receipt_items ORDER BY receipt_item_id ASC";
+        try (PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) return rs.getInt("receipt_item_id");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     // 2. GET BY ID
     public ImportReceiptItem getItemById(int id) {
         String sql = "SELECT * FROM import_receipt_items WHERE receipt_item_id = ?";

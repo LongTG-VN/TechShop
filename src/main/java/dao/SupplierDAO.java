@@ -140,15 +140,32 @@ public class SupplierDAO extends DBContext {
         }
     }
 
-    // Hard Delete
-    public void deleteSupplier(int id) {
-        String sql = "DELETE FROM suppliers WHERE supplier_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, id);
-            ps.executeUpdate();
+    /** True if supplier is used in import_receipts (FK), cannot hard-delete. */
+    public boolean isReferencedByReceipts(int supplierId) {
+        String sql = "SELECT 1 FROM import_receipts WHERE supplier_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, supplierId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
         } catch (Exception e) {
             e.printStackTrace();
+            return true; // safe: assume referenced on error
+        }
+    }
+
+    /** Hard delete only when not referenced by import_receipts. Returns true if deleted. */
+    public boolean deleteSupplierIfNoReferences(int id) {
+        if (conn == null || isReferencedByReceipts(id)) {
+            return false;
+        }
+        String sql = "DELETE FROM suppliers WHERE supplier_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
     }
 
@@ -171,9 +188,9 @@ public class SupplierDAO extends DBContext {
         dao.updateSupplier(new Supplier(10, "Le Hoàng Nhẩn", "0348808113", false));
         System.out.println("Da update NCC co ID = 1.");
 
-        // 4. Delete
-        dao.deleteSupplier(3);
-        System.out.println("Da xoa NCC co ID = 2.");
+        // 4. Delete (only if not referenced by import_receipts)
+        boolean deleted = dao.deleteSupplierIfNoReferences(3);
+        System.out.println(deleted ? "Deleted supplier 3." : "Supplier 3 not deleted (in use).");
 
         // 5. Get By ID
         System.out.println("--- TIM KIEM ID = 1 ---");
