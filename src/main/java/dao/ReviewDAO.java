@@ -10,10 +10,9 @@ import utils.DBContext;
 
 public class ReviewDAO extends DBContext {
 
-    // 1. Lấy tất cả đánh giá để Admin quản lý
+    // 1. Lấy tất cả đánh giá
     public List<Review> getAllReviews() {
         List<Review> list = new ArrayList<>();
-        // Đảm bảo SQL JOIN đầy đủ để lấy product_name
         String sql = "SELECT r.*, c.full_name as customer_name, p.name as product_name "
                 + "FROM reviews r "
                 + "JOIN customers c ON r.customer_id = c.customer_id "
@@ -26,7 +25,6 @@ public class ReviewDAO extends DBContext {
             PreparedStatement ps = conn.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                // Lấy timestamp từ DB và chuyển đổi
                 java.sql.Timestamp ts = rs.getTimestamp("created_at");
                 LocalDateTime ldt = (ts != null) ? ts.toLocalDateTime() : null;
 
@@ -36,10 +34,11 @@ public class ReviewDAO extends DBContext {
                         rs.getInt("order_item_id"),
                         rs.getInt("rating"),
                         rs.getString("comment"),
-                        ldt // Truyền LocalDateTime vào đây, hết lỗi gạch đỏ!
+                        ldt
                 );
                 r.setCustomerName(rs.getString("customer_name"));
-                r.setProductName(rs.getString("product_name")); // Đã có tên sản phẩm
+                r.setProductName(rs.getString("product_name"));
+                r.setStatus(rs.getString("status")); // Thêm dòng này
                 list.add(r);
             }
         } catch (Exception e) {
@@ -48,12 +47,12 @@ public class ReviewDAO extends DBContext {
         return list;
     }
 
-    // 2. Xóa đánh giá (Admin xóa nếu comment vi phạm)
-    public void deleteReview(int id) {
-        String sql = "DELETE FROM reviews WHERE review_id = ?";
+    public void toggleReviewStatus(int id, String newStatus) {
+        String sql = "UPDATE reviews SET status = ? WHERE review_id = ?";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, id);
+            ps.setString(1, newStatus); // Truyền status mới vào (VISIBLE hoặc HIDDEN)
+            ps.setInt(2, id);
             ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
@@ -62,7 +61,6 @@ public class ReviewDAO extends DBContext {
 
     // 3. Lấy chi tiết một đánh giá
     public Review getReviewById(int id) {
-        // JOIN thêm chuỗi bảng từ order_items đến products để lấy tên sản phẩm
         String sql = "SELECT r.*, c.full_name as customer_name, p.name as product_name "
                 + "FROM reviews r "
                 + "JOIN customers c ON r.customer_id = c.customer_id "
@@ -78,7 +76,7 @@ public class ReviewDAO extends DBContext {
             if (rs.next()) {
                 Review r = mapResultSet(rs);
                 r.setCustomerName(rs.getString("customer_name"));
-                r.setProductName(rs.getString("product_name")); // Đảm bảo gán giá trị này
+                r.setProductName(rs.getString("product_name"));
                 return r;
             }
         } catch (Exception e) {
@@ -105,7 +103,7 @@ public class ReviewDAO extends DBContext {
         }
         return list;
     }
-    // 4. ĐẾM TỔNG SỐ ĐÁNH GIÁ
+
     public int countTotalReviews() {
         String sql = "SELECT COUNT(*) FROM reviews";
         try {
@@ -120,7 +118,6 @@ public class ReviewDAO extends DBContext {
         return 0;
     }
 
-    // Hàm map dữ liệu nội bộ để tái sử dụng, khớp kiểu int cho ID
     private Review mapResultSet(ResultSet rs) throws Exception {
         Review r = new Review();
         r.setReviewId(rs.getInt("review_id"));
@@ -128,6 +125,7 @@ public class ReviewDAO extends DBContext {
         r.setOrderItemId(rs.getInt("order_item_id"));
         r.setRating(rs.getInt("rating"));
         r.setComment(rs.getString("comment"));
+        r.setStatus(rs.getString("status")); // Thêm dòng này
         java.sql.Timestamp ts = rs.getTimestamp("created_at");
         if (ts != null) {
             r.setCreatedAt(ts.toLocalDateTime());

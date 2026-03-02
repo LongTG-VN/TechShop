@@ -11,6 +11,7 @@ public class Review {
     private int rating;
     private String comment;
     private LocalDateTime createdAt;
+    private String status;
 
     private String customerName;
     private String productName;
@@ -97,5 +98,13 @@ public class Review {
 
     public void setProductName(String productName) {
         this.productName = productName;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

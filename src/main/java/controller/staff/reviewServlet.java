@@ -103,15 +103,22 @@ public class reviewServlet extends HttpServlet {
         ReviewDAO rdao = new ReviewDAO();
         HttpSession session = request.getSession();
 
-        if ("delete".equals(action)) {
+        if (action != null) {
             try {
-                int id = Integer.parseInt(request.getParameter("reviewId"));
-                rdao.deleteReview(id);
-                session.setAttribute("msg", "Review deleted successfully!");
-                session.setAttribute("msgType", "success");
+                int reviewId = Integer.parseInt(request.getParameter("reviewId"));
+                if ("hide".equals(action)) {
+                    rdao.toggleReviewStatus(reviewId, "HIDDEN");
+                    session.setAttribute("msg", "Review has been hidden successfully!");
+                    session.setAttribute("msgType", "success");
+                } else if ("show".equals(action)) {
+                    rdao.toggleReviewStatus(reviewId, "VISIBLE");
+                    session.setAttribute("msg", "Review is now visible to customers!");
+                    session.setAttribute("msgType", "success");
+                }
             } catch (Exception e) {
-                session.setAttribute("msg", "Error: Could not delete review.");
+                session.setAttribute("msg", "Error: Could not update review status.");
                 session.setAttribute("msgType", "danger");
+                e.printStackTrace();
             }
         }
 

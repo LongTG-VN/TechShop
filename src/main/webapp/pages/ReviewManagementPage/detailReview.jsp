@@ -1,11 +1,14 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+
 <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-xl border border-gray-100 mt-10">
     <div class="flex justify-between items-start border-b pb-6 mb-8">
         <div>
             <h2 class="text-3xl font-extrabold text-gray-900 uppercase tracking-tight">Review Detail</h2>
             <p class="text-gray-500 mt-1">Review ID: <span class="font-mono font-bold text-blue-600">#${review.reviewId}</span></p>
         </div>
-        <a href="reviewServlet?action=all" class="text-gray-500 flex items-center gap-2 text-sm font-medium">
+        <a href="reviewServlet?action=all" class="text-gray-500 flex items-center gap-2 text-sm font-medium hover:text-blue-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
             Back to List
         </a>
     </div>
@@ -31,6 +34,13 @@
                 <div>
                     <p class="text-xs font-bold text-gray-400 uppercase">Rating</p>
                     <p class="text-xl font-bold text-yellow-500">${review.rating} / 5 Stars</p>
+                </div>
+                <%-- Thêm Status hiển thị tại đây --%>
+                <div>
+                    <p class="text-xs font-bold text-gray-400 uppercase">Status</p>
+                    <p class="text-sm font-bold ${review.status.toLowerCase() == 'visible' ? 'text-green-600' : 'text-red-600'}">
+                        ${review.status.toUpperCase()}
+                    </p>
                 </div>
                 <div>
                     <p class="text-xs font-bold text-gray-400 uppercase">Created At</p>
