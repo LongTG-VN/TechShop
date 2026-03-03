@@ -104,6 +104,10 @@ public class productServlet extends HttpServlet {
                 case "detail":
                     int idDetail = Integer.parseInt(request.getParameter("id"));
                     request.setAttribute("product", pdao.getProductById(idDetail));
+
+                    ProductImageDAO imgDaoDetail = new ProductImageDAO();
+                    request.setAttribute("images", imgDaoDetail.getImagesByProductId(idDetail));
+
                     page = "/pages/ProductManagementPage/detailProduct.jsp";
                     break;
                 case "delete":
