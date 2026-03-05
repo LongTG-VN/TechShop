@@ -66,8 +66,7 @@ public class InventoryServlet extends HttpServlet {
                 setMsg(request.getSession(), ok ? "Inventory item deleted." : "Delete failed (invalid ID or item in use).", ok ? "success" : "danger");
                 response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryManagement");
             }
-            default ->
-                response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryManagement");
+            default -> response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryManagement");
         }
     }
 
