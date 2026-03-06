@@ -130,7 +130,9 @@ public class cartServlet extends HttpServlet {
             try {
                 variantId = Integer.parseInt(vParam);
                 quantity = Integer.parseInt(qParam);
-                if (quantity < 1) quantity = 1;
+                if (quantity < 1) {
+                    quantity = 1;
+                }
             } catch (NumberFormatException e) {
                 if (isAjax) {
                     sendJson(response, false, 0, 0, "Số lượng không hợp lệ.");
@@ -233,18 +235,19 @@ public class cartServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/cartservlet");
     }
 
-        /**
-         * Trả JSON cho AJAX: { "success": true/false, "totalAmount": number, "cartCount": number, "message": "..." }
-         */
-        private void sendJson(HttpServletResponse response, boolean success, long totalAmount, int cartCount) throws IOException {
-            sendJson(response, success, totalAmount, cartCount, null);
-        }
+    /**
+     * Trả JSON cho AJAX: { "success": true/false, "totalAmount": number,
+     * "cartCount": number, "message": "..." }
+     */
+    private void sendJson(HttpServletResponse response, boolean success, long totalAmount, int cartCount) throws IOException {
+        sendJson(response, success, totalAmount, cartCount, null);
+    }
 
-        private void sendJson(HttpServletResponse response, boolean success, long totalAmount, int cartCount, String message) throws IOException {
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            String msg = message != null ? ",\"message\":\"" + message.replace("\\", "\\\\").replace("\"", "\\\"") + "\"" : "";
-            response.getWriter().print("{\"success\":" + success + ",\"totalAmount\":" + totalAmount + ",\"cartCount\":" + cartCount + msg + "}");
-        }
+    private void sendJson(HttpServletResponse response, boolean success, long totalAmount, int cartCount, String message) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        String msg = message != null ? ",\"message\":\"" + message.replace("\\", "\\\\").replace("\"", "\\\"") + "\"" : "";
+        response.getWriter().print("{\"success\":" + success + ",\"totalAmount\":" + totalAmount + ",\"cartCount\":" + cartCount + msg + "}");
+    }
 
 }
