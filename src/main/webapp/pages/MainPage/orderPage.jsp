@@ -9,8 +9,26 @@
 
         <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 mb-8 tracking-tight">Thanh toán & Đặt hàng</h1>
 
-        <form id="checkoutForm" onsubmit="event.preventDefault(); showSuccessModal();" class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
-<input type="hidden" name="appliedVoucherId" id="appliedVoucherId" value="0">
+        <%-- Thông báo lỗi hết hàng --%>
+        <c:if test="${param.error == 'out_of_stock'}">
+            <div class="mb-6 flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-2xl px-5 py-4">
+                <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                </svg>
+                <div>
+                    <p class="font-bold text-sm">Đặt hàng thất bại — Sản phẩm hết hàng</p>
+                    <c:if test="${not empty param.product}">
+                        <p class="text-sm mt-0.5">Sản phẩm <strong>"${param.product}"</strong> hiện không đủ số lượng trong kho. Vui lòng điều chỉnh giỏ hàng hoặc liên hệ cửa hàng.</p>
+                    </c:if>
+                    <c:if test="${empty param.product}">
+                        <p class="text-sm mt-0.5">Một hoặc nhiều sản phẩm trong giỏ hàng hiện không đủ số lượng trong kho. Vui lòng điều chỉnh giỏ hàng.</p>
+                    </c:if>
+                </div>
+            </div>
+        </c:if>
+
+        <form id="checkoutForm" method="post" action="orderpageservlet" class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
+            <input type="hidden" name="appliedVoucherId" id="appliedVoucherId" value="0">
             <div class="lg:col-span-7 flex flex-col gap-8">
 
                 <div class="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
@@ -80,32 +98,30 @@
                     </h2>
 
                     <div class="space-y-3">
-                        <label class="flex items-center gap-4 border border-gray-200 rounded-xl p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-                            <input type="radio" name="paymentMethod" value="COD" class="w-5 h-5 text-red-600 focus:ring-red-500" checked>
-                            <img src="https://placehold.co/40x40/f3f4f6/555555?text=COD" alt="COD" class="w-10 h-10 rounded-md">
-                            <div class="flex-1">
-                                <h4 class="font-bold text-gray-900">Thanh toán khi nhận hàng (COD)</h4>
-                                <p class="text-xs text-gray-500">Thanh toán bằng tiền mặt khi giao hàng tận nhà.</p>
-                            </div>
-                        </label>
-
-                        <label class="flex items-center gap-4 border border-gray-200 rounded-xl p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-                            <input type="radio" name="paymentMethod" value="VNPAY" class="w-5 h-5 text-red-600 focus:ring-red-500">
-                            <img src="https://placehold.co/40x40/005baa/ffffff?text=VNPay" alt="VNPay" class="w-10 h-10 rounded-md">
-                            <div class="flex-1">
-                                <h4 class="font-bold text-gray-900">Thanh toán qua VNPAY</h4>
-                                <p class="text-xs text-gray-500">Quét mã QR từ ứng dụng ngân hàng.</p>
-                            </div>
-                        </label>
-
-                        <label class="flex items-center gap-4 border border-gray-200 rounded-xl p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-                            <input type="radio" name="paymentMethod" value="CARD" class="w-5 h-5 text-red-600 focus:ring-red-500">
-                            <img src="https://placehold.co/40x40/1f2937/ffffff?text=Card" alt="Credit Card" class="w-10 h-10 rounded-md">
-                            <div class="flex-1">
-                                <h4 class="font-bold text-gray-900">Thẻ Tín dụng / Ghi nợ</h4>
-                                <p class="text-xs text-gray-500">Hỗ trợ Visa, Mastercard, JCB.</p>
-                            </div>
-                        </label>
+                        <c:choose>
+                            <c:when test="${empty paymentMethods}">
+                                <p class="text-sm text-gray-500">
+                                    Hiện chưa có phương thức thanh toán nào được cấu hình. Vui lòng liên hệ quản trị viên.
+                                </p>
+                            </c:when>
+                            <c:otherwise>
+                                <c:forEach var="pm" items="${paymentMethods}" varStatus="loop">
+                                    <label class="flex items-center gap-4 border border-gray-200 rounded-xl p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                                        <input
+                                            type="radio"
+                                            name="paymentMethodId"
+                                            value="${pm.method_id}"
+                                            class="w-5 h-5 text-red-600 focus:ring-red-500"
+                                            ${loop.first ? 'checked' : ''}>
+                                        <div class="flex-1">
+                                            <h4 class="font-bold text-gray-900">
+                                                <c:out value="${pm.method_name}"/>
+                                            </h4>
+                                        </div>
+                                    </label>
+                                </c:forEach>
+                            </c:otherwise>
+                        </c:choose>
                     </div>
                 </div>
 
@@ -187,12 +203,13 @@
                     <p class="text-center text-xs text-gray-400 mt-4">Nhấn "Đặt hàng" đồng nghĩa với việc bạn đồng ý tuân theo <a href="#" class="text-blue-500 underline">Điều khoản</a> của chúng tôi.</p>
                 </div>
             </div>
+           
 
         </form>
     </div>
 </div>
 
-<div id="successModal" class="fixed inset-0 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+<!--<div id="successModal" class="fixed inset-0 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
     <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
 
     <div class="relative bg-white rounded-3xl shadow-2xl p-8 md:p-10 max-w-sm w-full mx-4 text-center transform scale-95 transition-transform duration-300" id="modalContent">
@@ -214,7 +231,7 @@
             Xem đơn hàng của tôi
         </button>
     </div>
-</div>
+</div>-->
 
 <script>
 
@@ -257,7 +274,7 @@
     <c:forEach items="${listVoucher}" var="v" varStatus="loop">
     {
     code: '${v.code}',
-    voucherId: ${v.voucherId},
+            voucherId: ${v.voucherId},
             discountPercent: ${v.discountPercent},
             maxDiscountAmount: ${v.maxDiscountAmount},
             minOrderValue: ${v.minOrderValue},
@@ -267,92 +284,93 @@
     ];
 
     function applyVoucher() {
-    const inputCode = document.getElementById('voucherInput').value.trim().toUpperCase();
-    const messageDiv = document.getElementById('voucherMessage');
-    const discountDisplay = document.getElementById('discountDisplay');
-    const totalDisplay = document.getElementById('totalDisplay');
+        const inputCode = document.getElementById('voucherInput').value.trim().toUpperCase();
+        const messageDiv = document.getElementById('voucherMessage');
+        const discountDisplay = document.getElementById('discountDisplay');
+        const totalDisplay = document.getElementById('totalDisplay');
 
-    // Hàm format số thành tiền VNĐ
-    const formatMoney = (amount) => amount.toLocaleString('vi-VN') + 'đ';
+        // Hàm format số thành tiền VNĐ
+        const formatMoney = (amount) => amount.toLocaleString('vi-VN') + 'đ';
 
-    if (inputCode === '') {
-        currentDiscount = 0;
-        document.getElementById('appliedVoucherId').value = "0"; // Xóa ID
-        messageDiv.innerHTML = '<span class="text-red-500 font-medium">Vui lòng nhập mã giảm giá.</span>';
-    } else {
-        // 2. TÌM VOUCHER TRONG MẢNG
-        const foundVoucher = availableVouchers.find(v => v.code.toUpperCase() === inputCode);
-
-        if (foundVoucher) {
-            // Bước 2.1: Kiểm tra voucher còn khả dụng không (Status, Số lượt dùng, Thời gian)
-            if (!foundVoucher.isAvailable) {
-                currentDiscount = 0;
-                document.getElementById('appliedVoucherId').value = "0"; // Xóa ID
-                messageDiv.innerHTML = '<span class="text-red-500 font-medium">Mã giảm giá đã hết lượt sử dụng hoặc đã hết hạn!</span>';
-            }
-            // Bước 2.2: Kiểm tra đơn hàng có đạt mức tối thiểu không
-            else if (subTotal < foundVoucher.minOrderValue) {
-                currentDiscount = 0;
-                document.getElementById('appliedVoucherId').value = "0"; // Xóa ID
-                messageDiv.innerHTML = `<span class="text-red-500 font-medium">Đơn hàng tối thiểu để áp dụng mã này là ` + formatMoney(foundVoucher.minOrderValue) + `!</span>`;
-            }
-            // Bước 2.3: Nếu thỏa mãn mọi điều kiện -> Tiến hành tính tiền
-            else {
-                // Tính mức giảm dựa trên phần trăm (%)
-                let calculatedDiscount = subTotal * (foundVoucher.discountPercent / 100);
-
-                // So sánh với mức giảm tối đa (Cap)
-                if (foundVoucher.maxDiscountAmount > 0 && calculatedDiscount > foundVoucher.maxDiscountAmount) {
-                    currentDiscount = foundVoucher.maxDiscountAmount; // Giới hạn số tiền giảm
-                } else {
-                    currentDiscount = calculatedDiscount;
-                }
-
-                // Đề phòng trường hợp tiền giảm vượt quá tổng tiền
-                if (currentDiscount > subTotal) {
-                    currentDiscount = subTotal;
-                }
-
-                // Gán ID để gửi về Servlet
-                document.getElementById('appliedVoucherId').value = foundVoucher.voucherId;
-                
-                messageDiv.innerHTML = `<span class="text-green-600 font-medium flex items-center gap-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> 
-                    Áp dụng thành công giảm ` + formatMoney(currentDiscount) + `!</span>`;
-            }
-        } else {
+        if (inputCode === '') {
             currentDiscount = 0;
             document.getElementById('appliedVoucherId').value = "0"; // Xóa ID
-            messageDiv.innerHTML = '<span class="text-red-500 font-medium">Mã giảm giá không tồn tại!</span>';
+            messageDiv.innerHTML = '<span class="text-red-500 font-medium">Vui lòng nhập mã giảm giá.</span>';
+        } else {
+            // 2. TÌM VOUCHER TRONG MẢNG
+            const foundVoucher = availableVouchers.find(v => v.code.toUpperCase() === inputCode);
+
+            if (foundVoucher) {
+                // Bước 2.1: Kiểm tra voucher còn khả dụng không (Status, Số lượt dùng, Thời gian)
+                if (!foundVoucher.isAvailable) {
+                    currentDiscount = 0;
+                    document.getElementById('appliedVoucherId').value = "0"; // Xóa ID
+                    messageDiv.innerHTML = '<span class="text-red-500 font-medium">Mã giảm giá đã hết lượt sử dụng hoặc đã hết hạn!</span>';
+                }
+                // Bước 2.2: Kiểm tra đơn hàng có đạt mức tối thiểu không
+                else if (subTotal < foundVoucher.minOrderValue) {
+                    currentDiscount = 0;
+                    document.getElementById('appliedVoucherId').value = "0"; // Xóa ID
+                    messageDiv.innerHTML = `<span class="text-red-500 font-medium">Đơn hàng tối thiểu để áp dụng mã này là ` + formatMoney(foundVoucher.minOrderValue) + `!</span>`;
+                }
+                // Bước 2.3: Nếu thỏa mãn mọi điều kiện -> Tiến hành tính tiền
+                else {
+                    // Tính mức giảm dựa trên phần trăm (%)
+                    let calculatedDiscount = subTotal * (foundVoucher.discountPercent / 100);
+
+                    // So sánh với mức giảm tối đa (Cap)
+                    if (foundVoucher.maxDiscountAmount > 0 && calculatedDiscount > foundVoucher.maxDiscountAmount) {
+                        currentDiscount = foundVoucher.maxDiscountAmount; // Giới hạn số tiền giảm
+                    } else {
+                        currentDiscount = calculatedDiscount;
+                    }
+
+                    // Đề phòng trường hợp tiền giảm vượt quá tổng tiền
+                    if (currentDiscount > subTotal) {
+                        currentDiscount = subTotal;
+                    }
+
+                    // Gán ID để gửi về Servlet
+                    document.getElementById('appliedVoucherId').value = foundVoucher.voucherId;
+
+                    messageDiv.innerHTML = `<span class="text-green-600 font-medium flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> 
+                    Áp dụng thành công giảm ` + formatMoney(currentDiscount) + `!</span>`;
+                }
+            } else {
+                currentDiscount = 0;
+                document.getElementById('appliedVoucherId').value = "0"; // Xóa ID
+                messageDiv.innerHTML = '<span class="text-red-500 font-medium">Mã giảm giá không tồn tại!</span>';
+            }
         }
+
+        // 3. Cập nhật lại HTML hiển thị giá tiền
+        discountDisplay.innerText = '-' + formatMoney(currentDiscount);
+        let finalTotal = subTotal - currentDiscount;
+        totalDisplay.innerText = formatMoney(finalTotal);
     }
+//    // --- 3. SCRIPT HIỂN THỊ MODAL THÀNH CÔNG ---
+//    const modal = document.getElementById('successModal');
+//    const modalContent = document.getElementById('modalContent');
 
-    // 3. Cập nhật lại HTML hiển thị giá tiền
-    discountDisplay.innerText = '-' + formatMoney(currentDiscount);
-    let finalTotal = subTotal - currentDiscount;
-    totalDisplay.innerText = formatMoney(finalTotal);
-}
-    // --- 3. SCRIPT HIỂN THỊ MODAL THÀNH CÔNG ---
-    const modal = document.getElementById('successModal');
-    const modalContent = document.getElementById('modalContent');
+//    function showSuccessModal() {
+//        modal.classList.remove('hidden');
+//        setTimeout(() => {
+//            modal.classList.remove('opacity-0');
+//            modalContent.classList.remove('scale-95');
+//            modalContent.classList.add('scale-100');
+//        }, 10);
+//    }
 
-    function showSuccessModal() {
-        modal.classList.remove('hidden');
-        setTimeout(() => {
-            modal.classList.remove('opacity-0');
-            modalContent.classList.remove('scale-95');
-            modalContent.classList.add('scale-100');
-        }, 10);
-    }
-
-    function closeModalAndRedirect() {
-        modal.classList.add('opacity-0');
-        modalContent.classList.remove('scale-100');
-        modalContent.classList.add('scale-95');
-
-        setTimeout(() => {
-            modal.classList.add('hidden');
-            window.location.href = "userservlet?action=homePage";
-        }, 300);
-    }
+//    function closeModalAndRedirect() {
+//        modal.classList.add('opacity-0');
+//        modalContent.classList.remove('scale-100');
+//        modalContent.classList.add('scale-95');
+//
+//        setTimeout(() => {
+//            modal.classList.add('hidden');
+//            window.location.href = "userservlet?action=homePage";
+//        }, 300);
+//    }
+   
 </script>

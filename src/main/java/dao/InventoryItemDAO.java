@@ -92,7 +92,8 @@ public class InventoryItemDAO extends DBContext {
         );
         try {
             item.setProductName(rs.getString("product_name"));
-        } catch (Exception ignored) { /* cột product_name không có khi SELECT * từ 1 bảng */ }
+        } catch (Exception ignored) {
+            /* cột product_name không có khi SELECT * từ 1 bảng */ }
         return item;
     }
 
@@ -173,6 +174,40 @@ public class InventoryItemDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Lấy danh sách inventory_id còn tồn (IN_STOCK) theo variant_id, giới hạn số lượng. Dùng khi tạo đơn hàng để gán sản phẩm từ kho vào order_items.
+     */
+    public List<Integer> getAvailableInventoryIdsByVariantId(int variantId, int limit) {
+        List<Integer> list = new ArrayList<>();
+        String sql = "SELECT TOP (?) inventory_id FROM inventory_items WHERE variant_id = ? AND status = 'IN_STOCK' ORDER BY inventory_id";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            ps.setInt(2, variantId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(rs.getInt("inventory_id"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    /**
+     * Cập nhật trạng thái tồn kho (vd: SOLD sau khi bán).
+     */
+    public boolean updateStatus(int inventoryId, String status) {
+        String sql = "UPDATE inventory_items SET status = ? WHERE inventory_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status == null ? "IN_STOCK" : status);
+            ps.setInt(2, inventoryId);
+            return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
             return false;

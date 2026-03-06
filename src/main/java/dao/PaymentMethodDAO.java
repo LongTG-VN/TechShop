@@ -36,6 +36,23 @@ public class PaymentMethodDAO extends DBContext {
         return list;
     }
 
+    //get active payment methods 
+    public List<PaymentMethod> getActivePaymentMethods() {
+        List<PaymentMethod> list = new ArrayList<>();
+        String sql = "SELECT * FROM payment_methods WHERE is_active = 1";
+        try (PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new PaymentMethod(
+                        rs.getInt("method_id"),
+                        rs.getString("method_name"),
+                        rs.getBoolean("is_active")));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     //get payment method by id
     public PaymentMethod getPaymentMethodById(int id) {
         String sql = "SELECT * FROM payment_methods WHERE method_id = ?";
@@ -94,6 +111,7 @@ public class PaymentMethodDAO extends DBContext {
             e.printStackTrace();
         }
     }
+
     //Soft delete
     public void deactivatePaymentMethod(int id) {
         String sql = "UPDATE payment_methods SET is_active = 0 WHERE method_id = ?";

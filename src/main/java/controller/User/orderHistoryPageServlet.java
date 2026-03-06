@@ -12,6 +12,11 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Cookie;
+import java.util.ArrayList;
+import java.util.List;
+import dao.OrderDAO;
+import model.Order;
 
 /**
  *
@@ -55,7 +60,48 @@ public class orderHistoryPageServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
-     String headerComponent = "/components/navbar.jsp"; // Trang mặc định khi mới vào
+        // Lấy customer hiện tại từ cookie
+        int currentUserId = -1;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("cookieID".equals(cookie.getName())) {
+                    try {
+                        currentUserId = Integer.parseInt(cookie.getValue());
+                    } catch (NumberFormatException e) {
+                        currentUserId = -1;
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Nếu chưa đăng nhập thì điều hướng về trang đăng nhập
+        if (currentUserId == -1) {
+            response.sendRedirect("userservlet?action=loginPage");
+            return;
+        }
+
+        String statusFilter = request.getParameter("status");
+
+        OrderDAO odao = new OrderDAO();
+        List<Order> allOrders = odao.getOrdersByCustomerWithSummary(currentUserId);
+        List<Order> ordersToShow = new ArrayList<>();
+
+        if (statusFilter == null || statusFilter.trim().isEmpty() || "ALL".equalsIgnoreCase(statusFilter)) {
+            ordersToShow = allOrders;
+        } else {
+            for (Order o : allOrders) {
+                if (statusFilter.equalsIgnoreCase(o.getStatus())) {
+                    ordersToShow.add(o);
+                }
+            }
+        }
+
+        request.setAttribute("orders", ordersToShow);
+        request.setAttribute("currentStatus", (statusFilter == null || statusFilter.trim().isEmpty()) ? "ALL" : statusFilter);
+
+        String headerComponent = "/components/navbar.jsp"; // Trang mặc định khi mới vào
         String footerComponent = "/components/footer.jsp"; // Trang mặc định khi mới vào
         String page = "/pages/MainPage/orderHistoryPage.jsp"; // Trang mặc định khi mới vào
         request.setAttribute("HeaderComponent", headerComponent);

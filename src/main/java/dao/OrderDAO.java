@@ -14,6 +14,7 @@ import java.util.Map;
 import model.Order;
 import model.Voucher;
 import utils.DBContext;
+import java.sql.Statement;
 
 /**
  *
@@ -21,31 +22,36 @@ import utils.DBContext;
  */
 public class OrderDAO extends DBContext {
 
-    // ===== CREATE =====
-    public void insertOrder(Order o) {
+   
+    /**
+     * Inserts order and returns the generated order_id; returns 0 on failure.
+     */
+    public int insertOrder(Order o) {
         String sql = """
         INSERT INTO orders
         (customer_id, voucher_id, payment_method_id, shipping_address, total_amount)
         VALUES (?, ?, ?, ?, ?)
-    """;
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        """;
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, o.getCustomerId());
-
             if (o.getVoucher() == null) {
                 ps.setNull(2, java.sql.Types.INTEGER);
             } else {
-
                 ps.setInt(2, o.getVoucher().getVoucherId());
             }
-
             ps.setInt(3, o.getPaymentMethodId());
             ps.setString(4, o.getShippingAddress());
             ps.setBigDecimal(5, o.getTotalAmount());
-
             ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return 0;
     }
 
     // ===== READ ALL =====
@@ -92,7 +98,7 @@ public class OrderDAO extends DBContext {
                 + "FROM orders o "
                 + "JOIN customers c ON o.customer_id = c.customer_id "
                 + "LEFT JOIN vouchers v ON o.voucher_id = v.voucher_id "
-                + "WHERE EXISTS (SELECT 1 FROM order_items WHERE order_id = o.order_id)"
+                //                + "WHERE EXISTS (SELECT 1 FROM order_items WHERE order_id = o.order_id)"
                 + "ORDER BY o.created_at DESC";
         try (PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {

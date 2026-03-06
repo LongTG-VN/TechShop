@@ -126,6 +126,19 @@ public class CartItemDAO extends DBContext {
         }
     }
 
+    /**
+     * Xóa toàn bộ giỏ hàng của một khách (sau khi đặt hàng thành công).
+     */
+    public void deleteCartByCustomerId(int customerId) {
+        String sql = "DELETE FROM cart_items WHERE customer_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, customerId);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     // 7. Lấy 1 dòng giỏ theo customer + variant (để add: nếu có thì update quantity)
     public CartItem getByCustomerAndVariant(int customerId, int variantId) {
         String sql = "SELECT * FROM cart_items WHERE customer_id = ? AND variant_id = ?";
