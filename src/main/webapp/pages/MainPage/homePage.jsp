@@ -244,9 +244,9 @@
                             class="absolute top-3 right-3 bg-gray-100 text-[10px] font-medium px-2.5 py-1 rounded-full text-gray-600 z-10 border border-gray-200">
                             Trả góp 0%</div>
 
-                    <div class="mt-8 mb-4 overflow-hidden rounded-xl bg-gray-50 p-2">
-                        <img src="../assets/img/product/samsung-galaxy-s25-green-thumbai-600x600.jpg" class="w-full h-44 object-contain transition-transform duration-500 group-hover:scale-110">
-                    </div>
+                        <div class="mt-8 mb-4 overflow-hidden rounded-xl bg-gray-50 p-2">
+                            <img src="../assets/img/product/samsung-galaxy-s25-green-thumbai-600x600.jpg" class="w-full h-44 object-contain transition-transform duration-500 group-hover:scale-110">
+                        </div>
 
                         <h3
                             class="text-sm font-semibold text-gray-800 group-hover:text-red-600 transition-colors line-clamp-2 min-h-[40px] mb-2">
