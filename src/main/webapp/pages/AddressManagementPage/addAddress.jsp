@@ -16,6 +16,7 @@
             <input type="hidden" name="provinceName" id="provinceName" value="${provinceName}">
             <input type="hidden" name="wardName" id="wardName" value="${wardName}">
             <input type="hidden" name="action" id="action" value="add">
+            <input type="hidden" name="state" value="${state}">
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>

@@ -79,7 +79,7 @@
 
                                 <%-- CHỈ HIỂN THỊ NÚT THÊM NẾU SỐ LƯỢNG ĐỊA CHỈ < 2 --%>
                                 <c:if test="${fn:length(listaddress) < 2}">
-                                    <a href="addresssuserservlet?action=add" class="relative border-2 border-dashed border-gray-300 bg-gray-50 rounded-2xl p-5 cursor-pointer hover:bg-gray-100 hover:border-red-400 transition-all flex flex-col items-center justify-center min-h-[140px] group">
+                                    <a href="addresssuserservlet?action=addIncart&state=cart" class="relative border-2 border-dashed border-gray-300 bg-gray-50 rounded-2xl p-5 cursor-pointer hover:bg-gray-100 hover:border-red-400 transition-all flex flex-col items-center justify-center min-h-[140px] group">
                                         <svg class="w-8 h-8 text-gray-400 group-hover:text-red-500 transition-colors mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                                         <span class="font-bold text-gray-600 group-hover:text-red-600 transition-colors">Thêm địa chỉ mới</span>
                                     </a>

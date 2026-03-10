@@ -90,8 +90,14 @@ public class addressUserServlet extends HttpServlet {
             case "add":
                 page = "/pages/AddressManagementPage/addAddress.jsp";
                 request.setAttribute("hasDefaultAddress", utils.IO.checkDefaultAddress(currentUserId));
+                request.setAttribute("cart", "");
                 break;
-
+            case "addIncart":
+                page = "/pages/AddressManagementPage/addAddress.jsp";
+                String state = request.getParameter("state");
+                request.setAttribute("hasDefaultAddress", utils.IO.checkDefaultAddress(currentUserId));
+                request.setAttribute("state", state);
+                break;
             case "edit":
                 page = "/pages/AddressManagementPage/editAddress.jsp";
                 String editIdRaw = request.getParameter("id"); // Lấy ID của địa chỉ cần sửa trên URL
@@ -228,9 +234,19 @@ public class addressUserServlet extends HttpServlet {
 // 5. Gọi DAO để thực hiện câu lệnh INSERT
                 String errorPhone = utils.IO.CheckNumber(street) ? "" : "Phone must be 10 number";
 
+                String state = request.getParameter("state");
+                
                 if (!errorPhone.isEmpty()) {
                     aO.insertAddress(new CustomerAddress(0, currentUserId, fullAddress, phoneReceiver, nameReceiver, isDefault));
-                    response.sendRedirect("addresssuserservlet");
+                  
+                    if (state.isEmpty()) {
+                        response.sendRedirect("addresssuserservlet");
+                    } else {
+                        response.sendRedirect("orderpageservlet");
+                    }
+                     
+                    
+                  
                 } else {
 
                     request.setAttribute("errorPhone", errorPhone);

@@ -97,11 +97,11 @@
                 </div>
             </div>
 
-           <div id="output" class="flex-grow p-4 overflow-y-auto flex flex-col bg-gray-50">
-    <div class="self-start bg-white border border-gray-200 p-3 rounded-2xl rounded-bl-none shadow-sm max-w-[80%] chat-bubble mb-3">
-        Chào Long! Mình là trợ lý Gemini 3. Hôm nay TechShop có thể giúp gì cho bạn?
-    </div>
-</div>
+            <div id="output" class="flex-grow p-4 overflow-y-auto flex flex-col bg-gray-50">
+                <div class="self-start bg-white border border-gray-200 p-3 rounded-2xl rounded-bl-none shadow-sm max-w-[80%] chat-bubble mb-3">
+                    Chào Long! Mình là trợ lý Gemini 3. Hôm nay TechShop có thể giúp gì cho bạn?
+                </div>
+            </div>
 
             <div id="typing-indicator" class="typing">AI đang suy nghĩ...</div>
 
@@ -125,7 +125,30 @@
         <script type="module">
             import { GoogleGenAI } from "@google/genai";
 
-            // Logic Ẩn/Hiện Khung Chat
+            // 1. DATABASE GIẢ LẬP
+            const techShopDB = [
+                {name: "Chuột không dây Logitech G304", category: "chuột", price: "800,000 VNĐ", stock: 15, specs: "Màu đen, DPI 12000, pin 9 tháng"},
+                {name: "Chuột có dây DareU EM901", category: "chuột", price: "350,000 VNĐ", stock: 5, specs: "Led RGB, siêu nhẹ"},
+                {name: "Laptop Dell XPS 15", category: "laptop", price: "25,000,000 VNĐ", stock: 2, specs: "Core i7, 16GB RAM, 512GB SSD"},
+                {name: "Bàn phím cơ Akko 3098", category: "bàn phím", price: "1,500,000 VNĐ", stock: 0, specs: "Switch hồng, keycap PBT"}
+            ];
+
+            // 2. HÀM TÌM KIẾM
+            function searchProducts(userQuery) {
+                let query = userQuery.toLowerCase();
+                query = query.replace(/\bko\b/g, "không").replace(/\blap\b/g, "laptop").replace(/\bphím\b/g, "bàn phím");
+                const words = query.split(" ").filter(w => w.length > 1);
+
+                return techShopDB.filter(product => {
+                    const pName = product.name.toLowerCase();
+                    const pCat = product.category.toLowerCase();
+                    const isMatchCategory = query.includes(pCat);
+                    const isMatchKeyword = words.some(word => pName.includes(word));
+                    return isMatchCategory || isMatchKeyword;
+                });
+            }
+
+            // 3. LOGIC GIAO DIỆN CHAT
             const toggleBtn = document.getElementById('chat-toggle-btn');
             const chatBox = document.getElementById('ai-chat-box');
             const chatIcon = document.getElementById('chat-icon');
@@ -137,8 +160,8 @@
                 closeIcon.classList.toggle('hidden');
             });
 
-            // Cấu hình AI
-            const API_KEY = "Co qq";
+            // 4. CẤU HÌNH AI (Đừng quên đổi Key và xóa Key cũ trên Google AI Studio nhé!)
+            const API_KEY = "AIzaSyBtlB8tHj2BdAETRsAv6ThjgoY-AHNbezE";
             const ai = new GoogleGenAI({apiKey: API_KEY});
 
             const btn = document.getElementById('btn-send');
@@ -146,86 +169,80 @@
             const output = document.getElementById('output');
             const typingIndicator = document.getElementById('typing-indicator');
 
-            // Hàm gõ chữ chuẩn của bạn
-           async function typewriterEffect(element, text) {
-            element.textContent = ""; // Dùng textContent thay vì innerText
-            let currentStr = "";
-            for (let i = 0; i < text.length; i++) {
-                currentStr += text[i];
-                element.textContent = currentStr; // Cập nhật toàn bộ chuỗi để giữ nguyên space
-                output.scrollTop = output.scrollHeight;
-                await new Promise(resolve => setTimeout(resolve, 15)); 
-            }
-        }
-
-        // 2. HÀM NỐI TIN NHẮN (Đã fix lỗi tràn khung và thêm ép lề)
-        function appendMessage(text, isUser) {
-            const msgDiv = document.createElement('div');
-            
-            // Thêm 2 class Tailwind: 'whitespace-pre-wrap' (giữ xuống dòng/khoảng trắng) và 'break-words' (ép rớt chữ khi quá dài)
-            if (isUser) {
-                // Tin nhắn User (Bên phải, màu đỏ)
-                msgDiv.className = "self-end bg-red-600 text-white p-3 rounded-2xl rounded-br-none shadow-md max-w-[80%] mb-3 whitespace-pre-wrap break-words";
-            } else {
-                // Tin nhắn AI (Bên trái, màu trắng)
-                msgDiv.className = "self-start bg-white border border-gray-200 p-3 rounded-2xl rounded-bl-none shadow-sm max-w-[80%] mb-3 whitespace-pre-wrap break-words";
-            }
-            
-            msgDiv.textContent = text;
-            output.appendChild(msgDiv);
-            output.scrollTop = output.scrollHeight;
-            return msgDiv;
-        }
-
-            async function askAI() {
-                const text = input.value.trim();
-                if (!text)
-                    return;
-
-                appendMessage(text, true); // Hiện lời User bên phải
-                input.value = '';
-                typingIndicator.style.display = 'block';
-
-                try {
-                    // Config AI chuẩn
-                    const response = await ai.models.generateContent({
-                        model: "gemini-3-flash-preview",
-                        contents: text,
-                        config: {
-                            systemInstruction: `
-                                Bạn là trợ lý bán hàng chuyên nghiệp của TechShop - cửa hàng đồ công nghệ do Thái Gia Long sáng lập. 
-                                Quy tắc trả lời:
-                                1. Chỉ tư vấn về các sản phẩm công nghệ (Laptop, chuột, bàn phím, linh kiện).
-                                2. Nếu khách hỏi về lĩnh vực khác, hãy từ chối khéo léo và lái về đồ công nghệ.
-                                3. Luôn gọi khách hàng là 'Quý khách' hoặc 'Bạn' và xưng là 'TechShop AI'.
-                                4. Luôn nhắc đến ưu đãi 'Bảo hành 12 tháng' và 'Giao hàng hỏa tốc trong FPT University'.
-                            `,
-                            temperature: 0.7,
-                            thinkingConfig: {
-                                thinkingLevel: "LOW"
-                            }
-                        }
-                    });
-
-                    typingIndicator.style.display = 'none';
-                    const aiMsgDiv = appendMessage("", false); // Lời AI bên trái
-                    await typewriterEffect(aiMsgDiv, response.text);
-
-                } catch (error) {
-                    typingIndicator.style.display = 'none';
-                    let errorMsg = "Lỗi kết nối: " + error.message;
-
-                    if (error.message.includes("503") || error.message.includes("high demand")) {
-                        errorMsg = "Hệ thống đang bận một chút. Long thử lại sau 30 giây nhé!";
-                    }
-
-                    const errDiv = appendMessage(errorMsg, false);
-                    errDiv.style.backgroundColor = "#fee2e2";
-                    errDiv.style.color = "#b91c1c";
+            async function typewriterEffect(element, text) {
+                element.textContent = "";
+                let currentStr = "";
+                for (let i = 0; i < text.length; i++) {
+                    currentStr += text[i];
+                    element.textContent = currentStr;
+                    output.scrollTop = output.scrollHeight;
+                    await new Promise(resolve => setTimeout(resolve, 15));
                 }
             }
 
-            // Gán sự kiện cho Nút gửi và Phím Enter
+            function appendMessage(text, isUser) {
+                const msgDiv = document.createElement('div');
+                if (isUser) {
+                    msgDiv.className = "self-end bg-red-600 text-white p-3 rounded-2xl rounded-br-none shadow-md max-w-[80%] mb-3 whitespace-pre-wrap break-words";
+                } else {
+                    msgDiv.className = "self-start bg-white border border-gray-200 p-3 rounded-2xl rounded-bl-none shadow-sm max-w-[80%] mb-3 whitespace-pre-wrap break-words";
+                }
+                msgDiv.textContent = text;
+                output.appendChild(msgDiv);
+                output.scrollTop = output.scrollHeight;
+                return msgDiv;
+            }
+
+            // 5. HÀM GỌI AI ĐÃ FIX CHUẨN RAG
+         async function askAI() {
+        const text = input.value.trim();
+        if (!text) return;
+
+        appendMessage(text, true); 
+        input.value = '';
+        typingIndicator.style.display = 'block';
+
+        try {
+            // BƯỚC 1: LẤY TOÀN BỘ KHO HÀNG (Làm theo cách của bạn)
+            let contextInfo = techShopDB.map(p =>
+                "- Tên: " + p.name + ", Giá: " + p.price + ", Tình trạng: " + (p.stock > 0 ? "Còn hàng" : "Hết hàng") + ", Chi tiết: " + p.specs
+            ).join("\n");
+
+            console.log("📦 Đã ném toàn bộ kho hàng cho AI:\n", contextInfo);
+
+            // BƯỚC 2: CHẾ TẠO PROMPT TƯ VẤN SÂU
+            const promptForAI = 
+                "Khách hàng vừa nhắn: \"" + text + "\"\n\n" +
+                "Dưới đây là TOÀN BỘ danh sách sản phẩm đang có của TechShop:\n" +
+                contextInfo + "\n\n" +
+                "Nhiệm vụ của bạn: Trở thành nhân viên tư vấn xuất sắc.\n" +
+                "- Hãy phân tích yêu cầu của khách (ví dụ: tìm đồ rẻ nhất, đồ chơi game, so sánh...) và tự tìm ra sản phẩm phù hợp nhất trong danh sách trên để giới thiệu.\n" +
+                "- Nếu khách hỏi đồ rẻ nhất, hãy tự so sánh giá và đưa ra sản phẩm có giá thấp nhất.\n" +
+                "- Trả lời tự nhiên, thân thiện. Tuyệt đối không để lộ cho khách biết bạn đang đọc từ một danh sách.\n" +
+                "- Luôn nhớ nhắc đến ưu đãi bảo hành 12 tháng.";
+
+            // BƯỚC 3: GỌI AI
+            const response = await ai.models.generateContent({
+                model: "gemini-3-flash-preview", 
+                contents: promptForAI, 
+                config: {
+                    systemInstruction: "Bạn là trợ lý bán hàng TechShop. Chỉ xưng là TechShop AI và gọi khách là Bạn/Quý khách.",
+                    temperature: 0.3 // Tăng nhẹ độ sáng tạo lên một chút để AI nói chuyện tự nhiên hơn
+                }
+            });
+
+            typingIndicator.style.display = 'none';
+            const aiMsgDiv = appendMessage("", false);
+            await typewriterEffect(aiMsgDiv, response.text);
+
+        } catch (error) {
+            typingIndicator.style.display = 'none';
+            const errDiv = appendMessage("Lỗi: " + error.message, false);
+            errDiv.style.backgroundColor = "#fee2e2";
+            errDiv.style.color = "#b91c1c";
+        }
+    }
+
             btn.addEventListener('click', askAI);
             input.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter')
