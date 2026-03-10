@@ -165,12 +165,17 @@ public class CartItemDAO extends DBContext {
     // 8. Lấy giỏ của 1 khách kèm tên SP, SKU, giá (để hiển thị trang cart)
     public List<CartItemDisplay> getCartDisplayByCustomerId(int customerId) {
         List<CartItemDisplay> list = new ArrayList<>();
-        String sql = "SELECT c.cart_item_id, c.variant_id, c.quantity, p.name AS product_name, pv.sku, pv.selling_price "
+        String sql = "SELECT c.cart_item_id, c.variant_id, c.quantity, "
+                + "p.name AS product_name, pv.sku, pv.selling_price, "
+                + "MAX(CAST(CASE WHEN pi.is_thumbnail = 1 THEN pi.image_url ELSE NULL END AS VARCHAR(255))) AS thumbnail_url, "
+                + "MAX(c.created_at) AS created_at "
                 + "FROM cart_items c "
                 + "JOIN product_variants pv ON c.variant_id = pv.variant_id "
                 + "JOIN products p ON pv.product_id = p.product_id "
+                + "LEFT JOIN product_images pi ON p.product_id = pi.product_id "
                 + "WHERE c.customer_id = ? "
-                + "ORDER BY c.created_at DESC";
+                + "GROUP BY c.cart_item_id, c.variant_id, c.quantity, p.name, pv.sku, pv.selling_price "
+                + "ORDER BY created_at DESC";
         try {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, customerId);
@@ -182,7 +187,8 @@ public class CartItemDAO extends DBContext {
                         rs.getString("product_name"),
                         rs.getString("sku"),
                         rs.getLong("selling_price"),
-                        rs.getInt("quantity")
+                        rs.getInt("quantity"),
+                        rs.getString("thumbnail_url")
                 ));
             }
         } catch (Exception e) {
