@@ -137,8 +137,19 @@
                             <c:otherwise>
                                 <c:forEach var="item" items="${listCart}">
                                     <div class="flex gap-4">
-                                        <div class="w-20 h-20 bg-gray-50 rounded-xl border border-gray-100 p-1 flex-shrink-0 flex items-center justify-center">
-                                            <span class="text-gray-400 text-xs font-medium text-center px-1 line-clamp-2"><c:out value="${item.productName}"/></span>
+                                        <div class="w-20 h-20 bg-gray-50 rounded-xl border border-gray-100 p-1 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                            <c:choose>
+                                                <c:when test="${not empty item.thumbnailUrl}">
+                                                    <img src="${pageContext.request.contextPath}/${item.thumbnailUrl}"
+                                                         alt="${item.productName}"
+                                                         class="w-full h-full object-contain">
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <img src="${pageContext.request.contextPath}/assets/img/product/iphone-15-blue.jpg"
+                                                         alt="${item.productName}"
+                                                         class="w-full h-full object-contain opacity-70">
+                                                </c:otherwise>
+                                            </c:choose>
                                         </div>
                                         <div class="flex-1 flex flex-col justify-center">
                                             <h4 class="font-semibold text-gray-900 text-sm line-clamp-2 mb-1"><c:out value="${item.productName}"/> - <c:out value="${item.sku}"/></h4>
