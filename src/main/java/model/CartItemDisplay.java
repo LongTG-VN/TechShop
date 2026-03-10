@@ -16,6 +16,7 @@ public class CartItemDisplay {
     private String sku;
     private long sellingPrice;
     private int quantity;
+    private String thumbnailUrl;
 
     public CartItemDisplay() {
     }
@@ -27,6 +28,16 @@ public class CartItemDisplay {
         this.sku = sku;
         this.sellingPrice = sellingPrice;
         this.quantity = quantity;
+    }
+
+    public CartItemDisplay(int cartItemId, int variantId, String productName, String sku, long sellingPrice, int quantity, String thumbnailUrl) {
+        this.cartItemId = cartItemId;
+        this.variantId = variantId;
+        this.productName = productName;
+        this.sku = sku;
+        this.sellingPrice = sellingPrice;
+        this.quantity = quantity;
+        this.thumbnailUrl = thumbnailUrl;
     }
 
     public int getCartItemId() {
@@ -75,6 +86,14 @@ public class CartItemDisplay {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public String getThumbnailUrl() {
+        return thumbnailUrl;
+    }
+
+    public void setThumbnailUrl(String thumbnailUrl) {
+        this.thumbnailUrl = thumbnailUrl;
     }
 
     /**
