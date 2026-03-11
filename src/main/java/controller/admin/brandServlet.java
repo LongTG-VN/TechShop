@@ -52,7 +52,7 @@ public class brandServlet extends HttpServlet {
             out.println("</html>");
         }
     }
-    private static final String UPLOAD_DIR = "assest/img/brands";
+    private static final String UPLOAD_DIR = "assets/img/brands";
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**
@@ -129,51 +129,43 @@ public class brandServlet extends HttpServlet {
             String name = request.getParameter("brandName").trim();
             boolean status = "1".equals(request.getParameter("isActive"));
 
-            // 1. XỬ LÝ FILE UPLOAD (Sử dụng đường dẫn tương đối từ Server)
+            // 1. XỬ LÝ FILE UPLOAD
             Part filePart = request.getPart("brandLogo");
-            String fileName = filePart.getSubmittedFileName();
+            String fileName = (filePart != null) ? filePart.getSubmittedFileName() : null;
             String imagePath = null;
 
-            // Trong doPost của brandServlet.java
             if (fileName != null && !fileName.isEmpty()) {
-                // 1. Tạo tên file duy nhất với Timestamp
-                fileName = System.currentTimeMillis() + "_" + fileName;
+                String extension = fileName.substring(fileName.lastIndexOf("."));
+                String finalFileName = "";
 
-                // 2. Lấy đường dẫn thư mục CHẠY TẠM (Deploy Path) để hiện ảnh ngay lập tức
+                if ("add".equals(action)) {
+                    // ADD: Tạo dãy số mới (Timestamp)
+                    finalFileName = System.currentTimeMillis() + "_" + name.replaceAll("\\s+", "_").toLowerCase() + extension;
+                } else if ("update".equals(action)) {
+                    // UPDATE: Lấy tên file cũ từ DB để ghi đè, tránh đẻ file mới
+                    int id = Integer.parseInt(request.getParameter("brandId"));
+                    Brand current = bdao.getBrandById(id);
+                    String oldPath = (current != null) ? current.getImageUrl() : null;
+
+                    if (oldPath != null && !oldPath.isEmpty() && oldPath.contains("/")) {
+                        // Trích xuất lại tên file cũ (bao gồm cả dãy số cũ)
+                        finalFileName = oldPath.substring(oldPath.lastIndexOf("/") + 1);
+                    } else {
+                        // Nếu trước đó chưa có ảnh hoặc lỗi đường dẫn, tạo mới có dãy số
+                        finalFileName = System.currentTimeMillis() + "_" + name.replaceAll("\\s+", "_").toLowerCase() + extension;
+                    }
+                }
+
+                // 2. THIẾT LẬP ĐƯỜNG DẪN LƯU TRỮ (Đã sửa chính tả assets)
                 String deployPath = request.getServletContext().getRealPath("") + File.separator + UPLOAD_DIR;
-
-                // 3. Lấy đường dẫn thư mục GỐC (Source Path) để lưu vĩnh viễn (không bị Clean làm mất)
-                // Nó sẽ tìm thư mục project của bạn và trỏ vào src/main/webapp/assest/img/brands
-                String realPath = request.getServletContext().getRealPath("");
-                String sourcePath = realPath.substring(0, realPath.indexOf("target"))
-                        + "src" + File.separator + "main" + File.separator + "webapp" + File.separator + UPLOAD_DIR;
-
-                // 4. Tạo thư mục nếu chưa có
                 File uploadDirDeploy = new File(deployPath);
-                File uploadDirSource = new File(sourcePath);
                 if (!uploadDirDeploy.exists()) {
-                    uploadDirDeploy.mkdirs();
-                }
-                if (!uploadDirSource.exists()) {
-                    uploadDirSource.mkdirs();
+                    uploadDirDeploy.mkdirs(); // Tạo thư mục nếu chưa có
                 }
 
-                // 5. Ghi file vào thư mục CHẠY TẠM (để trình duyệt thấy ngay)
-                filePart.write(deployPath + File.separator + fileName);
-
-                // 6. Copy file sang thư mục GỐC (để lưu vĩnh viễn và gửi cho nhóm)
-                try {
-                    java.nio.file.Files.copy(
-                            new File(deployPath + File.separator + fileName).toPath(),
-                            new File(sourcePath + File.separator + fileName).toPath(),
-                            java.nio.file.StandardCopyOption.REPLACE_EXISTING
-                    );
-                } catch (IOException e) {
-                    System.out.println("Lưu vào source lỗi: " + e.getMessage());
-                }
-
-                // 7. Lưu đường dẫn vào DB (Chuẩn: assest/img/brands/tên_file)
-                imagePath = UPLOAD_DIR + "/" + fileName;
+                // 3. GHI FILE (Lệnh write sẽ ghi đè nếu trùng tên file cũ)
+                filePart.write(deployPath + File.separator + finalFileName);
+                imagePath = UPLOAD_DIR + "/" + finalFileName;
             }
             // 2. XỬ LÝ ACTION: ADD
             if ("add".equals(action)) {
