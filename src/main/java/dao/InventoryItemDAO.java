@@ -272,6 +272,34 @@ public class InventoryItemDAO extends DBContext {
         return 0;
     }
 
+    public int countByReceiptItemId(int receiptItemId) {
+        String sql = "SELECT COUNT(*) FROM inventory_items WHERE receipt_item_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, receiptItemId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public boolean existsByImei(String imei) {
+        String sql = "SELECT TOP 1 1 FROM inventory_items WHERE imei = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, imei);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return true;
+        }
+    }
+
     /**
      * Cập nhật trạng thái tồn kho (vd: SOLD sau khi bán).
      */

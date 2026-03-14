@@ -1,5 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<fmt:formatNumber value="${receipt.total_cost}" groupingUsed="true" var="formattedTotalCost"/>
 <div class="bg-white rounded-xl shadow-lg p-6 max-w-2xl">
     <h2 class="text-xl font-bold text-gray-800 uppercase tracking-tight mb-6">Edit Inventory Receipt #${receipt.receipt_id}</h2>
     <form action="${pageContext.request.contextPath}/staffservlet" method="post">
@@ -23,8 +25,8 @@
                 </select>
             </div>
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">Total Cost (₫)</label>
-                <input type="number" name="total_cost" value="${receipt.total_cost}" min="0" step="1000" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"/>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Total Cost</label>
+                <input type="text" value="${formattedTotalCost}₫ (auto-calculated)" disabled class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500"/>
             </div>
         </div>
         <div class="flex gap-3 mt-6">

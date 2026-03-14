@@ -15,8 +15,8 @@
                 </select>
             </div>
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">Total Cost (₫)</label>
-                <input type="number" name="total_cost" value="0" min="0" step="1000" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"/>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Total Cost</label>
+                <input type="text" value="0₫ (auto-calculated from receipt items)" disabled class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500"/>
             </div>
         </div>
         <div class="flex gap-3 mt-6">

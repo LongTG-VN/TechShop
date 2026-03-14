@@ -27,17 +27,17 @@
     </c:forEach>
 
     <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-blue-500">
-        <p class="text-gray-500 text-sm">Tổng NCC</p>
+        <p class="text-gray-500 text-sm">Total Suppliers</p>
         <h3 class="text-2xl font-bold text-blue-600">${total}</h3>
     </div>
 
     <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-green-500">
-        <p class="text-gray-500 text-sm">Đang Hợp Tác</p>
+        <p class="text-gray-500 text-sm">Active Suppliers</p>
         <h3 class="text-2xl font-bold text-green-600">${activeCount}</h3>
     </div>
 
     <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-red-500">
-        <p class="text-gray-500 text-sm">Ngừng Hợp Tác</p>
+        <p class="text-gray-500 text-sm">Inactive Suppliers</p>
         <h3 class="text-2xl font-bold text-red-600">${total - activeCount}</h3>
     </div>
 </div>
@@ -51,13 +51,13 @@
             <input type="hidden" name="action" value="supplierManagement">
             <input type="text" name="keyword"
                    class="w-full px-4 py-2 border rounded-lg"
-                   placeholder="Tìm nhà cung cấp theo tên hoặc số điện thoại..."
+                   placeholder="Search suppliers by name or phone number..."
                    value="${param.keyword}">
         </form>
 
         <a href="supplier?action=add"
            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm">
-           + Thêm Nhà Cung Cấp
+           + Add Supplier
         </a>
     </div>
 
@@ -82,41 +82,41 @@
                 <div>
                     <c:choose>
                         <c:when test="${s.is_active}">
-                            <span class="inline-block px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">Đang hợp tác</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">Active</span>
                         </c:when>
                         <c:otherwise>
-                            <span class="inline-block px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">Ngừng hợp tác</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">Inactive</span>
                         </c:otherwise>
                     </c:choose>
                 </div>
                 <div class="flex gap-3 justify-end text-sm">
                     <a href="supplier?action=view&id=${s.supplier_id}"
-                       class="text-gray-600 hover:text-gray-800 font-medium underline">Xem</a>
+                       class="text-gray-600 hover:text-gray-800 font-medium underline">View</a>
                     <span class="text-gray-300">|</span>
                     <a href="supplier?action=edit&id=${s.supplier_id}"
-                       class="text-blue-600 hover:text-blue-800 font-medium underline">Sửa</a>
+                       class="text-blue-600 hover:text-blue-800 font-medium underline">Edit</a>
                     <span class="text-gray-300">|</span>
                     <c:choose>
                         <c:when test="${s.is_active}">
                             <a href="supplier?action=deactivate&id=${s.supplier_id}"
-                               class="text-amber-600 hover:text-amber-800 font-medium underline">Dừng</a>
+                               class="text-amber-600 hover:text-amber-800 font-medium underline">Deactivate</a>
                         </c:when>
                         <c:otherwise>
                             <a href="supplier?action=restore&id=${s.supplier_id}"
-                               class="text-emerald-600 hover:text-emerald-800 font-medium underline">Mở lại</a>
+                               class="text-emerald-600 hover:text-emerald-800 font-medium underline">Reactivate</a>
                         </c:otherwise>
                     </c:choose>
                     <span class="text-gray-300">|</span>
                     <a href="supplier?action=delete&id=${s.supplier_id}"
-                       onclick="return confirm('Xóa nhà cung cấp #${s.supplier_id}? Nếu đang được dùng trong phiếu nhập sẽ không xóa được.');"
-                       class="text-red-600 hover:text-red-800 font-medium underline">Xóa</a>
+                       onclick="return confirm('Delete supplier #${s.supplier_id}? If it is used in import receipts, deletion will fail.');"
+                       class="text-red-600 hover:text-red-800 font-medium underline">Delete</a>
                 </div>
             </div>
         </c:forEach>
 
         <c:if test="${empty listSuppliers}">
             <div class="py-12 text-center text-gray-500">
-                Không tìm thấy dữ liệu nhà cung cấp nào.
+                No supplier records found.
             </div>
         </c:if>
     </div>

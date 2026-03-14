@@ -97,6 +97,25 @@ public class ImportReceiptsDAO extends DBContext {
         }
     }
 
+    public void recalculateTotalCost(int receiptId) {
+        String sql = """
+                UPDATE import_receipts
+                SET total_cost = (
+                    SELECT COALESCE(SUM(import_price * quantity), 0)
+                    FROM import_receipt_items
+                    WHERE receipt_id = ?
+                )
+                WHERE receipt_id = ?
+                """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, receiptId);
+            ps.setInt(2, receiptId);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     // 5. DELETE - trả về true nếu xóa thành công, false nếu lỗi (ví dụ dính khóa ngoại)
     public boolean deleteReceipt(int id) {
         String sql = "DELETE FROM import_receipts WHERE receipt_id = ?";

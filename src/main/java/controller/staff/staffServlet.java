@@ -153,14 +153,18 @@ public class staffServlet extends HttpServlet {
                     break;
                 case "inventoryReceiptEdit":
                     int ridEdit = Integer.parseInt(request.getParameter("id"));
-                    request.setAttribute("receipt", new ImportReceiptsDAO().getReceiptById(ridEdit));
+                    ImportReceiptsDAO editReceiptDao = new ImportReceiptsDAO();
+                    editReceiptDao.recalculateTotalCost(ridEdit);
+                    request.setAttribute("receipt", editReceiptDao.getReceiptById(ridEdit));
                     request.setAttribute("listSuppliers", new SupplierDAO().getAllSuppliers());
                     request.setAttribute("listEmployees", new EmployeesDAO().getAllEmployeeses());
                     page = "/pages/InventoryReceiptManagementPage/editInventoryReceipt.jsp";
                     break;
                 case "inventoryReceiptDetail":
                     int ridDetail = Integer.parseInt(request.getParameter("id"));
-                    ImportReceipts receipt = new ImportReceiptsDAO().getReceiptById(ridDetail);
+                    ImportReceiptsDAO detailReceiptDao = new ImportReceiptsDAO();
+                    detailReceiptDao.recalculateTotalCost(ridDetail);
+                    ImportReceipts receipt = detailReceiptDao.getReceiptById(ridDetail);
                     request.setAttribute("receipt", receipt);
                     request.setAttribute("receiptItems", new ImportReceiptItemDAO().getItemsByReceiptId(ridDetail));
                     request.setAttribute("listVariants", new dao.ProductVariantDAO().getAllVariant());
@@ -313,9 +317,7 @@ public class staffServlet extends HttpServlet {
                     empId = 1;
                 }
             }
-            double totalCost = 0;
-            try { String tc = request.getParameter("total_cost"); if (tc != null && !tc.isEmpty()) totalCost = Double.parseDouble(tc); } catch (NumberFormatException e) { }
-            ImportReceipts r = new ImportReceipts(0, supplierId, empId, totalCost, null);
+            ImportReceipts r = new ImportReceipts(0, supplierId, empId, 0, null);
             int newId = new ImportReceiptsDAO().insertReceiptReturnId(r);
             if (newId > 0) {
                 request.getSession().setAttribute("msg", "Inventory receipt created successfully.");
@@ -335,9 +337,10 @@ public class staffServlet extends HttpServlet {
             int supplierId = (sp != null && !sp.isEmpty()) ? Integer.parseInt(sp) : 0;
             String ep = request.getParameter("employee_id");
             int empId = (ep != null && !ep.isEmpty()) ? Integer.parseInt(ep) : 0;
-            double totalCost = 0;
-            try { String tc = request.getParameter("total_cost"); if (tc != null && !tc.isEmpty()) totalCost = Double.parseDouble(tc); } catch (NumberFormatException e) { }
-            new ImportReceiptsDAO().updateReceipt(new ImportReceipts(receiptId, supplierId, empId, totalCost, null));
+            ImportReceiptsDAO receiptDao = new ImportReceiptsDAO();
+            ImportReceipts existingReceipt = receiptDao.getReceiptById(receiptId);
+            double totalCost = existingReceipt != null ? existingReceipt.getTotal_cost() : 0;
+            receiptDao.updateReceipt(new ImportReceipts(receiptId, supplierId, empId, totalCost, null));
             request.getSession().setAttribute("msg", "Inventory receipt updated successfully.");
             request.getSession().setAttribute("msgType", "success");
             response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryReceiptDetail&id=" + receiptId);
@@ -363,6 +366,7 @@ public class staffServlet extends HttpServlet {
                 request.getSession().setAttribute("msgType", "danger");
             } else {
                 new ImportReceiptItemDAO().insertItem(new ImportReceiptItem(0, receiptId, variantId, importPrice, qty));
+                new ImportReceiptsDAO().recalculateTotalCost(receiptId);
                 request.getSession().setAttribute("msg", "Item added to the receipt.");
                 request.getSession().setAttribute("msgType", "success");
             }
@@ -391,6 +395,7 @@ public class staffServlet extends HttpServlet {
                 request.getSession().setAttribute("msgType", "danger");
             } else {
                 new ImportReceiptItemDAO().updateItem(new ImportReceiptItem(itemId, receiptId, variantId, importPrice, qty));
+                new ImportReceiptsDAO().recalculateTotalCost(receiptId);
                 request.getSession().setAttribute("msg", "Receipt item updated successfully.");
                 request.getSession().setAttribute("msgType", "success");
             }
@@ -407,6 +412,7 @@ public class staffServlet extends HttpServlet {
             int deletedInv = invDao.deleteByReceiptItemId(itemId);
             boolean deleted = new ImportReceiptItemDAO().deleteItem(itemId);
             if (deleted) {
+                new ImportReceiptsDAO().recalculateTotalCost(receiptId);
                 String msg = deletedInv > 0 ? "Receipt item deleted together with " + deletedInv + " related inventory record(s)." : "Receipt item deleted successfully.";
                 request.getSession().setAttribute("msg", msg);
                 request.getSession().setAttribute("msgType", "success");

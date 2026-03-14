@@ -7,21 +7,21 @@
          class="fixed top-6 left-1/2 z-[9999] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 transition-all duration-300 ease-out">
         <div class="relative flex items-start gap-3 rounded-2xl border px-4 py-3 shadow-xl backdrop-blur-sm
              ${isDangerToast
-                 ? 'bg-white/95 border-red-100 text-red-700'
-                 : 'bg-white/95 border-emerald-100 text-emerald-700'}">
+               ? 'bg-white/95 border-red-100 text-red-700'
+               : 'bg-white/95 border-emerald-100 text-emerald-700'}">
             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full
                  ${isDangerToast ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}">
                 <c:choose>
                     <c:when test="${isDangerToast}">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M12 9v3m0 4h.01M10.29 3.86l-7.5 13A1 1 0 003.66 18h16.68a1 1 0 00.87-1.5l-7.5-13a1 1 0 00-1.74 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 9v3m0 4h.01M10.29 3.86l-7.5 13A1 1 0 003.66 18h16.68a1 1 0 00.87-1.5l-7.5-13a1 1 0 00-1.74 0z"/>
                         </svg>
                     </c:when>
                     <c:otherwise>
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </c:otherwise>
                 </c:choose>
@@ -38,8 +38,8 @@
                     onclick="closeToastDetail()"
                     class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-600">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M6 18L18 6M6 6l12 12"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
         </div>
@@ -49,7 +49,8 @@
     <script>
         function closeToastDetail() {
             var t = document.getElementById('toast-detail');
-            if (!t) return;
+            if (!t)
+                return;
             t.classList.add('opacity-0', '-translate-y-3');
             setTimeout(function () {
                 t.remove();
@@ -83,8 +84,8 @@
     <c:set var="empName" value="—"/>
     <c:forEach items="${listEmployees}" var="e"><c:if test="${e.employeeId == receipt.employee_id}"><c:set var="empName" value="${e.fullName}"/></c:if></c:forEach>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 p-4 bg-gray-50 rounded-xl">
-        <div><p class="text-xs font-semibold text-gray-500 uppercase">Supplier</p><p class="font-medium text-gray-900">${supplierName}</p></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 p-4 bg-gray-50 rounded-xl">
+                <div><p class="text-xs font-semibold text-gray-500 uppercase">Supplier</p><p class="font-medium text-gray-900">${supplierName}</p></div>
         <div><p class="text-xs font-semibold text-gray-500 uppercase">Employee</p><p class="font-medium text-gray-900">${empName}</p></div>
         <div><p class="text-xs font-semibold text-gray-500 uppercase">Total Cost</p><p class="font-bold text-blue-600"><fmt:formatNumber value="${receipt.total_cost}" groupingUsed="true"/>₫</p></div>
     </div>
@@ -106,21 +107,21 @@
                     <c:set var="variantSku" value="—"/>
                     <c:set var="variantProductName" value=""/>
                     <c:forEach items="${listVariants}" var="v"><c:if test="${v.variantId == it.variant_id}"><c:set var="variantSku" value="${v.sku}"/><c:set var="variantProductName" value="${v.productName}"/></c:if></c:forEach>
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-3 font-medium text-gray-500">#${it.receipt_item_id}</td>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3 font-medium text-gray-500">#${it.receipt_item_id}</td>
                         <td class="px-4 py-3"><span class="font-medium text-red-600">${variantSku}</span><c:if test="${not empty variantProductName}"> <span class="text-gray-500">${variantProductName}</span></c:if></td>
                         <td class="px-4 py-3 text-right"><fmt:formatNumber value="${it.import_price}" groupingUsed="true"/>₫</td>
                         <td class="px-4 py-3 text-center">${it.quantity}</td>
                         <td class="px-4 py-3">
-                            <a href="${pageContext.request.contextPath}/inventory?action=add&receipt_item_id=${it.receipt_item_id}"
-                               class="text-blue-600 hover:underline mr-2">Create IMEI</a>
-                            <a href="${pageContext.request.contextPath}/staffservlet?action=inventoryReceiptDetail&id=${receipt.receipt_id}&editItemId=${it.receipt_item_id}" class="text-amber-600 hover:underline mr-2">Edit</a>
-                            <form action="${pageContext.request.contextPath}/staffservlet" method="post" class="inline" onsubmit="return confirm('Delete this item?');">
-                                <input type="hidden" name="action" value="receiptItemDelete"/>
-                                <input type="hidden" name="receipt_item_id" value="${it.receipt_item_id}"/>
-                                <input type="hidden" name="receipt_id" value="${receipt.receipt_id}"/>
-                                <button type="submit" class="text-red-600 hover:underline">Delete</button>
-                            </form>
+                            <div class="flex items-center justify-center gap-4 whitespace-nowrap">
+                                <a href="${pageContext.request.contextPath}/staffservlet?action=inventoryReceiptDetail&id=${receipt.receipt_id}&editItemId=${it.receipt_item_id}" class="text-amber-600 hover:underline">Edit</a>
+                                <form action="${pageContext.request.contextPath}/staffservlet" method="post" class="inline" onsubmit="return confirm('Delete this item?');">
+                                    <input type="hidden" name="action" value="receiptItemDelete"/>
+                                    <input type="hidden" name="receipt_item_id" value="${it.receipt_item_id}"/>
+                                    <input type="hidden" name="receipt_id" value="${receipt.receipt_id}"/>
+                                    <button type="submit" class="text-red-600 hover:underline">Delete</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 </c:forEach>
@@ -143,33 +144,33 @@
                 <div class="space-y-4" data-variant-picker data-selected-variant="${editItem.variant_id}">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
                         <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Category</label>
-                        <select data-category-select class="w-full px-4 py-2 border border-amber-200 rounded-lg bg-white">
-                            <option value="">— Select category —</option>
-                        </select>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Category</label>
+                            <select data-category-select class="w-full px-4 py-2 border border-amber-200 rounded-lg bg-white">
+                                <option value="">— Select category —</option>
+                            </select>
                         </div>
                         <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Product</label>
-                        <select data-product-select class="w-full px-4 py-2 border border-amber-200 rounded-lg bg-white" disabled>
-                            <option value="">— Select product —</option>
-                        </select>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Product</label>
+                            <select data-product-select class="w-full px-4 py-2 border border-amber-200 rounded-lg bg-white" disabled>
+                                <option value="">— Select product —</option>
+                            </select>
                         </div>
                         <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">SKU / Variant</label>
-                        <select name="variant_id" data-variant-select required class="w-full px-4 py-2 border border-amber-200 rounded-lg bg-white" disabled>
-                            <option value="">— Chọn variant —</option>
-                        </select>
-                        <p data-variant-hint class="mt-1 text-xs text-amber-700">Choose a category to filter products.</p>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">SKU / Variant</label>
+                            <select name="variant_id" data-variant-select required class="w-full px-4 py-2 border border-amber-200 rounded-lg bg-white" disabled>
+                                <option value="">— Chọn variant —</option>
+                            </select>
+                            <p data-variant-hint class="mt-1 text-xs text-amber-700">Choose a category to filter products.</p>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                         <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Import Price (₫)</label>
-                        <input type="number" name="import_price" value="${editItem.import_price}" min="0" step="1000" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"/>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Import Price (₫)</label>
+                            <input type="number" name="import_price" value="${editItem.import_price}" min="0" step="1000" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"/>
                         </div>
                         <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Quantity</label>
-                        <input type="number" name="quantity" value="${editItem.quantity}" min="1" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"/>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Quantity</label>
+                            <input type="number" name="quantity" value="${editItem.quantity}" min="1" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"/>
                         </div>
                         <div class="flex gap-2">
                             <button type="submit" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-medium">Update</button>
@@ -188,33 +189,33 @@
         <div class="space-y-4" data-variant-picker data-selected-variant="">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
                 <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">Category</label>
-                <select data-category-select class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
-                    <option value="">— Select category —</option>
-                </select>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Category</label>
+                    <select data-category-select class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                        <option value="">— Select category —</option>
+                    </select>
                 </div>
                 <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">Product</label>
-                <select data-product-select class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white" disabled>
-                    <option value="">— Select product —</option>
-                </select>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Product</label>
+                    <select data-product-select class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white" disabled>
+                        <option value="">— Select product —</option>
+                    </select>
                 </div>
                 <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">SKU / Variant</label>
-                <select name="variant_id" data-variant-select required class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white" disabled>
-                    <option value="">— Chọn variant —</option>
-                </select>
-                <p data-variant-hint class="mt-1 text-xs text-gray-500">Choose a category to filter products.</p>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">SKU / Variant</label>
+                    <select name="variant_id" data-variant-select required class="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white" disabled>
+                        <option value="">— Chọn variant —</option>
+                    </select>
+                    <p data-variant-hint class="mt-1 text-xs text-gray-500">Choose a category to filter products.</p>
                 </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">Import Price (₫)</label>
-                <input type="number" name="import_price" value="0" min="0" step="1000" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"/>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Import Price (₫)</label>
+                    <input type="number" name="import_price" value="0" min="0" step="1000" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"/>
                 </div>
                 <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">Quantity</label>
-                <input type="number" name="quantity" value="1" min="1" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"/>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Quantity</label>
+                    <input type="number" name="quantity" value="1" min="1" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"/>
                 </div>
                 <div>
                     <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Add Item</button>

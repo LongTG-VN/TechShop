@@ -71,12 +71,14 @@
                             </c:otherwise>
                         </c:choose>
                     </td>
-                    <td class="p-4 text-blue-600 font-medium">
-                        <a href="orderStatusServlet?action=edit&id=${s.statusId}" class="hover:underline">Edit</a>
+                    <td class="p-4">
+                        <div class="flex items-center gap-4 text-sm font-medium whitespace-nowrap">
+                        <a href="orderStatusServlet?action=edit&id=${s.statusId}" class="text-blue-600 hover:text-blue-800 hover:underline">Edit</a>
                         <a href="orderStatusServlet?action=delete&id=${s.statusId}"
-                           class="text-red-600 hover:text-red-800 font-medium">
+                           class="text-red-600 hover:text-red-800 hover:underline">
                             Delete
                         </a>
+                        </div>
                     </td>
                 </tr>
             </c:forEach>
