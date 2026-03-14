@@ -16,9 +16,9 @@ public class InventoryItem {
     private String imei;
     private double import_price;
     private String status;
-    /** Tên sản phẩm (từ JOIN với product_variants + products), dùng cho hiển thị. */
+   
     private String productName;
-    /** Tên người mua (JOIN từ orders + customers), có thể null nếu chưa bán. */
+   
     private String buyerName;
 
     public InventoryItem() {
