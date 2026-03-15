@@ -215,7 +215,7 @@ public class orderpageServlet extends HttpServlet {
 
         model.Voucher appliedVoucher = null;
         double discount = 0;
-        
+
         if (voucherId > 0) {
             VoucherDAO vdao = new VoucherDAO();
             appliedVoucher = vdao.getVoucherById(voucherId);
@@ -284,7 +284,18 @@ public class orderpageServlet extends HttpServlet {
             VoucherDAO vdao = new VoucherDAO();
             vdao.incrementUsedQuantity(appliedVoucher.getVoucherId());
         }
-        response.sendRedirect("orderpageservlet?orderSuccess=1&orderId=" + orderId);
+        //Check vnpay
+        PaymentMethodDAO pdao = new PaymentMethodDAO();
+        PaymentMethod selectedMethod = pdao.getPaymentMethodById(paymentMethodId);
+        boolean isVNPay = selectedMethod != null
+                && selectedMethod.getMethod_name().toUpperCase().contains("VNPAY");
+
+        if (isVNPay) {
+            response.sendRedirect("vnpayservlet?action=pay&orderId=" + orderId
+                    + "&amount=" + totalAmount.longValue());
+        } else {
+            response.sendRedirect("orderpageservlet?orderSuccess=1&orderId=" + orderId);
+        }
     }
 
     /**

@@ -41,6 +41,7 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="border-b-2 border-gray-100">
+                        <th class="py-3 font-bold text-gray-700">Product Image</th>  
                         <th class="py-3 font-bold text-gray-700">Product Name</th>
                         <th class="py-3 font-bold text-gray-700">IMEI / Serial</th>
                         <th class="py-3 text-right font-bold text-gray-700">Price</th>
@@ -49,6 +50,10 @@
                 <tbody>
                     <c:forEach items="${items}" var="item">
                         <tr class="border-b border-gray-50 hover:bg-gray-50">
+                            <td class="py-4">
+                                <img src="${item.imageUrl != null ? item.imageUrl : 'https://placehold.co/100x100'}" 
+                                     alt="${item.productName}" class="w-[100px] h-[100px] object-cover rounded">
+                            </td>
                             <td class="py-4">
                                 <div class="font-medium">${item.productName}</div>
                                 <div class="text-xs text-gray-400">SKU: ${item.sku}</div>

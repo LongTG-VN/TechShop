@@ -22,11 +22,11 @@ public class DBContext {
     public DBContext() {
         try {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-           String dbURL = "jdbc:sqlserver://localhost:1433;" 
-             + "databaseName=TechShopFix_DB;"
-             + "user=sa;"
-             + "password=123;" 
-             + "encrypt=true;trustServerCertificate=true;";
+            String dbURL = "jdbc:sqlserver://localhost:1433;"
+                    + "databaseName=TechShopFix_DB;"
+                    + "user=sa;"
+                    + "password=1234;"
+                    + "encrypt=true;trustServerCertificate=true;";
             conn = DriverManager.getConnection(dbURL);
             if (conn != null) {
                 DatabaseMetaData dm = (DatabaseMetaData) conn.getMetaData();
@@ -48,6 +48,6 @@ public class DBContext {
     }
 
     public static void main(String[] args) {
-         DBContext db = new DBContext();
+        DBContext db = new DBContext();
     }
 }

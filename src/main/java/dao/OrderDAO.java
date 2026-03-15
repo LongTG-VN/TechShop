@@ -191,7 +191,7 @@ public class OrderDAO extends DBContext {
 
                 String finalName = (pName != null) ? pName : "No products";
                 if (count > 1) {
-                    finalName += " (+" + (count - 1) + " sản phẩm)";
+                    finalName += " (+" + (count - 1) + " items)";
                 }
 
                 o.setOrderName(finalName);
@@ -241,11 +241,12 @@ public class OrderDAO extends DBContext {
     //Get order detail with IMEI
     public List<Map<String, Object>> getOrderDetailsWithIMEI(int orderId) {
         List<Map<String, Object>> details = new ArrayList<>();
-        String sql = "SELECT p.name, pv.sku, ii.imei, oi.selling_price "
+        String sql = "SELECT p.name, pv.sku, ii.imei, oi.selling_price, pi.image_url "
                 + "FROM order_items oi "
                 + "JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
                 + "JOIN product_variants pv ON ii.variant_id = pv.variant_id "
                 + "JOIN products p ON pv.product_id = p.product_id "
+                + "LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_thumbnail = 1 "
                 + "WHERE oi.order_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, orderId);
@@ -256,6 +257,7 @@ public class OrderDAO extends DBContext {
                 item.put("sku", rs.getString("sku"));
                 item.put("imei", rs.getString("imei"));
                 item.put("price", rs.getBigDecimal("selling_price"));
+                item.put("imageUrl", rs.getString("image_url"));
                 details.add(item);
             }
         } catch (Exception e) {
@@ -266,13 +268,15 @@ public class OrderDAO extends DBContext {
 
     public List<Map<String, Object>> getOrderDetails(int orderId) {
         List<Map<String, Object>> details = new ArrayList<>();
-        String sql = "SELECT p.name, pv.sku, ii.imei, oi.selling_price, pi.image_url "
+        String sql = "SELECT p.name, pv.sku, COUNT(*) as quantity, "
+                + "oi.selling_price, pi.image_url "
                 + "FROM order_items oi "
                 + "JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
                 + "JOIN product_variants pv ON ii.variant_id = pv.variant_id "
                 + "JOIN products p ON pv.product_id = p.product_id "
-                + "LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_thumbnail = 1 " // Thêm join ảnh thumbnail
-                + "WHERE oi.order_id = ?";
+                + "LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_thumbnail = 1 "
+                + "WHERE oi.order_id = ? "
+                + "GROUP BY p.name, pv.sku, oi.selling_price, pi.image_url";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, orderId);
             ResultSet rs = ps.executeQuery();
@@ -280,9 +284,9 @@ public class OrderDAO extends DBContext {
                 Map<String, Object> item = new HashMap<>();
                 item.put("productName", rs.getString("name"));
                 item.put("sku", rs.getString("sku"));
-                item.put("imei", rs.getString("imei"));
+                item.put("quantity", rs.getInt("quantity"));   
                 item.put("price", rs.getBigDecimal("selling_price"));
-                item.put("imageUrl", rs.getString("image_url"));  // Thêm ảnh
+                item.put("imageUrl", rs.getString("image_url"));
                 details.add(item);
             }
         } catch (Exception e) {
@@ -378,6 +382,43 @@ public class OrderDAO extends DBContext {
             ps.setString(1, paymentStatus);
             ps.setInt(2, orderId);
             ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void cancelUnpaidOrder(int orderId) {
+        // 1. Hoàn lại inventory về IN_STOCK
+        String sqlInventory = """
+        UPDATE inventory_items SET status = 'IN_STOCK'
+        WHERE inventory_id IN (
+            SELECT inventory_id FROM order_items WHERE order_id = ?
+        )
+    """;
+        // 2. Xóa order_items
+        String sqlItems = "DELETE FROM order_items WHERE order_id = ?";
+        // 3. Xóa order_status_history nếu có
+        String sqlHistory = "DELETE FROM order_status_history WHERE order_id = ?";
+        // 4. Xóa order
+        String sqlOrder = "DELETE FROM orders WHERE order_id = ?";
+
+        try {
+            PreparedStatement ps1 = conn.prepareStatement(sqlInventory);
+            ps1.setInt(1, orderId);
+            ps1.executeUpdate();
+
+            PreparedStatement ps2 = conn.prepareStatement(sqlItems);
+            ps2.setInt(1, orderId);
+            ps2.executeUpdate();
+
+            PreparedStatement ps3 = conn.prepareStatement(sqlHistory);
+            ps3.setInt(1, orderId);
+            ps3.executeUpdate();
+
+            PreparedStatement ps4 = conn.prepareStatement(sqlOrder);
+            ps4.setInt(1, orderId);
+            ps4.executeUpdate();
+
         } catch (Exception e) {
             e.printStackTrace();
         }

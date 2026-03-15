@@ -5,7 +5,6 @@
     <div class="bg-gray-800 p-4 text-white font-bold text-lg">
         Edit Order #${order.orderId}
     </div>
-
     <form action="orderStaffServlet" method="POST" class="p-6 space-y-6">
         <input type="hidden" name="action" value="updateOrder">
         <input type="hidden" name="orderId" value="${order.orderId}">
@@ -72,8 +71,11 @@
             <div>
                 <label class="block text-sm font-bold text-gray-700 mb-2">Payment Status</label>
 
-                <%-- Server-side: tính autoPayment theo status hiện tại --%>
+                <%-- autoPayment: ưu tiên DB thực tế, sau đó mới tính theo status --%>
                 <c:choose>
+                    <c:when test="${order.paymentStatus == 'PAID'}">
+                        <c:set var="autoPayment" value="PAID"/>
+                    </c:when>
                     <c:when test="${empty nextStatus && order.status != cancelledCode}">
                         <c:set var="autoPayment" value="PAID"/>
                     </c:when>
@@ -114,6 +116,10 @@
         document.getElementById('selectedStatus').value = code;
         document.getElementById('statusPreview').textContent = 'Will update status to: ' + code;
         document.getElementById('statusPreview').className = 'mt-2 text-xs text-blue-600 font-semibold';
+
+        const alreadyPaid = '${order.paymentStatus}' === 'PAID';
+        if (alreadyPaid)
+            return;
 
         const paymentInput = document.getElementById('selectedPayment');
         const paymentDisplay = document.getElementById('paymentDisplay');

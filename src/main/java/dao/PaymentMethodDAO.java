@@ -56,8 +56,7 @@ public class PaymentMethodDAO extends DBContext {
     //get payment method by id
     public PaymentMethod getPaymentMethodById(int id) {
         String sql = "SELECT * FROM payment_methods WHERE method_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
