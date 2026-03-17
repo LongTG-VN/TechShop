@@ -39,10 +39,10 @@ public class ImportReceiptItemDAO extends DBContext {
         return list;
     }
 
-    /** Lấy tất cả item theo receipt_id (để hiển thị trong detail phiếu nhập). */
+    /** Lấy tất cả item theo receipt_id (để hiển thị trong detail phiếu nhập), sắp xếp tăng dần theo ID. */
     public List<ImportReceiptItem> getItemsByReceiptId(int receiptId) {
         List<ImportReceiptItem> list = new ArrayList<>();
-        String sql = "SELECT * FROM import_receipt_items WHERE receipt_id = ? ORDER BY receipt_item_id";
+        String sql = "SELECT * FROM import_receipt_items WHERE receipt_id = ? ORDER BY receipt_item_id ASC";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, receiptId);
             try (ResultSet rs = ps.executeQuery()) {

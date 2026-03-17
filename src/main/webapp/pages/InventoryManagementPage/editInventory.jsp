@@ -74,9 +74,10 @@
             </a>
         </div>
 
-        <form action="inventory" method="POST" class="space-y-5">
+        <form id="editInventoryForm" action="inventory" method="POST" class="space-y-5" onsubmit="return confirmSoldToInStock(event);">
             <input type="hidden" name="action" value="update">
             <input type="hidden" name="inventory_id" value="${inventoryItem.inventory_id}">
+            <input type="hidden" id="originalStatus" value="${inventoryItem.status}">
 
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">
@@ -147,7 +148,7 @@
                         Status
                     </label>
 
-                    <select name="status"
+                    <select name="status" id="statusSelect"
                             class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
 
                         <option value="IN_STOCK"
@@ -180,6 +181,22 @@
             </div>
 
             <script>
+                function confirmSoldToInStock(event) {
+                    var original = document.getElementById("originalStatus");
+                    var statusSelect = document.getElementById("statusSelect");
+                    if (!original || !statusSelect) return true;
+                    var origVal = (original.value || "").toUpperCase();
+                    var newVal = (statusSelect.value || "").toUpperCase();
+                    if (origVal === "SOLD" && newVal === "IN_STOCK") {
+                        var msg = "This item may be linked to an order. Normally use Order Cancel to revert stock. Continue anyway?";
+                        if (!confirm(msg)) {
+                            event.preventDefault();
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+
                 window.onload = function() {
 
                     var search = document.getElementById("variantSearch");

@@ -6,7 +6,6 @@ package controller.staff;
 
 import dao.BrandDAO;
 import dao.CategoryDAO;
-import dao.InventoryItemDAO;
 import dao.ProductDAO;
 import dao.SupplierDAO;
 import dao.EmployeesDAO;
@@ -29,7 +28,7 @@ import model.InventoryItem;
 import model.Supplier;
 import java.util.Map;
 import model.Employees;
-import service.ImportService;
+import dao.InventoryItemDAO;
 
 /**
  *
@@ -91,13 +90,6 @@ public class staffServlet extends HttpServlet {
             switch (action) {
                 case "dashboard":
                     page = "/pages/DashboardPage/staffDashboard.jsp";
-                    
-                    
-                    
-                    
-                    
-                    
-                    
                     break;
                 // Trong switch (action) của Servlet:
 
@@ -119,15 +111,43 @@ public class staffServlet extends HttpServlet {
                     try {
                         InventoryItemDAO idao = new InventoryItemDAO();
                         String keyword = request.getParameter("keyword");
+
+                        // Danh sách chi tiết từng sản phẩm trong kho (IMEI-level)
                         List<InventoryItem> listInventory = (keyword != null && !keyword.trim().isEmpty())
                                 ? idao.searchInventory(keyword)
                                 : idao.getAllInventory();
                         listData = listInventory != null ? listInventory : new java.util.ArrayList<>();
                         request.setAttribute("listInventory", listData);
+
+                        // Chỉ load phần tổng hợp khi không search (đúng với điều kiện ở JSP)
+                        if (keyword == null || keyword.trim().isEmpty()) {
+                            List<model.InventorySummary> inventorySummary = idao.getInventorySummary();
+                            request.setAttribute("inventorySummary", inventorySummary != null ? inventorySummary : new java.util.ArrayList<>());
+
+                            int totalImported = 0;
+                            int totalSold = 0;
+                            int totalInStock = 0;
+                            if (inventorySummary != null) {
+                                for (model.InventorySummary s : inventorySummary) {
+                                    if (s != null) {
+                                        totalImported += s.getImported();
+                                        totalSold += s.getSold();
+                                        totalInStock += s.getInStock();
+                                    }
+                                }
+                            }
+                            request.setAttribute("totalImported", totalImported);
+                            request.setAttribute("totalSold", totalSold);
+                            request.setAttribute("totalInStock", totalInStock);
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                         listData = new java.util.ArrayList<>();
                         request.setAttribute("listInventory", listData);
+                        request.setAttribute("inventorySummary", new java.util.ArrayList<>());
+                        request.setAttribute("totalImported", 0);
+                        request.setAttribute("totalSold", 0);
+                        request.setAttribute("totalInStock", 0);
                     }
                     break;
 
@@ -300,7 +320,7 @@ public class staffServlet extends HttpServlet {
         if ("inventoryReceiptConfirm".equals(action)) {
             String rp = request.getParameter("receipt_id");
             int receiptId = (rp != null && !rp.isEmpty()) ? Integer.parseInt(rp) : 0;
-            int created = new ImportService().generateInventoryFromReceipt(receiptId);
+            int created = new dao.InventoryItemDAO().generateInventoryFromReceipt(receiptId);
             request.getSession().setAttribute("msg", "Receipt confirmed. " + created + " inventory record(s) created.");
             request.getSession().setAttribute("msgType", "success");
             response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryReceiptDetail&id=" + receiptId);
