@@ -298,6 +298,68 @@ public class OrderDAO extends DBContext {
         return details;
     }
 
+    public List<Order> getOrdersByYear(int year) {
+        List<Order> list = new ArrayList<>();
+        String sql = "SELECT * FROM orders WHERE YEAR(created_at) = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, year);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Voucher voucher = null;
+                int vId = rs.getInt("voucher_id");
+                if (!rs.wasNull()) {
+                    voucher = new Voucher();
+                    voucher.setVoucherId(vId);
+                }
+                list.add(new Order(
+                        rs.getInt("order_id"),
+                        rs.getInt("customer_id"),
+                        voucher,
+                        rs.getInt("payment_method_id"),
+                        rs.getString("shipping_address"),
+                        rs.getBigDecimal("total_amount"),
+                        rs.getString("payment_status"),
+                        rs.getString("status"),
+                        rs.getTimestamp("created_at")
+                ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public List<Order> getOrdersByMonth(int month) {
+        List<Order> list = new ArrayList<>();
+        String sql = "SELECT * FROM orders WHERE MONTH(created_at) = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, month);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Voucher voucher = null;
+                int vId = rs.getInt("voucher_id");
+                if (!rs.wasNull()) {
+                    voucher = new Voucher();
+                    voucher.setVoucherId(vId);
+                }
+                list.add(new Order(
+                        rs.getInt("order_id"),
+                        rs.getInt("customer_id"),
+                        voucher,
+                        rs.getInt("payment_method_id"),
+                        rs.getString("shipping_address"),
+                        rs.getBigDecimal("total_amount"),
+                        rs.getString("payment_status"),
+                        rs.getString("status"),
+                        rs.getTimestamp("created_at")
+                ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public List<Map<String, Object>> getOrderDetails(int orderId) {
         List<Map<String, Object>> details = new ArrayList<>();
         String sql = "SELECT p.name, pv.sku, COUNT(*) as quantity, "
@@ -360,8 +422,7 @@ public class OrderDAO extends DBContext {
     }
 
     /**
-     * Chi tiết đơn hàng CANCELLED theo từng inventory_id để lấy được IMEI (nếu có).
-     * Dùng cho trang staff order detail để luôn hiển thị IMEI/Serial.
+     * Chi tiết đơn hàng CANCELLED theo từng inventory_id để lấy được IMEI (nếu có). Dùng cho trang staff order detail để luôn hiển thị IMEI/Serial.
      */
     public List<Map<String, Object>> getCancelledOrderDetailsWithIMEI(int orderId) {
         List<Map<String, Object>> details = new ArrayList<>();

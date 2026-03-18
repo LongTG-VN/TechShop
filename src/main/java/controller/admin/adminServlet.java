@@ -8,6 +8,7 @@ import dao.BrandDAO;
 import dao.CategoryDAO;
 import dao.CustomerDAO;
 import dao.EmployeesDAO;
+import dao.OrderDAO;
 import dao.OrderStatusDAO;
 import dao.PaymentMethodDAO;
 import dao.ProductSpecificationValueDAO;
@@ -22,6 +23,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import model.Employees;
+import model.Order;
 import model.Voucher;
 
 /**
@@ -32,8 +34,7 @@ import model.Voucher;
 public class adminServlet extends HttpServlet {
 
     /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
      *
      * @param request servlet request
      * @param response servlet response
@@ -83,7 +84,7 @@ public class adminServlet extends HttpServlet {
         if (action == null) {
             action = "";
         }
-        
+
         // 3. Logic điều hướng (Switch-case sẽ sạch sẽ hơn if-else)
         if (action != null) {
             switch (action) {
@@ -94,14 +95,32 @@ public class adminServlet extends HttpServlet {
                     request.setAttribute("listDataEmployee", new EmployeesDAO().getEmployeesByYear(2026));
 
                     List<Voucher> listV = new VoucherDAO().getVouchersByYear(2026);
+                    List<Order> listOrders = new OrderDAO().getOrdersByYear(2026);
 
                     long activeV = listV.stream().filter(v -> v.getStatus().equalsIgnoreCase("Active")).count();
                     long lockedV = listV.stream().filter(v -> v.getStatus().equalsIgnoreCase("Locked")).count();
                     long expiredV = listV.stream().filter(v -> v.getStatus().equalsIgnoreCase("Expired")).count();
 
+                    long pendingCount = listOrders.stream()
+                            .filter(o -> o.getStatus().equalsIgnoreCase("PENDING")).count();
+                    long approvedCount = listOrders.stream()
+                            .filter(o -> o.getStatus().equalsIgnoreCase("APPROVED")).count();
+                    long shippingCount = listOrders.stream()
+                            .filter(o -> o.getStatus().equalsIgnoreCase("SHIPPING")).count();
+                    long shippedCount = listOrders.stream()
+                            .filter(o -> o.getStatus().equalsIgnoreCase("SHIPPED")).count();
+                    long cancelledCount = listOrders.stream()
+                            .filter(o -> o.getStatus().equalsIgnoreCase("CANCELLED")).count();
+
                     request.setAttribute("activeV", activeV);
                     request.setAttribute("lockedV", lockedV);
                     request.setAttribute("expiredV", expiredV);
+
+                    request.setAttribute("pendingCount", pendingCount);
+                    request.setAttribute("approvedCount", approvedCount);
+                    request.setAttribute("shippingCount", shippingCount);
+                    request.setAttribute("shippedCount", shippedCount);
+                    request.setAttribute("cancelledCount", cancelledCount);
 
                     request.setAttribute("listDataVoucher", listV);
 
@@ -163,14 +182,27 @@ public class adminServlet extends HttpServlet {
                         request.setAttribute("listDataEmployee", new EmployeesDAO().getEmployeesByYear(2026));
 
                         List<Voucher> listVD = new VoucherDAO().getVouchersByYear(2026);
+                        List<Order> listOrdersYear = new OrderDAO().getOrdersByYear(2026);
 
                         long activeVD = listVD.stream().filter(v -> v.getStatus().equalsIgnoreCase("Active")).count();
                         long lockedVD = listVD.stream().filter(v -> v.getStatus().equalsIgnoreCase("Locked")).count();
                         long expiredVD = listVD.stream().filter(v -> v.getStatus().equalsIgnoreCase("Expired")).count();
 
+                        long pendingCountY = listOrdersYear.stream().filter(o -> o.getStatus().equalsIgnoreCase("PENDING")).count();
+                        long approvedCountY = listOrdersYear.stream().filter(o -> o.getStatus().equalsIgnoreCase("APPROVED")).count();
+                        long shippingCountY = listOrdersYear.stream().filter(o -> o.getStatus().equalsIgnoreCase("SHIPPING")).count();
+                        long shippedCountY = listOrdersYear.stream().filter(o -> o.getStatus().equalsIgnoreCase("SHIPPED")).count();
+                        long cancelledCountY = listOrdersYear.stream().filter(o -> o.getStatus().equalsIgnoreCase("CANCELLED")).count();
+
                         request.setAttribute("activeV", activeVD);
                         request.setAttribute("lockedV", lockedVD);
                         request.setAttribute("expiredV", expiredVD);
+
+                        request.setAttribute("pendingCount", pendingCountY);
+                        request.setAttribute("approvedCount", approvedCountY);
+                        request.setAttribute("shippingCount", shippingCountY);
+                        request.setAttribute("shippedCount", shippedCountY);
+                        request.setAttribute("cancelledCount", cancelledCountY);
 
                         request.setAttribute("listDataVoucher", listVD);
                     } else {
@@ -178,19 +210,31 @@ public class adminServlet extends HttpServlet {
                         request.setAttribute("listDataEmployee", new EmployeesDAO().getEmployeesByMonth(Integer.parseInt(month)));
 
                         List<Voucher> listVM = new VoucherDAO().getVouchersByMonth(Integer.parseInt(month));
-
+                        List<Order> listOrdersMonth = new OrderDAO().getOrdersByMonth(Integer.parseInt(month));
 // Đếm trạng thái Voucher
                         long activeVM = listVM.stream().filter(v -> v.getStatus().equalsIgnoreCase("Active")).count();
                         long lockedVM = listVM.stream().filter(v -> v.getStatus().equalsIgnoreCase("Locked")).count();
                         long expiredVM = listVM.stream().filter(v -> v.getStatus().equalsIgnoreCase("Expired")).count();
 
+                        long pendingCountM = listOrdersMonth.stream().filter(o -> o.getStatus().equalsIgnoreCase("PENDING")).count();
+                        long approvedCountM = listOrdersMonth.stream().filter(o -> o.getStatus().equalsIgnoreCase("APPROVED")).count();
+                        long shippingCountM = listOrdersMonth.stream().filter(o -> o.getStatus().equalsIgnoreCase("SHIPPING")).count();
+                        long shippedCountM = listOrdersMonth.stream().filter(o -> o.getStatus().equalsIgnoreCase("SHIPPED")).count();
+                        long cancelledCountM = listOrdersMonth.stream().filter(o -> o.getStatus().equalsIgnoreCase("CANCELLED")).count();
 // Đếm loại nhân viêns
                         request.setAttribute("activeV", activeVM);
                         request.setAttribute("lockedV", lockedVM);
                         request.setAttribute("expiredV", expiredVM);
 
+                        request.setAttribute("pendingCount", pendingCountM);
+                        request.setAttribute("approvedCount", approvedCountM);
+                        request.setAttribute("shippingCount", shippingCountM);
+                        request.setAttribute("shippedCount", shippedCountM);
+                        request.setAttribute("cancelledCount", cancelledCountM);
+
 // Đẩy dữ liệu sang JSP
                         request.setAttribute("listDataVoucher", listVM);
+                        request.setAttribute("listDataOrder", listOrdersMonth);
                     }
 
                     page = "/pages/DashboardPage/adminDashboard.jsp";
@@ -233,16 +277,30 @@ public class adminServlet extends HttpServlet {
                     request.setAttribute("listDataEmployee", new EmployeesDAO().getEmployeesByYear(2026));
 
                     List<Voucher> listVC = new VoucherDAO().getVouchersByYear(2026);
+                    List<Order> listOrdersDefault = new OrderDAO().getOrdersByYear(2026);
 
                     long activeVC = listVC.stream().filter(v -> v.getStatus().equalsIgnoreCase("Active")).count();
                     long lockedVC = listVC.stream().filter(v -> v.getStatus().equalsIgnoreCase("Locked")).count();
                     long expiredVC = listVC.stream().filter(v -> v.getStatus().equalsIgnoreCase("Expired")).count();
 
+                    long pendingCountD = listOrdersDefault.stream().filter(o -> o.getStatus().equalsIgnoreCase("PENDING")).count();
+                    long approvedCountD = listOrdersDefault.stream().filter(o -> o.getStatus().equalsIgnoreCase("APPROVED")).count();
+                    long shippingCountD = listOrdersDefault.stream().filter(o -> o.getStatus().equalsIgnoreCase("SHIPPING")).count();
+                    long shippedCountD = listOrdersDefault.stream().filter(o -> o.getStatus().equalsIgnoreCase("SHIPPED")).count();
+                    long cancelledCountD = listOrdersDefault.stream().filter(o -> o.getStatus().equalsIgnoreCase("CANCELLED")).count();
+
                     request.setAttribute("activeV", activeVC);
                     request.setAttribute("lockedV", lockedVC);
                     request.setAttribute("expiredV", expiredVC);
 
+                    request.setAttribute("pendingCount", pendingCountD);
+                    request.setAttribute("approvedCount", approvedCountD);
+                    request.setAttribute("shippingCount", shippingCountD);
+                    request.setAttribute("shippedCount", shippedCountD);
+                    request.setAttribute("cancelledCount", cancelledCountD);
+
                     request.setAttribute("listDataVoucher", listVC);
+                    request.setAttribute("listDataOrder", listOrdersDefault);
 
                     page = "/pages/DashboardPage/adminDashboard.jsp";
             }
