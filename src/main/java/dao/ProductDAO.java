@@ -38,7 +38,8 @@ public class ProductDAO extends DBContext {
     }
 
     /**
-     * Lấy tất cả sản phẩm kèm tổng tồn kho hiện tại (IN_STOCK) để dùng cho màn Import Receipt Item.
+     * Lấy tất cả sản phẩm kèm tổng tồn kho hiện tại (IN_STOCK) để dùng cho màn
+     * Import Receipt Item.
      */
     public List<Product> getAllProductWithStock() {
         List<Product> list = new ArrayList<>();
@@ -57,8 +58,7 @@ public class ProductDAO extends DBContext {
                      c.category_name, b.brand_name
             ORDER BY p.product_id DESC
             """;
-        try (PreparedStatement ps = conn.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
+        try (PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 Product p = mapResultSetToProduct(rs);
                 p.setCategoryName(rs.getString("category_name"));
@@ -257,18 +257,18 @@ public class ProductDAO extends DBContext {
 
     // 11. Lấy sản phẩm có Filter
     public List<Product> getFilteredProducts(String keyword, Integer categoryId, Integer brandId, Double minPrice,
-            Double maxPrice) {
+            Double maxPrice, String sortOrder) { // Thêm tham số sortOrder ở đây
         List<Product> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT p.*, c.category_name, b.brand_name, "
-                        + "MIN(pv.selling_price) as min_price, "
-                        + "MAX(CAST(CASE WHEN pi.is_thumbnail = 1 THEN pi.image_url ELSE NULL END AS VARCHAR(255))) as thumbnail_url "
-                        + "FROM products p "
-                        + "LEFT JOIN categories c ON p.category_id = c.category_id "
-                        + "LEFT JOIN brands b ON p.brand_id = b.brand_id "
-                        + "LEFT JOIN product_variants pv ON p.product_id = pv.product_id AND pv.is_active = 1 "
-                        + "LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_thumbnail = 1 "
-                        + "WHERE p.status = 'ACTIVE' ");
+                + "MIN(pv.selling_price) as min_price, "
+                + "MAX(CAST(CASE WHEN pi.is_thumbnail = 1 THEN pi.image_url ELSE NULL END AS VARCHAR(255))) as thumbnail_url "
+                + "FROM products p "
+                + "LEFT JOIN categories c ON p.category_id = c.category_id "
+                + "LEFT JOIN brands b ON p.brand_id = b.brand_id "
+                + "LEFT JOIN product_variants pv ON p.product_id = pv.product_id AND pv.is_active = 1 "
+                + "LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_thumbnail = 1 "
+                + "WHERE p.status = 'ACTIVE' ");
 
         if (keyword != null && !keyword.trim().isEmpty()) {
             sql.append(" AND p.name LIKE ? ");
@@ -283,8 +283,6 @@ public class ProductDAO extends DBContext {
         sql.append(
                 "GROUP BY p.product_id, p.name, p.category_id, p.brand_id, p.description, p.status, p.created_at, p.created_by, p.updated_by, p.updated_at, c.category_name, b.brand_name ");
 
-        // HAVING để so sánh với min_price (do min_price được tạo ra từ GROUP BY nên
-        // phải dùng HAVING)
         if (minPrice != null || maxPrice != null) {
             sql.append(" HAVING 1=1 ");
             if (minPrice != null) {
@@ -295,7 +293,19 @@ public class ProductDAO extends DBContext {
             }
         }
 
-        sql.append(" ORDER BY p.product_id DESC");
+        // --- ĐOẠN CHỈNH SỬA CHO SẮP XẾP ---
+        if (sortOrder != null) {
+            if (sortOrder.equals("priceAsc")) {
+                sql.append(" ORDER BY MIN(pv.selling_price) ASC ");
+            } else if (sortOrder.equals("priceDesc")) {
+                sql.append(" ORDER BY MIN(pv.selling_price) DESC ");
+            } else {
+                sql.append(" ORDER BY p.product_id DESC "); // Mặc định
+            }
+        } else {
+            sql.append(" ORDER BY p.product_id DESC "); // Mặc định nếu không chọn
+        }
+        // ---------------------------------
 
         try {
             PreparedStatement ps = conn.prepareStatement(sql.toString());
@@ -377,16 +387,15 @@ public class ProductDAO extends DBContext {
 
         return p;
     }
-    
-    
+
     public static void main(String[] args) {
         ProductDAO a = new ProductDAO();
-        
+
         List<Product> list = a.getProductsByBrandId(1, 1);
-        
+
         for (Product product : list) {
             System.out.println(product.toString());
         }
-        
+
     }
 }
