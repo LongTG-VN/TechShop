@@ -139,7 +139,7 @@
 
             // 2. PARSE DỮ LIỆU TỪ SERVLET (Có try-catch chống sập)
             const jsonString = `${inventoryJson}`;
-          let techShopDB = [];
+            let techShopDB = [];
             try {
                 // Dùng JSTL c:forEach để in từng sản phẩm từ List 'inventory' vào mảng JS
             <c:forEach items="${inventory}" var="item">
@@ -160,7 +160,7 @@
             // 3. KHỞI TẠO AI (Có try-catch chống sập do thiếu Key)
             let ai = null;
             try {
-                const API_KEY = "AIzaSyBSaJQ11g9X3ee1SjapkZHWa3QOPbX8L0U"; // Hãy đổi lại Key thật của bạn ở đây
+                const API_KEY = "AIzaSyAxQ6xGjhBJx3BNQcz3hX4APPDF51L86FU"; // Hãy đổi lại Key thật của bạn ở đây
                 ai = new GoogleGenAI({apiKey: API_KEY});
             } catch (error) {
                 console.error("Lỗi khởi tạo AI:", error);
@@ -198,7 +198,8 @@
 
             async function askAI() {
                 const text = input.value.trim();
-                if (!text) return;
+                if (!text)
+                    return;
 
                 appendMessage(text, true);
                 input.value = '';
@@ -214,21 +215,24 @@
                 try {
                     // Mapping theo đúng class InventoryItem của bạn
                     let contextInfo = techShopDB.map(p =>
-                        "- Tên: " + (p.productName || 'Chưa cập nhật') + 
-                        ", Giá nhập: " + (p.import_price || 0) + 
-                        ", Trạng thái: " + (p.status || 'N/A') + 
-                        ", IMEI: " + (p.imei || 'N/A')
+                        "- Tên: " + (p.productName || 'Chưa cập nhật') +
+                                ", Trạng thái: " + (p.status || 'N/A') +
+                                ", IMEI: " + (p.imei || 'N/A')
                     ).join("\n");
 
-                  const promptForAI =
+                    const promptForAI =
                             "Khách hàng vừa nhắn: \"" + text + "\"\n\n" +
-                            "Dưới đây là TOÀN BỘ danh sách sản phẩm đang có của TechShop:\n" +
+                               "Dưới đây là TOÀN BỘ danh sách sản phẩm đang có của TechShop:\n" +
                             contextInfo + "\n\n" +
-                            "Nhiệm vụ của bạn: Trở thành nhân viên tư vấn xuất sắc.\n" +
-                            "- Hãy phân tích yêu cầu của khách và tự tìm ra sản phẩm phù hợp nhất trong danh sách trên để giới thiệu.\n" +
-                            "- Lưu ý: 'Giá nhập' là giá nội bộ, tuyệt đối không báo giá này cho khách.\n" +
-                            "- Trả lời tự nhiên, thân thiện. Tuyệt đối không để lộ cho khách biết bạn đang đọc từ một danh sách.\n" +
-                            "- Luôn nhớ nhắc đến ưu đãi bảo hành 12 tháng.";
+                            `Nhiệm vụ của bạn: Trở thành một chuyên gia tư vấn công nghệ xuất sắc tại TechShop. Hãy thực hiện theo các bước sau:\n\n` +
+                            `Bước 1 (Kiểm tra kho): Đối chiếu tin nhắn của khách với danh sách sản phẩm trên để tìm ra (các) sản phẩm phù hợp nhất đang có sẵn.\n` +
+                            `Bước 2 (Mở rộng thông tin): Sử dụng công cụ Search để tìm thêm các "Ưu điểm nổi bật", "Đánh giá thực tế" hoặc "Tính năng độc đáo" của sản phẩm vừa tìm được để làm tư liệu tư vấn thuyết phục hơn.\n` +
+                            `Bước 3 (Phản hồi khách): Tổng hợp thông tin và trả lời khách hàng.\n\n` +
+                            `LƯU Ý QUAN TRỌNG:\n` +
+                            `- Chỉ báo 'Giá bán', TUYỆT ĐỐI không tiết lộ 'Giá nhập' (đây là giá nội bộ).\n` +
+                            `- Trả lời tự nhiên, thân thiện. Không được nói: "Trong danh sách tôi thấy..." hay "Theo dữ liệu kho...".\n` +
+                            `- Nếu trong kho không có sản phẩm chính xác, hãy search để tìm sản phẩm có tính năng tương đương trong kho để gợi ý thay thế.\n` +
+                            `- LUÔN NHẮC ĐẾN: Chính sách bảo hành 12 tháng tại TechShop để khách hàng yên tâm.`;
 
                     // 👇 THÊM 3 DÒNG NÀY VÀO ĐÂY ĐỂ KIỂM TRA 👇
                     console.log("=== TOÀN BỘ LỆNH VÀ DỮ LIỆU SẮP GỬI CHO AI ===");
@@ -258,7 +262,8 @@
 
             btn.addEventListener('click', askAI);
             input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') askAI();
+                if (e.key === 'Enter')
+                    askAI();
             });
         </script>
     </body>
