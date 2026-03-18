@@ -235,68 +235,64 @@ public class orderpageServlet extends HttpServlet {
 
         BigDecimal totalAmount = BigDecimal.valueOf(subtotal - Math.round(discount));
 
+        // Check VNPAY trước khi tạo order
+        PaymentMethodDAO pdao = new PaymentMethodDAO();
+        PaymentMethod selectedMethod = pdao.getPaymentMethodById(paymentMethodId);
+        boolean isVNPay = selectedMethod != null
+                && selectedMethod.getMethod_name().toUpperCase().contains("VNPAY");
+
         // BƯỚC VALIDATE: Kiểm tra tồn kho trước khi tạo order
-        // Nếu bất kỳ sản phẩm nào không đủ hàng IN_STOCK → báo lỗi, không tạo order
         InventoryItemDAO inventoryDAO = new InventoryItemDAO();
         for (CartItemDisplay item : listCart) {
             List<Integer> available = inventoryDAO.getAvailableInventoryIdsByVariantId(
                     item.getVariantId(), item.getQuantity());
             if (available.size() < item.getQuantity()) {
-                // Không đủ hàng → redirect về trang order với thông báo lỗi
                 response.sendRedirect("orderpageservlet?error=out_of_stock&product="
                         + java.net.URLEncoder.encode(item.getProductName(), "UTF-8"));
                 return;
             }
         }
 
-        // 1. Tạo đơn hàng (header) và lấy order_id
-        OrderDAO orderDAO = new OrderDAO();
-        model.Order newOrder = new model.Order(
-                customerId,
-                appliedVoucher,
-                paymentMethodId,
-                shippingAddress,
-                totalAmount
-        );
-        int orderId = orderDAO.insertOrder(newOrder);
-        if (orderId <= 0) {
-            response.sendRedirect("orderpageservlet");
-            return;
-        }
-
-        // 2. Thêm chi tiết đơn hàng (order_items) từ giỏ hàng, cập nhật tồn kho
-        OrderItemDAO orderItemDAO = new OrderItemDAO();
-        for (CartItemDisplay item : listCart) {
-            int variantId = item.getVariantId();
-            int qty = item.getQuantity();
-            BigDecimal sellingPrice = BigDecimal.valueOf(item.getSellingPrice());
-            List<Integer> inventoryIds = inventoryDAO.getAvailableInventoryIdsByVariantId(variantId, qty);
-            for (Integer invId : inventoryIds) {
-                orderItemDAO.insertOrderItem(new OrderItem(orderId, invId, sellingPrice));
-                inventoryDAO.updateStatus(invId, "SOLD");
-            }
-        }
-
-        // 3.Check vnpay
-        PaymentMethodDAO pdao = new PaymentMethodDAO();
-        PaymentMethod selectedMethod = pdao.getPaymentMethodById(paymentMethodId);
-        boolean isVNPay = selectedMethod != null
-                && selectedMethod.getMethod_name().toUpperCase().contains("VNPAY");
-
         if (isVNPay) {
-            // VNPAY: giữ giỏ hàng, redirect sang thanh toán
-            response.sendRedirect("vnpayservlet?action=pay&orderId=" + orderId
-                    + "&amount=" + totalAmount.longValue());
+            // VNPAY: lưu thông tin vào session, CHƯA tạo order
+            jakarta.servlet.http.HttpSession sess = request.getSession();
+            sess.setAttribute("vnpay_customerId", customerId);
+            sess.setAttribute("vnpay_shippingAddress", shippingAddress);
+            sess.setAttribute("vnpay_paymentMethodId", paymentMethodId);
+            sess.setAttribute("vnpay_totalAmount", totalAmount.longValue());
+            sess.setAttribute("vnpay_voucherId", voucherId);
+            response.sendRedirect("vnpayservlet?action=pay&amount=" + totalAmount.longValue());
         } else {
-            // COD hoặc method khác: xóa giỏ hàng, hiện popup success
+            // COD hoặc method khác: tạo order ngay
+            OrderDAO orderDAO = new OrderDAO();
+            model.Order newOrder = new model.Order(
+                    customerId, appliedVoucher, paymentMethodId, shippingAddress, totalAmount);
+            int orderId = orderDAO.insertOrder(newOrder);
+            if (orderId <= 0) {
+                response.sendRedirect("orderpageservlet");
+                return;
+            }
+
+            OrderItemDAO orderItemDAO = new OrderItemDAO();
+            for (CartItemDisplay item : listCart) {
+                int variantId = item.getVariantId();
+                int qty = item.getQuantity();
+                BigDecimal sellingPrice = BigDecimal.valueOf(item.getSellingPrice());
+                List<Integer> inventoryIds = inventoryDAO.getAvailableInventoryIdsByVariantId(variantId, qty);
+                for (Integer invId : inventoryIds) {
+                    orderItemDAO.insertOrderItem(new OrderItem(orderId, invId, sellingPrice));
+                    inventoryDAO.updateStatus(invId, "SOLD");
+                }
+            }
+
+            // Cập nhật voucher
+            if (appliedVoucher != null) {
+                VoucherDAO vdao = new VoucherDAO();
+                vdao.incrementUsedQuantity(appliedVoucher.getVoucherId());
+            }
+
             cartDao.deleteCartByCustomerId(customerId);
             response.sendRedirect("orderpageservlet?orderSuccess=1&orderId=" + orderId);
-        }
-
-        // 4. Cập nhật số lượng voucher đã sử dụng
-        if (appliedVoucher != null) {
-            VoucherDAO vdao = new VoucherDAO();
-            vdao.incrementUsedQuantity(appliedVoucher.getVoucherId());
         }
 
     }

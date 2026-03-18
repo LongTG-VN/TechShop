@@ -1,66 +1,28 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package controller.User;
 
 import dao.CartItemDAO;
+import dao.InventoryItemDAO;
 import dao.OrderDAO;
+import dao.OrderItemDAO;
+import dao.VoucherDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import model.CartItemDisplay;
+import model.OrderItem;
 import utils.VNPayConfig;
 import utils.VNPayUtils;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.text.SimpleDateFormat;
-import java.util.*;
-
-/**
- *
- * @author WIN11
- */
 @WebServlet(name = "vnpayservlet", urlPatterns = {"/vnpayservlet"})
 public class VNPayServlet extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet VNPayServlet</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet VNPayServlet at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
-
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -74,44 +36,21 @@ public class VNPayServlet extends HttpServlet {
         }
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
-    }
-
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
-// Tạo URL thanh toán và redirect sang VNPay
-
     private void handleCreatePayment(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
-        String orderIdParam = request.getParameter("orderId");
-        String amountParam = request.getParameter("amount"); // số tiền (VND, chưa x100)
-
-        // VNPay yêu cầu amount x100
+        String amountParam = request.getParameter("amount");
         long amount = Long.parseLong(amountParam) * 100;
+
+        // Dùng timestamp làm txnRef tạm (chưa có orderId thật)
+        String txnRef = String.valueOf(System.currentTimeMillis());
+
+        // Lưu txnRef vào session để verify sau
+        request.getSession().setAttribute("vnpay_txnRef", txnRef);
 
         String createDate = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
         String expireDate = new SimpleDateFormat("yyyyMMddHHmmss")
-                .format(new Date(System.currentTimeMillis() + 15 * 60 * 1000)); // hết hạn 15 phút
-
+                .format(new Date(System.currentTimeMillis() + 15 * 60 * 1000));
         String ipAddr = request.getRemoteAddr();
 
         Map<String, String> vnpParams = new HashMap<>();
@@ -120,8 +59,8 @@ public class VNPayServlet extends HttpServlet {
         vnpParams.put("vnp_TmnCode", VNPayConfig.vnp_TmnCode);
         vnpParams.put("vnp_Amount", String.valueOf(amount));
         vnpParams.put("vnp_CurrCode", VNPayConfig.vnp_CurrCode);
-        vnpParams.put("vnp_TxnRef", orderIdParam);               // mã đơn hàng
-        vnpParams.put("vnp_OrderInfo", "Thanh toan don hang #" + orderIdParam);
+        vnpParams.put("vnp_TxnRef", txnRef);
+        vnpParams.put("vnp_OrderInfo", "Thanh toan don hang");
         vnpParams.put("vnp_OrderType", VNPayConfig.vnp_OrderType);
         vnpParams.put("vnp_Locale", VNPayConfig.vnp_Locale);
         vnpParams.put("vnp_ReturnUrl", VNPayConfig.vnp_ReturnUrl);
@@ -133,47 +72,86 @@ public class VNPayServlet extends HttpServlet {
         response.sendRedirect(paymentUrl);
     }
 
-    // Nhận kết quả từ VNPay sau khi thanh toán
     private void handleReturn(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         Map<String, String> params = new HashMap<>();
         request.getParameterMap().forEach((k, v) -> params.put(k, v[0]));
 
-        String orderId = params.get("vnp_TxnRef");
         String responseCode = params.get("vnp_ResponseCode");
-        String transactionNo = params.get("vnp_TransactionNo");
-        String amount = params.get("vnp_Amount");
-
-        boolean validHash = VNPayUtils.verifySecureHash(new HashMap<>(params));
         boolean success = "00".equals(responseCode);
 
         if (success) {
+            // Lấy thông tin từ session để tạo order
+            HttpSession sess = request.getSession();
             try {
-                int id = Integer.parseInt(orderId);
-                new OrderDAO().updateOrderPaymentStatus(id, "PAID");
+                int customerId = (int) sess.getAttribute("vnpay_customerId");
+                String address = (String) sess.getAttribute("vnpay_shippingAddress");
+                int paymentMethodId = (int) sess.getAttribute("vnpay_paymentMethodId");
+                long totalAmountL = (long) sess.getAttribute("vnpay_totalAmount");
+                int voucherId = (int) sess.getAttribute("vnpay_voucherId");
+                BigDecimal totalAmount = BigDecimal.valueOf(totalAmountL);
 
-                int customerId = new OrderDAO().getCustomerIdByOrderId(id);
-                if (customerId > 0) {
-                    new CartItemDAO().deleteCartByCustomerId(customerId);
+                // Lấy voucher nếu có
+                model.Voucher appliedVoucher = null;
+                if (voucherId > 0) {
+                    appliedVoucher = new VoucherDAO().getVoucherById(voucherId);
                 }
+
+                // Tạo order
+                OrderDAO orderDAO = new OrderDAO();
+                model.Order newOrder = new model.Order(
+                        customerId, appliedVoucher, paymentMethodId, address, totalAmount);
+                int orderId = orderDAO.insertOrder(newOrder);
+
+                if (orderId > 0) {
+                    // Thêm order_items + update inventory
+                    CartItemDAO cartDao = new CartItemDAO();
+                    InventoryItemDAO inventoryDAO = new InventoryItemDAO();
+                    OrderItemDAO orderItemDAO = new OrderItemDAO();
+                    List<CartItemDisplay> listCart = cartDao.getCartDisplayByCustomerId(customerId);
+
+                    for (CartItemDisplay item : listCart) {
+                        int variantId = item.getVariantId();
+                        int qty = item.getQuantity();
+                        BigDecimal sellingPrice = BigDecimal.valueOf(item.getSellingPrice());
+                        List<Integer> inventoryIds = inventoryDAO.getAvailableInventoryIdsByVariantId(variantId, qty);
+                        for (Integer invId : inventoryIds) {
+                            orderItemDAO.insertOrderItem(new OrderItem(orderId, invId, sellingPrice));
+                            inventoryDAO.updateStatus(invId, "SOLD");
+                        }
+                    }
+
+                    // Cập nhật payment status PAID
+                    orderDAO.updateOrderPaymentStatus(orderId, "PAID");
+
+                    // Cập nhật voucher
+                    if (appliedVoucher != null) {
+                        new VoucherDAO().incrementUsedQuantity(appliedVoucher.getVoucherId());
+                    }
+
+                    // Xóa giỏ hàng
+                    cartDao.deleteCartByCustomerId(customerId);
+                }
+
+                // Xóa session vnpay
+                sess.removeAttribute("vnpay_customerId");
+                sess.removeAttribute("vnpay_shippingAddress");
+                sess.removeAttribute("vnpay_paymentMethodId");
+                sess.removeAttribute("vnpay_totalAmount");
+                sess.removeAttribute("vnpay_voucherId");
+                sess.removeAttribute("vnpay_txnRef");
+
+                response.sendRedirect("orderpageservlet?orderSuccess=1&orderId=" + orderId);
+
             } catch (Exception e) {
                 e.printStackTrace();
+                response.sendRedirect("orderpageservlet");
             }
-            response.sendRedirect("orderpageservlet?orderSuccess=1&orderId=" + orderId);
             return;
         }
 
-        // Thanh toán thất bại hoặc user hủy → xóa order khỏi DB
-        try {
-            int id = Integer.parseInt(orderId);
-            OrderDAO orderDAO = new OrderDAO();
-            orderDAO.cancelUnpaidOrder(id); // xóa order + hoàn inventory
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        // Hủy hoặc thất bại → quay về trang đặt hàng
+        // Hủy hoặc thất bại → quay về trang đặt hàng, giỏ hàng vẫn còn
         request.getSession().setAttribute("vnpayError", "24".equals(responseCode)
                 ? "You have canceled your VNPAY payment or an error has occurred. Please try again. We apologize for the inconvenience."
                 : "VNPay payment failed (Error code: " + responseCode + "). ");
