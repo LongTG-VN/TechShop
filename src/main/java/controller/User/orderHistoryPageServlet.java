@@ -149,7 +149,17 @@ public class orderHistoryPageServlet extends HttpServlet {
 
             // Kiểm tra quyền: đơn tồn tại và thuộc về user hiện tại
             if (order != null && order.getCustomerId() == currentUserId) {
-                List<Map<String, Object>> items = orderDao.getOrderDetails(orderId);
+                // Nếu đơn chưa hủy: lấy từ order_items, nếu đơn đã hủy: ưu tiên đọc từ cancelled_order_items
+                List<Map<String, Object>> items;
+                if ("CANCELLED".equalsIgnoreCase(order.getStatus())) {
+                    items = orderDao.getCancelledOrderDetails(orderId);
+                    if (items == null || items.isEmpty()) {
+                        // fallback trong trường hợp dữ liệu chưa được snapshot đầy đủ
+                        items = orderDao.getOrderDetails(orderId);
+                    }
+                } else {
+                    items = orderDao.getOrderDetails(orderId);
+                }
                 request.setAttribute("order", order);
                 request.setAttribute("items", items);
                 forwardToTemplate(request, response, PAGE_DETAIL);

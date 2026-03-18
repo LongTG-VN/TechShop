@@ -4,12 +4,15 @@
  */
 package dao;
 
+import java.security.SecureRandom;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import model.ImportReceiptItem;
 import model.InventoryItem;
+import model.InventorySummary;
 import utils.DBContext;
 
 /**
@@ -17,6 +20,8 @@ import utils.DBContext;
  * @author LE HOANG NHAN
  */
 public class InventoryItemDAO extends DBContext {
+
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     // 1. GET ALL (kèm tên sản phẩm từ product_variants + products)
     public List<InventoryItem> getAllInventory() {
@@ -199,7 +204,8 @@ public class InventoryItemDAO extends DBContext {
     }
 
     /**
-     * Xóa toàn bộ inventory_items gắn với 1 receipt_item_id (dùng khi xóa dòng phiếu nhập).
+     * Xóa toàn bộ inventory_items gắn với 1 receipt_item_id (dùng khi xóa dòng
+     * phiếu nhập).
      */
     public int deleteByReceiptItemId(int receiptItemId) {
         String sql = "DELETE FROM inventory_items WHERE receipt_item_id = ?";
@@ -216,8 +222,9 @@ public class InventoryItemDAO extends DBContext {
     }
 
     /**
-     * Kiểm tra xem receipt_item_id có inventory nào KHÔNG còn IN_STOCK hay không.
-     * Trả về true nếu có ít nhất 1 bản ghi khác IN_STOCK (đã bán / reserved...).
+     * Kiểm tra xem receipt_item_id có inventory nào KHÔNG còn IN_STOCK hay
+     * không. Trả về true nếu có ít nhất 1 bản ghi khác IN_STOCK (đã bán /
+     * reserved...).
      */
     public boolean hasNonInStockByReceiptItemId(int receiptItemId) {
         String sql = "SELECT TOP 1 1 FROM inventory_items WHERE receipt_item_id = ? AND status <> 'IN_STOCK'";
@@ -236,11 +243,12 @@ public class InventoryItemDAO extends DBContext {
     }
 
     /**
-     * Lấy danh sách inventory_id còn tồn (IN_STOCK) theo variant_id, giới hạn số lượng. Dùng khi tạo đơn hàng để gán sản phẩm từ kho vào order_items.
+     * Lấy danh sách inventory_id còn tồn (IN_STOCK) theo variant_id, giới hạn
+     * số lượng. Dùng khi tạo đơn hàng để gán sản phẩm từ kho vào order_items.
      */
-   public List<Integer> getAvailableInventoryIdsByVariantId(int variantId, int limit) {
-    List<Integer> list = new ArrayList<>();
-    String sql = """
+    public List<Integer> getAvailableInventoryIdsByVariantId(int variantId, int limit) {
+        List<Integer> list = new ArrayList<>();
+        String sql = """
         SELECT TOP (?) ii.inventory_id
         FROM inventory_items ii
         WHERE ii.variant_id = ?
@@ -252,18 +260,18 @@ public class InventoryItemDAO extends DBContext {
         )
         ORDER BY ii.inventory_id
     """;
-    try (PreparedStatement ps = conn.prepareStatement(sql)) {
-        ps.setInt(1, limit);
-        ps.setInt(2, variantId);
-        ResultSet rs = ps.executeQuery();
-        while (rs.next()) {
-            list.add(rs.getInt("inventory_id"));
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            ps.setInt(2, variantId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(rs.getInt("inventory_id"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        e.printStackTrace();
+        return list;
     }
-    return list;
-}
 
     /**
      * Đếm số lượng tồn kho hiện tại (IN_STOCK) theo variant_id.
@@ -324,6 +332,115 @@ public class InventoryItemDAO extends DBContext {
             e.printStackTrace();
             return false;
         }
+    }
+
+    /**
+     * Sinh bản ghi inventory_items từ tất cả dòng của một phiếu nhập. Mỗi
+     * quantity sẽ tạo ra quantity record IN_STOCK gắn với receipt_item_id tương
+     * ứng. IMEI được auto-generate đơn giản, đảm bảo không trùng trong bảng
+     * inventory_items.
+     */
+    public int generateInventoryFromReceipt(int receiptId) {
+        ImportReceiptItemDAO itemDao = new ImportReceiptItemDAO();
+
+        List<ImportReceiptItem> items = itemDao.getItemsByReceiptId(receiptId);
+        int created = 0;
+
+        for (ImportReceiptItem it : items) {
+            // Chỉ sinh thêm số record còn thiếu so với quantity trong phiếu
+            int qtyToCreate = it.getQuantity() - countByReceiptItemId(it.getReceipt_item_id());
+            for (int i = 0; i < qtyToCreate; i++) {
+                String imei = generateUniqueImei();
+                InventoryItem inv = new InventoryItem(
+                        0,
+                        it.getVariant_id(),
+                        it.getReceipt_item_id(),
+                        imei,
+                        it.getImport_price(),
+                        "IN_STOCK"
+                );
+                if (insertInventory(inv)) {
+                    created++;
+                }
+            }
+        }
+        return created;
+    }
+
+    private String generateUniqueImei() {
+        String imei;
+        do {
+            StringBuilder sb = new StringBuilder("86");
+            for (int i = 0; i < 13; i++) {
+                sb.append(RANDOM.nextInt(10));
+            }
+            imei = sb.toString();
+        } while (existsByImei(imei));
+        return imei;
+    }
+
+    /**
+     * Thống kê số lượng tồn kho theo trạng thái để hiển thị donut chart trên dashboard staff.
+     * Kết quả: [inStock, sold, other].
+     */
+    public int[] getInventoryStatusCounts() {
+        String sql = """
+                     SELECT
+                         SUM(CASE WHEN status = 'IN_STOCK' THEN 1 ELSE 0 END) AS in_stock,
+                         SUM(CASE WHEN status = 'SOLD' THEN 1 ELSE 0 END)     AS sold,
+                         SUM(CASE WHEN status NOT IN ('IN_STOCK', 'SOLD') THEN 1 ELSE 0 END) AS other
+                     FROM inventory_items
+                     """;
+        int inStock = 0;
+        int sold = 0;
+        int other = 0;
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                inStock = rs.getInt("in_stock");
+                sold = rs.getInt("sold");
+                other = rs.getInt("other");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new int[]{inStock, sold, other};
+    }
+
+    /**
+     * Summary nhập / bán / tồn theo variant (1 dòng / variant).
+     */
+    public List<InventorySummary> getInventorySummary() {
+        List<InventorySummary> list = new ArrayList<>();
+        String sql = """
+            SELECT
+                pv.variant_id,
+                p.name AS product_name,
+                pv.sku,
+                COUNT(*) AS imported,
+                SUM(CASE WHEN ii.status = 'SOLD' THEN 1 ELSE 0 END)     AS sold,
+                SUM(CASE WHEN ii.status = 'IN_STOCK' THEN 1 ELSE 0 END) AS in_stock
+            FROM inventory_items ii
+            JOIN product_variants pv ON ii.variant_id = pv.variant_id
+            JOIN products p          ON pv.product_id = p.product_id
+            GROUP BY pv.variant_id, p.name, pv.sku
+            ORDER BY p.name, pv.sku
+            """;
+        try (PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new InventorySummary(
+                        rs.getInt("variant_id"),
+                        rs.getString("product_name"),
+                        rs.getString("sku"),
+                        rs.getInt("imported"),
+                        rs.getInt("sold"),
+                        rs.getInt("in_stock")
+                ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     // --- MAIN TEST ---

@@ -129,6 +129,33 @@ public class ImportReceiptsDAO extends DBContext {
         }
     }
 
+    /**
+     * Tính tổng tiền phiếu nhập theo tháng/năm (dùng cho dashboard staff).
+     */
+    public double getTotalImportCostByMonth(int month, int year) {
+        String sql = """
+                     SELECT COALESCE(SUM(total_cost), 0) AS total
+                     FROM import_receipts
+                     WHERE (? = 0 OR MONTH(import_date) = ?)
+                       AND (? = 0 OR YEAR(import_date) = ?)
+                     """;
+        double total = 0;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, month);
+            ps.setInt(2, month);
+            ps.setInt(3, year);
+            ps.setInt(4, year);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    total = rs.getDouble("total");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return total;
+    }
+
     // --- MAIN TEST ---
     public static void main(String[] args) {
         ImportReceiptsDAO dao = new ImportReceiptsDAO();

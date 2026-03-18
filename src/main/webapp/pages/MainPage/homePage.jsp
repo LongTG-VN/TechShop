@@ -35,19 +35,19 @@
                     <div class="ant-tabs-nav-list flex gap-6 md:gap-8">
                         <div class="ant-tabs-tab tab-item active cursor-pointer pb-3 border-b-2 border-blue-600 text-blue-600 font-bold transition-colors"
                              onclick="switchTab(event, 'tab-1')">
-                            <div class="ant-tabs-tab-btn text-base">Điện thoại</div>
+                            <div class="ant-tabs-tab-btn text-base">Smartphone</div>
                         </div>
                         <div class="ant-tabs-tab tab-item cursor-pointer pb-3 border-b-2 border-transparent text-gray-500 hover:text-blue-500 transition-colors"
                              onclick="switchTab(event, 'tab-2')">
-                            <div class="ant-tabs-tab-btn text-base">Máy tính</div>
+                            <div class="ant-tabs-tab-btn text-base">Laptop</div>
                         </div>
                         <div class="ant-tabs-tab tab-item cursor-pointer pb-3 border-b-2 border-transparent text-gray-500 hover:text-blue-500 transition-colors"
                              onclick="switchTab(event, 'tab-3')">
-                            <div class="ant-tabs-tab-btn text-base">Phụ kiện</div>
+                            <div class="ant-tabs-tab-btn text-base">Accessories</div>
                         </div>
                         <div class="ant-tabs-tab tab-item cursor-pointer pb-3 border-b-2 border-transparent text-gray-500 hover:text-blue-500 transition-colors"
                              onclick="switchTab(event, 'tab-4')">
-                            <div class="ant-tabs-tab-btn text-base">Laptop</div>
+                            <div class="ant-tabs-tab-btn text-base">Watch</div>
                         </div>
                     </div>
                 </div>
@@ -86,10 +86,10 @@
                     </div>
                 </div>
 
-                <!-- Tab 2: Máy tính -->
+                <!-- Tab 2: Laptop -->
                 <div id="tab-2" class="tab-pane hidden fade-in">
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                        <c:forEach var="p" items="${computerList}">
+                        <c:forEach var="p" items="${laptopList}">
                             <a href="detailservlet?productId=${p.productId}"
                                class="bg-white p-4 border border-gray-100 rounded-xl shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 group cursor-pointer flex flex-col h-full block">
                                 <div
@@ -110,7 +110,7 @@
                                 </div>
                             </a>
                         </c:forEach>
-                        <c:if test="${empty computerList}">
+                        <c:if test="${empty laptopList}">
                             <div
                                 class="col-span-full bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300 text-center text-gray-400 font-medium">
                                 Chưa có sản phẩm nào</div>
@@ -150,10 +150,10 @@
                     </div>
                 </div>
 
-                <!-- Tab 4: Laptop -->
+                <!-- Tab 4: Watch -->
                 <div id="tab-4" class="tab-pane hidden fade-in">
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                        <c:forEach var="p" items="${laptopList}">
+                        <c:forEach var="p" items="${watchList}">
                             <a href="detailservlet?productId=${p.productId}"
                                class="bg-white p-4 border border-gray-100 rounded-xl shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 group cursor-pointer flex flex-col h-full block">
                                 <div
@@ -174,7 +174,7 @@
                                 </div>
                             </a>
                         </c:forEach>
-                        <c:if test="${empty laptopList}">
+                        <c:if test="${empty watchList}">
                             <div
                                 class="col-span-full bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300 text-center text-gray-400 font-medium">
                                 Chưa có sản phẩm nào</div>

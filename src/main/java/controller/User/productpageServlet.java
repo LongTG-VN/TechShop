@@ -61,20 +61,26 @@ public class productpageServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String headerComponent = "/components/navbar.jsp"; // Trang mặc định khi mới vào
-        String footerComponent = "/components/footer.jsp"; // Trang mặc định khi mới vào
-        String page = "/pages/MainPage/productPage.jsp"; // Trang mặc định khi mới vào
+        // 1. Khởi tạo các thành phần giao diện mặc định
+        String headerComponent = "/components/navbar.jsp";
+        String footerComponent = "/components/footer.jsp";
+        String page = "/pages/MainPage/productPage.jsp";
 
+        // 2. Lấy các tham số lọc từ Request
         String keyword = request.getParameter("keyword");
         String categoryIdParam = request.getParameter("categoryId");
         String brandIdParam = request.getParameter("brandId");
         String priceRange = request.getParameter("priceRange");
+
+        // THÊM: Lấy tham số sắp xếp từ dropdown
+        String sortOrder = request.getParameter("sortOrder");
 
         Integer categoryId = null;
         Integer brandId = null;
         Double minPrice = null;
         Double maxPrice = null;
 
+        // 3. Xử lý ép kiểu và logic khoảng giá
         try {
             if (categoryIdParam != null && !categoryIdParam.trim().isEmpty()) {
                 categoryId = Integer.parseInt(categoryIdParam);
@@ -105,25 +111,32 @@ public class productpageServlet extends HttpServlet {
             e.printStackTrace();
         }
 
+        // 4. Gọi DAO để lấy danh sách sản phẩm đã lọc và sắp xếp
         ProductDAO pdao = new ProductDAO();
-        List<Product> productList = pdao.getFilteredProducts(keyword, categoryId, brandId, minPrice, maxPrice);
+        // Cập nhật: Truyền thêm sortOrder vào hàm lấy dữ liệu
+        List<Product> productList = pdao.getFilteredProducts(keyword, categoryId, brandId, minPrice, maxPrice, sortOrder);
 
+        // 5. Lấy dữ liệu bổ trợ cho các bộ lọc Sidebar
         dao.CategoryDAO cdao = new dao.CategoryDAO();
         dao.BrandDAO bdao = new dao.BrandDAO();
+
+        // 6. Đưa dữ liệu lên Request Attribute để hiển thị trên JSP
         request.setAttribute("categoryList", cdao.getAllCategory());
         request.setAttribute("brandList", bdao.getAllBrand());
-
         request.setAttribute("productList", productList);
+
+        // Giữ lại trạng thái các bộ lọc để UI không bị reset
         request.setAttribute("keyword", keyword);
-        request.setAttribute("categoryId", categoryId); // Để giữ lại state trên UI
+        request.setAttribute("categoryId", categoryId);
         request.setAttribute("brandId", brandId);
         request.setAttribute("priceRange", priceRange);
+        request.setAttribute("sortOrder", sortOrder); // Gửi sortOrder về JSP để selected option [cite: 304]
 
         request.setAttribute("HeaderComponent", headerComponent);
         request.setAttribute("FooterComponent", footerComponent);
         request.setAttribute("ContentPage", page);
 
-        // 5. Forward đến Template duy nhất
+        // 7. Forward đến Template người dùng
         request.getRequestDispatcher("/template/userTemplate.jsp").forward(request, response);
     }
 

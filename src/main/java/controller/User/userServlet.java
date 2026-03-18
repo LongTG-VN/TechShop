@@ -84,14 +84,15 @@ public class userServlet extends HttpServlet {
                     page = "/pages/MainPage/homePage.jsp";
                     ProductDAO productDAO = new ProductDAO();
                     InventoryItemDAO aO = new InventoryItemDAO();
-                    request.setAttribute("phoneList", productDAO.getProductsByCategoryId(1, 10));
-                    request.setAttribute("computerList", productDAO.getProductsByCategoryId(2, 10));
-                    request.setAttribute("accessoryList", productDAO.getProductsByCategoryId(3, 10));
-                    request.setAttribute("laptopList", productDAO.getProductsByCategoryId(4, 10));
+                    request.setAttribute("phoneList", productDAO.getProductsByCategoryId(1, 10));     // ID 1: Smartphone
+                    request.setAttribute("laptopList", productDAO.getProductsByCategoryId(2, 10));    // ID 2: Laptop
+                    request.setAttribute("accessoryList", productDAO.getProductsByCategoryId(3, 10)); // ID 3: Accessory
+                    request.setAttribute("watchList", productDAO.getProductsByCategoryId(4, 10));     // ID 4: Watch
+                    
                     request.setAttribute("appleList", productDAO.getProductsByBrandId(1, 10));
                     request.setAttribute("samsungList", productDAO.getProductsByBrandId(2, 10));
                     request.setAttribute("inventory", aO.getAllInventory());
-                                     
+
                     break;
                 case "loginPage":
                     page = "/pages/MainPage/loginPage.jsp"; // Bạn cần tạo file này
@@ -106,12 +107,12 @@ public class userServlet extends HttpServlet {
                     CustomerDAO cdao = new CustomerDAO();
                     EmployeesDAO Edao = new EmployeesDAO();
                     CustomerAddressDAO cadd = new CustomerAddressDAO();
-                    
+
                     Customer customer = cdao.getCustomerById(customerID);
-                        request.setAttribute("customer", customer);
-                        List<CustomerAddress> listdata = cadd.getAddressesByCustomerId(customerID);
-                        request.setAttribute("listAddress", listdata);
-                   
+                    request.setAttribute("customer", customer);
+                    List<CustomerAddress> listdata = cadd.getAddressesByCustomerId(customerID);
+                    request.setAttribute("listAddress", listdata);
+
                     break;
                 default:
 

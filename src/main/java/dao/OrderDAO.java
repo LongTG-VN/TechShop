@@ -143,18 +143,37 @@ public class OrderDAO extends DBContext {
     public List<Order> getOrdersByCustomerWithSummary(int customerId) {
         List<Order> list = new ArrayList<>();
         String sql = "SELECT o.*, c.full_name, v.code as voucher_code, "
-                + "(SELECT TOP 1 p.name FROM order_items oi "
-                + " JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
-                + " JOIN product_variants pv ON ii.variant_id = pv.variant_id "
-                + " JOIN products p ON pv.product_id = p.product_id "
-                + " WHERE oi.order_id = o.order_id) as representative_product, "
-                + "(SELECT TOP 1 pi.image_url FROM order_items oi "
-                + " JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
-                + " JOIN product_variants pv ON ii.variant_id = pv.variant_id "
-                + " JOIN products p ON pv.product_id = p.product_id "
-                + " LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_thumbnail = 1 "
-                + " WHERE oi.order_id = o.order_id) as product_image_url, "
-                + "(SELECT COUNT(*) FROM order_items WHERE order_id = o.order_id) as total_items "
+                // Tên sản phẩm đại diện: ưu tiên từ order_items, nếu đã xóa (đơn hủy) thì lấy từ cancelled_order_items
+                + "COALESCE( "
+                + "  (SELECT TOP 1 p.name FROM order_items oi "
+                + "   JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
+                + "   JOIN product_variants pv ON ii.variant_id = pv.variant_id "
+                + "   JOIN products p ON pv.product_id = p.product_id "
+                + "   WHERE oi.order_id = o.order_id), "
+                + "  (SELECT TOP 1 p.name FROM cancelled_order_items coi "
+                + "   JOIN inventory_items ii ON coi.inventory_id = ii.inventory_id "
+                + "   JOIN product_variants pv ON ii.variant_id = pv.variant_id "
+                + "   JOIN products p ON pv.product_id = p.product_id "
+                + "   WHERE coi.order_id = o.order_id) "
+                + ") as representative_product, "
+                // Ảnh đại diện: tương tự, ưu tiên từ order_items, fallback cancelled_order_items
+                + "COALESCE( "
+                + "  (SELECT TOP 1 pi.image_url FROM order_items oi "
+                + "   JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
+                + "   JOIN product_variants pv ON ii.variant_id = pv.variant_id "
+                + "   JOIN products p ON pv.product_id = p.product_id "
+                + "   LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_thumbnail = 1 "
+                + "   WHERE oi.order_id = o.order_id), "
+                + "  (SELECT TOP 1 pi.image_url FROM cancelled_order_items coi "
+                + "   JOIN inventory_items ii ON coi.inventory_id = ii.inventory_id "
+                + "   JOIN product_variants pv ON ii.variant_id = pv.variant_id "
+                + "   JOIN products p ON pv.product_id = p.product_id "
+                + "   LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_thumbnail = 1 "
+                + "   WHERE coi.order_id = o.order_id) "
+                + ") as product_image_url, "
+                // Tổng số items: đang còn trong order_items + đã snapshot ở cancelled_order_items
+                + "((SELECT COUNT(*) FROM order_items WHERE order_id = o.order_id) "
+                + " + (SELECT ISNULL(SUM(quantity), 0) FROM cancelled_order_items WHERE order_id = o.order_id)) as total_items "
                 + "FROM orders o "
                 + "JOIN customers c ON o.customer_id = c.customer_id "
                 + "LEFT JOIN vouchers v ON o.voucher_id = v.voucher_id "
@@ -295,6 +314,39 @@ public class OrderDAO extends DBContext {
         return details;
     }
 
+    /**
+     * Lấy chi tiết đơn hàng cho các đơn đã hủy, đọc từ bảng
+     * cancelled_order_items.
+     */
+    public List<Map<String, Object>> getCancelledOrderDetails(int orderId) {
+        List<Map<String, Object>> details = new ArrayList<>();
+        String sql = "SELECT p.name, pv.sku, SUM(coi.quantity) as quantity, "
+                + "coi.unit_price, pi.image_url "
+                + "FROM cancelled_order_items coi "
+                + "JOIN inventory_items ii ON coi.inventory_id = ii.inventory_id "
+                + "JOIN product_variants pv ON ii.variant_id = pv.variant_id "
+                + "JOIN products p ON pv.product_id = p.product_id "
+                + "LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_thumbnail = 1 "
+                + "WHERE coi.order_id = ? "
+                + "GROUP BY p.name, pv.sku, coi.unit_price, pi.image_url";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("productName", rs.getString("name"));
+                item.put("sku", rs.getString("sku"));
+                item.put("quantity", rs.getInt("quantity"));
+                item.put("price", rs.getBigDecimal("unit_price"));
+                item.put("imageUrl", rs.getString("image_url"));
+                details.add(item);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return details;
+    }
+
     //get all order status
     public List<Map<String, String>> getAllOrderStatuses() {
         List<Map<String, String>> statusList = new ArrayList<>();
@@ -403,37 +455,55 @@ public class OrderDAO extends DBContext {
         }
     }
 
+    /**
+     * Hủy đơn chưa thanh toán (VNPay bỏ giữa chừng / thanh toán thất bại).
+     * Không xóa đơn: chỉ hoàn inventory, xóa order_items, set status =
+     * CANCELLED để vẫn "mò" được trong lịch sử.
+     */
     public void cancelUnpaidOrder(int orderId) {
-        // 1. Hoàn lại inventory về IN_STOCK
+        // 1. Snapshot chi tiết đơn vào bảng lịch sử (giữ lại thông tin đơn đã hủy)
+        String sqlSnapshot = """
+            INSERT INTO cancelled_order_items (order_id, inventory_id, quantity, unit_price, snapshot_created_at)
+            SELECT oi.order_id,
+                   oi.inventory_id,
+                   1 AS quantity,
+                   oi.selling_price AS unit_price,
+                   GETDATE()
+            FROM order_items oi
+            WHERE oi.order_id = ?
+        """;
+
+        // 2. Hoàn lại inventory về IN_STOCK
         String sqlInventory = """
         UPDATE inventory_items SET status = 'IN_STOCK'
         WHERE inventory_id IN (
             SELECT inventory_id FROM order_items WHERE order_id = ?
         )
     """;
-        // 2. Xóa order_items
+        // 3. Xóa order_items (inventory đã hoàn về kho, chi tiết đã lưu ở bảng cancelled_order_items)
         String sqlItems = "DELETE FROM order_items WHERE order_id = ?";
-        // 3. Xóa order_status_history nếu có
-        String sqlHistory = "DELETE FROM order_status_history WHERE order_id = ?";
-        // 4. Xóa order
-        String sqlOrder = "DELETE FROM orders WHERE order_id = ?";
+
+        // 4. Cập nhật đơn thành CANCELLED
+        String cancelledCode = getCancelledStatusCode();
+        String sqlUpdateOrder = "UPDATE orders SET status = ? WHERE order_id = ?";
 
         try {
+            PreparedStatement ps0 = conn.prepareStatement(sqlSnapshot);
+            ps0.setInt(1, orderId);
+            ps0.executeUpdate();
+
             PreparedStatement ps1 = conn.prepareStatement(sqlInventory);
             ps1.setInt(1, orderId);
             ps1.executeUpdate();
 
+            PreparedStatement ps3 = conn.prepareStatement(sqlUpdateOrder);
+            ps3.setString(1, cancelledCode);
+            ps3.setInt(2, orderId);
+            ps3.executeUpdate();
+
             PreparedStatement ps2 = conn.prepareStatement(sqlItems);
             ps2.setInt(1, orderId);
             ps2.executeUpdate();
-
-            PreparedStatement ps3 = conn.prepareStatement(sqlHistory);
-            ps3.setInt(1, orderId);
-            ps3.executeUpdate();
-
-            PreparedStatement ps4 = conn.prepareStatement(sqlOrder);
-            ps4.setInt(1, orderId);
-            ps4.executeUpdate();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -441,13 +511,10 @@ public class OrderDAO extends DBContext {
     }
 
     public boolean cancelOrderByCustomer(int orderId, int customerId) {
-        // Kiểm tra đơn thuộc customer và đang ở bước đầu tiên
+        // Kiểm tra đơn thuộc customer (bỏ điều kiện step_order/payment_status để tránh khó hủy)
         String sqlCheck = """
         SELECT o.order_id FROM orders o
-        JOIN order_statuses os ON UPPER(o.status) = UPPER(os.status_code)
         WHERE o.order_id = ? AND o.customer_id = ?
-        AND os.step_order = (SELECT MIN(step_order) FROM order_statuses)
-        AND o.payment_status = 'UNPAID'
     """;
         try {
             PreparedStatement ps = conn.prepareStatement(sqlCheck);
@@ -457,7 +524,22 @@ public class OrderDAO extends DBContext {
             if (!rs.next()) {
                 return false; // không hợp lệ
             }
-            // Hoàn inventory
+            // 1. Snapshot chi tiết đơn vào bảng lịch sử (giữ lại thông tin đơn đã hủy)
+            String sqlSnapshot = """
+                INSERT INTO cancelled_order_items (order_id, inventory_id, quantity, unit_price, snapshot_created_at)
+                SELECT oi.order_id,
+                       oi.inventory_id,
+                       1 AS quantity,
+                       oi.selling_price AS unit_price,
+                       GETDATE()
+                FROM order_items oi
+                WHERE oi.order_id = ?
+            """;
+            PreparedStatement psSnap = conn.prepareStatement(sqlSnapshot);
+            psSnap.setInt(1, orderId);
+            psSnap.executeUpdate();
+
+            // 2. Hoàn inventory về IN_STOCK để kho dùng lại cho đơn khác
             String sqlInv = """
             UPDATE inventory_items SET status = 'IN_STOCK'
             WHERE inventory_id IN (
@@ -467,6 +549,12 @@ public class OrderDAO extends DBContext {
             PreparedStatement ps2 = conn.prepareStatement(sqlInv);
             ps2.setInt(1, orderId);
             ps2.executeUpdate();
+
+            // 3. Xóa order_items của đơn hủy (chi tiết đã nằm ở cancelled_order_items)
+            String sqlDeleteItems = "DELETE FROM order_items WHERE order_id = ?";
+            PreparedStatement ps2b = conn.prepareStatement(sqlDeleteItems);
+            ps2b.setInt(1, orderId);
+            ps2b.executeUpdate();
 
             // Lấy status_code của CANCELLED
             String cancelledCode = getCancelledStatusCode();
