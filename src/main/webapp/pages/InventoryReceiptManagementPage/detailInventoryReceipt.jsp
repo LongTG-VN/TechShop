@@ -74,20 +74,45 @@
                     Confirm & Generate Inventory
                 </button>
             </form>
-            <a href="${pageContext.request.contextPath}/staffservlet?action=inventoryReceiptEdit&id=${receipt.receipt_id}" class="inline-flex items-center px-3 py-2 text-amber-600 bg-amber-50 rounded-lg hover:bg-amber-100 font-medium">Edit</a>
-            <a href="${pageContext.request.contextPath}/staffservlet?action=inventoryReceiptManagement" class="inline-flex items-center px-3 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 font-medium">← Receipt List</a>
+            <a href="${pageContext.request.contextPath}/staffservlet?action=inventoryReceiptEdit&id=${receipt.receipt_id}"
+               class="inline-flex items-center px-3 py-2 text-amber-600 bg-amber-50 rounded-lg hover:bg-amber-100 font-medium">
+                Edit
+            </a>
+            <a href="${pageContext.request.contextPath}/staffservlet?action=inventoryReceiptManagement"
+               class="inline-flex items-center px-3 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 font-medium">
+                ← Receipt List
+            </a>
         </div>
     </div>
 
     <c:set var="supplierName" value="—"/>
-    <c:forEach items="${listSuppliers}" var="s"><c:if test="${s.supplier_id == receipt.supplier_id}"><c:set var="supplierName" value="${s.supplier_name}"/></c:if></c:forEach>
+    <c:forEach items="${listSuppliers}" var="s">
+        <c:if test="${s.supplier_id == receipt.supplier_id}">
+            <c:set var="supplierName" value="${s.supplier_name}"/>
+        </c:if>
+    </c:forEach>
     <c:set var="empName" value="—"/>
-    <c:forEach items="${listEmployees}" var="e"><c:if test="${e.employeeId == receipt.employee_id}"><c:set var="empName" value="${e.fullName}"/></c:if></c:forEach>
+    <c:forEach items="${listEmployees}" var="e">
+        <c:if test="${e.employeeId == receipt.employee_id}">
+            <c:set var="empName" value="${e.fullName}"/>
+        </c:if>
+    </c:forEach>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 p-4 bg-gray-50 rounded-xl">
-                <div><p class="text-xs font-semibold text-gray-500 uppercase">Supplier</p><p class="font-medium text-gray-900">${supplierName}</p></div>
-        <div><p class="text-xs font-semibold text-gray-500 uppercase">Employee</p><p class="font-medium text-gray-900">${empName}</p></div>
-        <div><p class="text-xs font-semibold text-gray-500 uppercase">Total Cost</p><p class="font-bold text-blue-600"><fmt:formatNumber value="${receipt.total_cost}" groupingUsed="true"/>₫</p></div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 p-4 bg-gray-50 rounded-xl">
+        <div>
+            <p class="text-xs font-semibold text-gray-500 uppercase">Supplier</p>
+            <p class="font-medium text-gray-900">${supplierName}</p>
+        </div>
+        <div>
+            <p class="text-xs font-semibold text-gray-500 uppercase">Employee</p>
+            <p class="font-medium text-gray-900">${empName}</p>
+        </div>
+        <div>
+            <p class="text-xs font-semibold text-gray-500 uppercase">Total Cost</p>
+            <p class="font-bold text-blue-600">
+                <fmt:formatNumber value="${receipt.total_cost}" groupingUsed="true"/>₫
+            </p>
+        </div>
     </div>
 
     <h3 class="text-lg font-bold text-gray-800 mb-3">Receipt Items</h3>
@@ -106,16 +131,35 @@
                 <c:forEach items="${receiptItems}" var="it">
                     <c:set var="variantSku" value="—"/>
                     <c:set var="variantProductName" value=""/>
-                    <c:forEach items="${listVariants}" var="v"><c:if test="${v.variantId == it.variant_id}"><c:set var="variantSku" value="${v.sku}"/><c:set var="variantProductName" value="${v.productName}"/></c:if></c:forEach>
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-3 font-medium text-gray-500">#${it.receipt_item_id}</td>
-                        <td class="px-4 py-3"><span class="font-medium text-red-600">${variantSku}</span><c:if test="${not empty variantProductName}"> <span class="text-gray-500">${variantProductName}</span></c:if></td>
-                        <td class="px-4 py-3 text-right"><fmt:formatNumber value="${it.import_price}" groupingUsed="true"/>₫</td>
+                    <c:forEach items="${listVariants}" var="v">
+                        <c:if test="${v.variantId == it.variant_id}">
+                            <c:set var="variantSku" value="${v.sku}"/>
+                            <c:set var="variantProductName" value="${v.productName}"/>
+                        </c:if>
+                    </c:forEach>
+
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 font-medium text-gray-500">#${it.receipt_item_id}</td>
+                        <td class="px-4 py-3">
+                            <span class="font-medium text-red-600">${variantSku}</span>
+                            <c:if test="${not empty variantProductName}">
+                                <span class="text-gray-500"> ${variantProductName}</span>
+                            </c:if>
+                        </td>
+                        <td class="px-4 py-3 text-right">
+                            <fmt:formatNumber value="${it.import_price}" groupingUsed="true"/>₫
+                        </td>
                         <td class="px-4 py-3 text-center">${it.quantity}</td>
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-center gap-4 whitespace-nowrap">
-                                <a href="${pageContext.request.contextPath}/staffservlet?action=inventoryReceiptDetail&id=${receipt.receipt_id}&editItemId=${it.receipt_item_id}" class="text-amber-600 hover:underline">Edit</a>
-                                <form action="${pageContext.request.contextPath}/staffservlet" method="post" class="inline" onsubmit="return confirm('Delete this item?');">
+                                <a href="${pageContext.request.contextPath}/staffservlet?action=inventoryReceiptDetail&id=${receipt.receipt_id}&editItemId=${it.receipt_item_id}"
+                                   class="text-amber-600 hover:underline">
+                                    Edit
+                                </a>
+                                <form action="${pageContext.request.contextPath}/staffservlet"
+                                      method="post"
+                                      class="inline"
+                                      onsubmit="return confirm('Delete this item?');">
                                     <input type="hidden" name="action" value="receiptItemDelete"/>
                                     <input type="hidden" name="receipt_item_id" value="${it.receipt_item_id}"/>
                                     <input type="hidden" name="receipt_id" value="${receipt.receipt_id}"/>
@@ -134,10 +178,16 @@
 
     <c:if test="${not empty param.editItemId}">
         <c:set var="editItem" value="${null}"/>
-        <c:forEach items="${receiptItems}" var="it"><c:if test="${it.receipt_item_id == param.editItemId}"><c:set var="editItem" value="${it}"/></c:if></c:forEach>
+        <c:forEach items="${receiptItems}" var="it">
+            <c:if test="${it.receipt_item_id == param.editItemId}">
+                <c:set var="editItem" value="${it}"/>
+            </c:if>
+        </c:forEach>
         <c:if test="${not empty editItem}">
             <h3 class="text-lg font-bold text-gray-800 mb-3">Edit Item #${editItem.receipt_item_id}</h3>
-            <form action="${pageContext.request.contextPath}/staffservlet" method="post" class="p-4 bg-amber-50 rounded-xl border border-amber-200 mb-6">
+            <form action="${pageContext.request.contextPath}/staffservlet"
+                  method="post"
+                  class="p-4 bg-amber-50 rounded-xl border border-amber-200 mb-6">
                 <input type="hidden" name="action" value="receiptItemEdit"/>
                 <input type="hidden" name="receipt_item_id" value="${editItem.receipt_item_id}"/>
                 <input type="hidden" name="receipt_id" value="${receipt.receipt_id}"/>
@@ -174,7 +224,10 @@
                         </div>
                         <div class="flex gap-2">
                             <button type="submit" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-medium">Update</button>
-                            <a href="${pageContext.request.contextPath}/staffservlet?action=inventoryReceiptDetail&id=${receipt.receipt_id}" class="px-4 py-2 bg-gray-200 rounded-lg font-medium">Cancel</a>
+                            <a href="${pageContext.request.contextPath}/staffservlet?action=inventoryReceiptDetail&id=${receipt.receipt_id}"
+                               class="px-4 py-2 bg-gray-200 rounded-lg font-medium">
+                                Cancel
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -183,7 +236,9 @@
     </c:if>
 
     <h3 class="text-lg font-bold text-gray-800 mb-3">Add Item to Receipt</h3>
-    <form action="${pageContext.request.contextPath}/staffservlet" method="post" class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+    <form action="${pageContext.request.contextPath}/staffservlet"
+          method="post"
+          class="p-4 bg-gray-50 rounded-xl border border-gray-200">
         <input type="hidden" name="action" value="receiptItemAdd"/>
         <input type="hidden" name="receipt_id" value="${receipt.receipt_id}"/>
         <div class="space-y-4" data-variant-picker data-selected-variant="">
@@ -218,7 +273,10 @@
                     <input type="number" name="quantity" value="1" min="1" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"/>
                 </div>
                 <div>
-                    <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Add Item</button>
+                    <button type="submit"
+                            class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                        Add Item
+                    </button>
                 </div>
             </div>
         </div>

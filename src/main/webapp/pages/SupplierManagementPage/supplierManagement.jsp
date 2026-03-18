@@ -1,123 +1,119 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
-<%-- Toast notification sau CRUD --%>
 <c:if test="${not empty sessionScope.msg}">
-    <div id="toast-notification" class="fixed top-10 left-1/2 -translate-x-1/2 z-[9999] min-w-[320px] transition-all duration-500">
-        <div class="flex items-center justify-center p-4 rounded-xl shadow-2xl border-2
-            ${sessionScope.msgType == 'danger' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-green-50 text-green-800 border-green-200'}">
-            <span class="font-bold uppercase tracking-wider text-sm">${sessionScope.msg}</span>
+    <div class="mb-4">
+        <div class="px-4 py-3 rounded border
+             ${sessionScope.msgType == 'danger' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-green-50 text-green-800 border-green-200'}">
+            ${sessionScope.msg}
         </div>
     </div>
     <c:remove var="msg" scope="session" />
     <c:remove var="msgType" scope="session" />
-    <script>setTimeout(() => document.getElementById('toast-notification')?.remove(), 3000);</script>
 </c:if>
 
-<!-- ===== STATISTICS ===== -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-
-    <c:set var="total" value="${listSuppliers != null ? listSuppliers.size() : 0}" />
-    <c:set var="activeCount" value="0" />
-
-    <c:forEach items="${listSuppliers != null ? listSuppliers : []}" var="s">
-        <c:if test="${s.is_active}">
-            <c:set var="activeCount" value="${activeCount + 1}" />
-        </c:if>
-    </c:forEach>
-
-    <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-blue-500">
-        <p class="text-gray-500 text-sm">Total Suppliers</p>
-        <h3 class="text-2xl font-bold text-blue-600">${total}</h3>
-    </div>
-
-    <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-green-500">
-        <p class="text-gray-500 text-sm">Active Suppliers</p>
-        <h3 class="text-2xl font-bold text-green-600">${activeCount}</h3>
-    </div>
-
-    <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-red-500">
-        <p class="text-gray-500 text-sm">Inactive Suppliers</p>
-        <h3 class="text-2xl font-bold text-red-600">${total - activeCount}</h3>
-    </div>
-</div>
-
-<!-- ===== SEARCH + ADD ===== -->
 <div class="bg-white rounded-xl shadow-lg p-5">
 
-    <div class="flex justify-between mb-5">
-
-        <form class="w-1/2" action="staffservlet" method="GET">
+    <!-- Search + Add (giống Inventory) -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+        <form class="w-full md:w-1/3 md:max-w-[520px]" action="staffservlet" method="GET">
             <input type="hidden" name="action" value="supplierManagement">
-            <input type="text" name="keyword"
-                   class="w-full px-4 py-2 border rounded-lg"
-                   placeholder="Search suppliers by name or phone number..."
-                   value="${param.keyword}">
+
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </span>
+                <input type="text"
+                       name="keyword"
+                       class="w-full pl-10 pr-10 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                       placeholder="Search suppliers by name or phone..."
+                       value="${param.keyword}">
+                <c:if test="${not empty param.keyword}">
+                    <a href="staffservlet?action=supplierManagement"
+                       class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </a>
+                </c:if>
+            </div>
         </form>
 
         <a href="supplier?action=add"
-           class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm">
-           + Add Supplier
+           class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm whitespace-nowrap text-center">
+            + Add supplier
         </a>
     </div>
 
-    <!-- ===== HEADER ROW (đều cột) ===== -->
-    <div class="grid grid-cols-[60px_1fr_140px_140px_180px] gap-4 py-3 px-4 bg-gray-100 rounded-t-lg border border-gray-200 border-b-0 font-bold text-gray-700 items-center">
-        <div>ID</div>
-        <div>SUPPLIER</div>
-        <div>PHONE</div>
-        <div>STATUS</div>
-        <div class="text-right">ACTION</div>
-    </div>
+    <!-- Table (giống Inventory) -->
+    <div class="overflow-x-auto rounded-lg border border-gray-200">
+        <table class="w-full text-sm text-left text-gray-600">
+            <thead class="text-xs uppercase bg-gray-50 text-gray-700 font-semibold">
+                <tr>
+                    <th class="px-4 py-3 w-[90px]">ID</th>
+                    <th class="px-4 py-3">Supplier name</th>
+                    <th class="px-4 py-3 w-[170px]">Phone</th>
+                    <th class="px-4 py-3 text-center w-[140px]">Status</th>
+                    <th class="px-4 py-3 text-right w-[260px]">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                <c:forEach items="${listSuppliers != null ? listSuppliers : []}" var="s">
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-4 py-3 font-mono text-gray-700">#${s.supplier_id}</td>
+                        <td class="px-4 py-3 font-medium text-gray-900">${s.supplier_name}</td>
+                        <td class="px-4 py-3 whitespace-nowrap">${s.phone}</td>
+                        <td class="px-4 py-3 text-center">
+                            <c:choose>
+                                <c:when test="${s.is_active}">
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full text-green-700 bg-green-100">
+                                        Active
+                                    </span>
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full text-red-700 bg-red-100">
+                                        Inactive
+                                    </span>
+                                </c:otherwise>
+                            </c:choose>
+                        </td>
+                        <td class="px-4 py-3 text-right whitespace-nowrap">
+                            <a href="supplier?action=view&id=${s.supplier_id}"
+                               class="text-gray-600 hover:text-gray-800 font-medium hover:underline">View</a>
+                            <span class="text-gray-300 mx-1">|</span>
+                            <a href="supplier?action=edit&id=${s.supplier_id}"
+                               class="text-blue-600 hover:text-blue-800 font-medium hover:underline">Edit</a>
+                            <span class="text-gray-300 mx-1">|</span>
+                            <c:choose>
+                                <c:when test="${s.is_active}">
+                                    <a href="supplier?action=deactivate&id=${s.supplier_id}"
+                                       class="text-amber-600 hover:text-amber-800 font-medium hover:underline">Deactivate</a>
+                                </c:when>
+                                <c:otherwise>
+                                    <a href="supplier?action=restore&id=${s.supplier_id}"
+                                       class="text-emerald-600 hover:text-emerald-800 font-medium hover:underline">Restore</a>
+                                </c:otherwise>
+                            </c:choose>
+                            <span class="text-gray-300 mx-1">|</span>
+                            <a href="supplier?action=delete&id=${s.supplier_id}"
+                               onclick="return confirm('Delete supplier #${s.supplier_id}? If it is used in import receipts, deletion may fail.');"
+                               class="text-red-600 hover:text-red-800 font-medium hover:underline">Delete</a>
+                        </td>
+                    </tr>
+                </c:forEach>
 
-    <!-- ===== LIST ===== -->
-    <div class="border border-gray-200 border-t-0 rounded-b-lg divide-y divide-gray-200">
-        <c:forEach items="${listSuppliers != null ? listSuppliers : []}" var="s">
-            <div class="grid grid-cols-[60px_1fr_140px_140px_180px] gap-4 py-4 px-4 items-center hover:bg-gray-50/50">
-                <div class="font-mono text-gray-600">#${s.supplier_id}</div>
-                <div>
-                    <p class="font-bold text-gray-900">${s.supplier_name}</p>
-                </div>
-                <div class="text-gray-700 font-medium">${s.phone}</div>
-                <div>
-                    <c:choose>
-                        <c:when test="${s.is_active}">
-                            <span class="inline-block px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">Active</span>
-                        </c:when>
-                        <c:otherwise>
-                            <span class="inline-block px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">Inactive</span>
-                        </c:otherwise>
-                    </c:choose>
-                </div>
-                <div class="flex gap-3 justify-end text-sm">
-                    <a href="supplier?action=view&id=${s.supplier_id}"
-                       class="text-gray-600 hover:text-gray-800 font-medium underline">View</a>
-                    <span class="text-gray-300">|</span>
-                    <a href="supplier?action=edit&id=${s.supplier_id}"
-                       class="text-blue-600 hover:text-blue-800 font-medium underline">Edit</a>
-                    <span class="text-gray-300">|</span>
-                    <c:choose>
-                        <c:when test="${s.is_active}">
-                            <a href="supplier?action=deactivate&id=${s.supplier_id}"
-                               class="text-amber-600 hover:text-amber-800 font-medium underline">Deactivate</a>
-                        </c:when>
-                        <c:otherwise>
-                            <a href="supplier?action=restore&id=${s.supplier_id}"
-                               class="text-emerald-600 hover:text-emerald-800 font-medium underline">Reactivate</a>
-                        </c:otherwise>
-                    </c:choose>
-                    <span class="text-gray-300">|</span>
-                    <a href="supplier?action=delete&id=${s.supplier_id}"
-                       onclick="return confirm('Delete supplier #${s.supplier_id}? If it is used in import receipts, deletion will fail.');"
-                       class="text-red-600 hover:text-red-800 font-medium underline">Delete</a>
-                </div>
-            </div>
-        </c:forEach>
-
-        <c:if test="${empty listSuppliers}">
-            <div class="py-12 text-center text-gray-500">
-                No supplier records found.
-            </div>
-        </c:if>
+                <c:if test="${empty listSuppliers}">
+                    <tr>
+                        <td colspan="5" class="px-4 py-12 text-center text-gray-500 italic">
+                            No supplier data.
+                        </td>
+                    </tr>
+                </c:if>
+            </tbody>
+        </table>
     </div>
 </div>

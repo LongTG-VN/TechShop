@@ -17,22 +17,19 @@ import utils.DBContext;
  */
 public class SupplierDAO extends DBContext {
 
-    // READ ALL
+    /**
+     * Đọc toàn bộ supplier. Ghi chú: trả về list rỗng nếu DB lỗi/kết nối null
+     * để UI vẫn chạy được.
+     */
     public List<Supplier> getAllSuppliers() {
         List<Supplier> list = new ArrayList<>();
         if (conn == null) {
             return list;
         }
-        String sql = "SELECT * FROM suppliers";
+        String sql = "SELECT supplier_id, supplier_name, phone, is_active FROM suppliers";
         try (PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                Supplier s = new Supplier(
-                        rs.getInt("supplier_id"),
-                        rs.getString("supplier_name"),
-                        rs.getString("phone"),
-                        rs.getBoolean("is_active")
-                );
-                list.add(s);
+                list.add(mapRow(rs));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -40,20 +37,20 @@ public class SupplierDAO extends DBContext {
         return list;
     }
 
-    // GET BY ID 
+    /**
+     * Lấy supplier theo id. Trả về null nếu không tồn tại.
+     */
     public Supplier getSupplierById(int id) {
-        String sql = "SELECT * FROM suppliers WHERE supplier_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        if (conn == null) {
+            return null;
+        }
+        String sql = "SELECT supplier_id, supplier_name, phone, is_active FROM suppliers WHERE supplier_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return new Supplier(
-                        rs.getInt("supplier_id"),
-                        rs.getString("supplier_name"),
-                        rs.getString("phone"),
-                        rs.getBoolean("is_active")
-                );
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRow(rs);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -61,11 +58,15 @@ public class SupplierDAO extends DBContext {
         return null;
     }
 
-    // CREATE
+    /**
+     * Thêm supplier mới.
+     */
     public void insertSupplier(Supplier s) {
+        if (conn == null || s == null) {
+            return;
+        }
         String sql = "INSERT INTO suppliers (supplier_name, phone, is_active) VALUES (?, ?, ?)";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, s.getSupplier_name());
             ps.setString(2, s.getPhone());
             ps.setBoolean(3, s.getIs_active());
@@ -75,11 +76,15 @@ public class SupplierDAO extends DBContext {
         }
     }
 
-    // UPDATE
+    /**
+     * Cập nhật supplier theo id.
+     */
     public void updateSupplier(Supplier s) {
+        if (conn == null || s == null) {
+            return;
+        }
         String sql = "UPDATE suppliers SET supplier_name = ?, phone = ?, is_active = ? WHERE supplier_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, s.getSupplier_name());
             ps.setString(2, s.getPhone());
             ps.setBoolean(3, s.getIs_active());
@@ -90,7 +95,9 @@ public class SupplierDAO extends DBContext {
         }
     }
 
-    // Search by name or phone
+    /**
+     * Tìm supplier theo tên hoặc số điện thoại (LIKE).
+     */
     public List<Supplier> searchSuppliers(String keyword) {
         List<Supplier> list = new ArrayList<>();
         if (conn == null || keyword == null || keyword.trim().isEmpty()) {
@@ -103,12 +110,7 @@ public class SupplierDAO extends DBContext {
             ps.setString(2, pattern);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    list.add(new Supplier(
-                            rs.getInt("supplier_id"),
-                            rs.getString("supplier_name"),
-                            rs.getString("phone"),
-                            rs.getBoolean("is_active")
-                    ));
+                    list.add(mapRow(rs));
                 }
             }
         } catch (Exception e) {
@@ -117,8 +119,13 @@ public class SupplierDAO extends DBContext {
         return list;
     }
 
-    // Deactivate (soft delete)
+    /**
+     * Soft delete: set is_active = 0.
+     */
     public void deactivateSupplier(int id) {
+        if (conn == null) {
+            return;
+        }
         String sql = "UPDATE suppliers SET is_active = 0 WHERE supplier_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -128,8 +135,13 @@ public class SupplierDAO extends DBContext {
         }
     }
 
-    // Restore
+    /**
+     * Khôi phục: set is_active = 1.
+     */
     public void restoreSupplier(int id) {
+        if (conn == null) {
+            return;
+        }
         String sql = "UPDATE suppliers SET is_active = 1 WHERE supplier_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -140,9 +152,13 @@ public class SupplierDAO extends DBContext {
     }
 
     /**
-     * True if supplier is used in import_receipts (FK), cannot hard-delete.
+     * Kiểm tra supplier có đang được dùng trong import_receipts không. Nếu có
+     * FK reference thì không nên hard delete.
      */
     public boolean isReferencedByReceipts(int supplierId) {
+        if (conn == null) {
+            return true;
+        }
         String sql = "SELECT 1 FROM import_receipts WHERE supplier_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, supplierId);
@@ -156,8 +172,8 @@ public class SupplierDAO extends DBContext {
     }
 
     /**
-     * Hard delete only when not referenced by import_receipts. Returns true if
-     * deleted.
+     * Hard delete chỉ khi không bị FK reference. Trả về true nếu xóa thành
+     * công.
      */
     public boolean deleteSupplierIfNoReferences(int id) {
         if (conn == null || isReferencedByReceipts(id)) {
@@ -173,31 +189,12 @@ public class SupplierDAO extends DBContext {
         }
     }
 
-    // TEST
-    public static void main(String[] args) {
-        SupplierDAO dao = new SupplierDAO();
-
-        // 1. Get All
-        System.out.println("--- DANH SACH ---");
-        List<Supplier> list = dao.getAllSuppliers();
-        for (Supplier s : list) {
-            System.out.println(s);
-        }
-
-        // 2. Insert
-        dao.insertSupplier(new Supplier(0, "NCC Test Simple", "0123456789", true));
-        System.out.println("Da them 1 NCC.");
-
-        // 3. Update 
-        dao.updateSupplier(new Supplier(10, "Le Hoàng Nhẩn", "0348808113", false));
-        System.out.println("Da update NCC co ID = 1.");
-
-        // 4. Delete (only if not referenced by import_receipts)
-        boolean deleted = dao.deleteSupplierIfNoReferences(3);
-        System.out.println(deleted ? "Deleted supplier 3." : "Supplier 3 not deleted (in use).");
-
-        // 5. Get By ID
-        System.out.println("--- TIM KIEM ID = 1 ---");
-        System.out.println(dao.getSupplierById(1));
+    private Supplier mapRow(ResultSet rs) throws Exception {
+        return new Supplier(
+                rs.getInt("supplier_id"),
+                rs.getString("supplier_name"),
+                rs.getString("phone"),
+                rs.getBoolean("is_active")
+        );
     }
 }

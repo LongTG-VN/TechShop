@@ -1,3 +1,7 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
+ */
 package controller.staff;
 
 import dao.ImportReceiptItemDAO;
@@ -22,6 +26,21 @@ public class InventoryServlet extends HttpServlet {
         dao = new InventoryItemDAO();
     }
 
+    private void redirectToInventoryManagement(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryManagement");
+    }
+
+    private int parseIntSafe(String s, int defaultValue) {
+        if (s == null) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(s.trim());
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -30,52 +49,56 @@ public class InventoryServlet extends HttpServlet {
 
         String action = request.getParameter("action");
         if (action == null) {
-            response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryManagement");
+            redirectToInventoryManagement(request, response);
             return;
         }
 
+        String page = "/pages/InventoryManagementPage/inventoryManagement.jsp";
         switch (action) {
-            case "add" -> {
-                String receiptItemIdStr = request.getParameter("receipt_item_id");
-                if (receiptItemIdStr != null && !receiptItemIdStr.isBlank()) {
-                    try {
-                        int receiptItemId = Integer.parseInt(receiptItemIdStr);
-                        request.setAttribute("receiptItem", new ImportReceiptItemDAO().getItemById(receiptItemId));
-                    } catch (NumberFormatException ignored) {
-                    }
+            case "add": {
+                int receiptItemId = parseIntSafe(request.getParameter("receipt_item_id"), 0);
+                if (receiptItemId > 0) {
+                    request.setAttribute("receiptItem", new ImportReceiptItemDAO().getItemById(receiptItemId));
                 }
                 request.setAttribute("listVariants", new ProductVariantDAO().getAllVariant());
-                request.setAttribute("contentPage", "/pages/InventoryManagementPage/addInventory.jsp");
-                request.getRequestDispatcher("/template/staffTemplate.jsp").forward(request, response);
+                page = "/pages/InventoryManagementPage/addInventory.jsp";
+                break;
             }
-            case "view" -> {
+            case "view": {
                 InventoryItem item = getByIdSafe(request);
                 request.setAttribute("inventoryItem", item);
-                request.setAttribute("contentPage", "/pages/InventoryManagementPage/detailInventory.jsp");
-                request.getRequestDispatcher("/template/staffTemplate.jsp").forward(request, response);
+                page = "/pages/InventoryManagementPage/detailInventory.jsp";
+                break;
             }
-            case "edit" -> {
+            case "edit": {
                 InventoryItem item = getByIdSafe(request);
                 request.setAttribute("inventoryItem", item);
                 request.setAttribute("listVariants", new ProductVariantDAO().getAllVariant());
-                request.setAttribute("contentPage", "/pages/InventoryManagementPage/editInventory.jsp");
-                request.getRequestDispatcher("/template/staffTemplate.jsp").forward(request, response);
+                page = "/pages/InventoryManagementPage/editInventory.jsp";
+                break;
             }
-            case "delete" -> {
-                String idStr = request.getParameter("id");
+            case "delete": {
                 boolean ok = false;
-                if (idStr != null && !idStr.isBlank()) {
-                    try {
-                        int id = Integer.parseInt(idStr);
-                        ok = dao.deleteInventory(id);
-                    } catch (NumberFormatException ignored) {
-                    }
+                int id = parseIntSafe(request.getParameter("id"), 0);
+                if (id > 0) {
+                    ok = dao.deleteInventory(id);
                 }
-                setMsg(request.getSession(), ok ? "Inventory item deleted." : "Delete failed (invalid ID or item in use).", ok ? "success" : "danger");
-                response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryManagement");
+                if (ok) {
+                    setMsg(request.getSession(), "Inventory item deleted.", "success");
+                } else {
+                    setMsg(request.getSession(), "Delete failed (invalid ID or item in use).", "danger");
+                }
+                redirectToInventoryManagement(request, response);
+                return;
             }
-            default -> response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryManagement");
+            default: {
+                redirectToInventoryManagement(request, response);
+                return;
+            }
         }
+
+        request.setAttribute("contentPage", page);
+        request.getRequestDispatcher("/template/staffTemplate.jsp").forward(request, response);
     }
 
     @Override
@@ -86,87 +109,89 @@ public class InventoryServlet extends HttpServlet {
 
         String action = request.getParameter("action");
         if (action == null) {
-            response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryManagement");
+            redirectToInventoryManagement(request, response);
             return;
         }
 
         switch (action) {
-            case "add" ->
-                handleAdd(request, response);
-            case "update" ->
-                handleUpdate(request, response);
-            default ->
-                response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryManagement");
-        }
-    }
+            case "add": {
+                String receiptItemIdStr = request.getParameter("receipt_item_id");
+                String imei = request.getParameter("imei");
+                String importPriceStr = request.getParameter("import_price");
+                String status = request.getParameter("status");
 
-    private void handleAdd(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String variantIdStr = request.getParameter("variant_id");
-        String receiptItemIdStr = request.getParameter("receipt_item_id");
-        String imei = request.getParameter("imei");
-        String importPriceStr = request.getParameter("import_price");
-        String status = request.getParameter("status");
-
-        try {
-            int variantId = Integer.parseInt(variantIdStr != null ? variantIdStr : "0");
-            int receiptItemId;
-            if (receiptItemIdStr != null && !receiptItemIdStr.isBlank()) {
-                receiptItemId = Integer.parseInt(receiptItemIdStr);
-            } else {
-                receiptItemId = new ImportReceiptItemDAO().getFirstReceiptItemId();
-                if (receiptItemId == 0) {
-                    setMsg(request.getSession(), "No receipt item available. Create an import receipt first.", "danger");
-                    response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryManagement");
-                    return;
+                try {
+                    int variantId = parseIntSafe(request.getParameter("variant_id"), 0);
+                    int receiptItemId;
+                    if (receiptItemIdStr != null && !receiptItemIdStr.isBlank()) {
+                        receiptItemId = Integer.parseInt(receiptItemIdStr);
+                    } else {
+                        receiptItemId = new ImportReceiptItemDAO().getFirstReceiptItemId();
+                        if (receiptItemId == 0) {
+                            setMsg(request.getSession(), "No receipt item available. Create an import receipt first.", "danger");
+                            redirectToInventoryManagement(request, response);
+                            return;
+                        }
+                    }
+                    double importPrice = Double.parseDouble(importPriceStr != null ? importPriceStr : "0");
+                    if (imei == null || imei.trim().isEmpty()) {
+                        setMsg(request.getSession(), "Please enter IMEI.", "danger");
+                    } else {
+                        String normalizedStatus = (status == null || status.trim().isEmpty()) ? "IN_STOCK" : status.trim();
+                        InventoryItem item = new InventoryItem(0, variantId, receiptItemId, imei.trim(), importPrice, normalizedStatus);
+                        boolean ok = dao.insertInventory(item);
+                        if (ok) {
+                            setMsg(request.getSession(), "Item added.", "success");
+                        } else {
+                            setMsg(request.getSession(), "Add failed (duplicate IMEI or invalid data).", "danger");
+                        }
+                    }
+                } catch (NumberFormatException e) {
+                    setMsg(request.getSession(), "Invalid data (variant or import price).", "danger");
                 }
+
+                redirectToInventoryManagement(request, response);
+                break;
             }
-            double importPrice = Double.parseDouble(importPriceStr != null ? importPriceStr : "0");
-            if (imei == null || imei.trim().isEmpty()) {
-                setMsg(request.getSession(), "Please enter IMEI.", "danger");
-            } else {
-                String normalizedStatus = (status == null || status.trim().isEmpty()) ? "IN_STOCK" : status.trim();
-                InventoryItem item = new InventoryItem(0, variantId, receiptItemId, imei.trim(), importPrice, normalizedStatus);
-                boolean ok = dao.insertInventory(item);
-                setMsg(request.getSession(), ok ? "Item added." : "Add failed (duplicate IMEI or invalid data).", ok ? "success" : "danger");
+            case "update": {
+                String imei = request.getParameter("imei");
+                String importPriceStr = request.getParameter("import_price");
+                String status = request.getParameter("status");
+
+                try {
+                    int inventoryId = parseIntSafe(request.getParameter("inventory_id"), 0);
+                    InventoryItem existing = dao.getInventoryById(inventoryId);
+                    if (existing == null) {
+                        setMsg(request.getSession(), "Item not found.", "danger");
+                        redirectToInventoryManagement(request, response);
+                        return;
+                    }
+                    int variantId = parseIntSafe(request.getParameter("variant_id"), 0);
+                    double importPrice = Double.parseDouble(importPriceStr != null ? importPriceStr : "0");
+
+                    if (imei == null || imei.trim().isEmpty()) {
+                        setMsg(request.getSession(), "Please enter IMEI.", "danger");
+                    } else {
+                        String normalizedStatus = (status == null || status.trim().isEmpty()) ? "IN_STOCK" : status.trim();
+                        InventoryItem item = new InventoryItem(inventoryId, variantId, existing.getReceipt_item_id(), imei.trim(), importPrice, normalizedStatus);
+                        boolean ok = dao.updateInventory(item);
+                        if (ok) {
+                            setMsg(request.getSession(), "Item updated.", "success");
+                        } else {
+                            setMsg(request.getSession(), "Update failed.", "danger");
+                        }
+                    }
+                } catch (NumberFormatException e) {
+                    setMsg(request.getSession(), "Invalid data.", "danger");
+                }
+
+                redirectToInventoryManagement(request, response);
+                break;
             }
-        } catch (NumberFormatException e) {
-            setMsg(request.getSession(), "Invalid data (variant or import price).", "danger");
+            default:
+                redirectToInventoryManagement(request, response);
+                break;
         }
-
-        response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryManagement");
-    }
-
-    private void handleUpdate(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String inventoryIdStr = request.getParameter("inventory_id");
-        String variantIdStr = request.getParameter("variant_id");
-        String imei = request.getParameter("imei");
-        String importPriceStr = request.getParameter("import_price");
-        String status = request.getParameter("status");
-
-        try {
-            int inventoryId = Integer.parseInt(inventoryIdStr);
-            InventoryItem existing = dao.getInventoryById(inventoryId);
-            if (existing == null) {
-                setMsg(request.getSession(), "Item not found.", "danger");
-                response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryManagement");
-                return;
-            }
-            int variantId = Integer.parseInt(variantIdStr != null ? variantIdStr : "0");
-            double importPrice = Double.parseDouble(importPriceStr != null ? importPriceStr : "0");
-
-            if (imei == null || imei.trim().isEmpty()) {
-                setMsg(request.getSession(), "Please enter IMEI.", "danger");
-            } else {
-                String normalizedStatus = (status == null || status.trim().isEmpty()) ? "IN_STOCK" : status.trim();
-                InventoryItem item = new InventoryItem(inventoryId, variantId, existing.getReceipt_item_id(), imei.trim(), importPrice, normalizedStatus);
-                boolean ok = dao.updateInventory(item);
-                setMsg(request.getSession(), ok ? "Item updated." : "Update failed.", ok ? "success" : "danger");
-            }
-        } catch (NumberFormatException e) {
-            setMsg(request.getSession(), "Invalid data.", "danger");
-        }
-
-        response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryManagement");
     }
 
     private InventoryItem getByIdSafe(HttpServletRequest request) {
@@ -185,5 +210,15 @@ public class InventoryServlet extends HttpServlet {
     private void setMsg(HttpSession session, String msg, String type) {
         session.setAttribute("msg", msg);
         session.setAttribute("msgType", type);
+    }
+
+    /**
+     * Returns a short description of the servlet.
+     *
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo() {
+        return "Short description";
     }
 }

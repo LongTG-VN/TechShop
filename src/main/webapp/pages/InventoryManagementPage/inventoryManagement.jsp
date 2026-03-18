@@ -44,7 +44,8 @@
     <!-- Search -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
 
-        <form class="w-full md:w-1/2" action="staffservlet" method="GET">
+        <div class="w-full flex flex-col md:flex-row md:items-center gap-3">
+            <form class="w-full md:w-1/3 md:max-w-[520px]" action="staffservlet" method="GET">
             <input type="hidden" name="action" value="inventoryManagement">
 
             <div class="relative">
@@ -65,7 +66,14 @@
                     </a>
                 </c:if>
             </div>
-        </form>
+            </form>
+
+            <button type="button"
+                    id="btn-back-to-summary"
+                    class="inline-flex items-center px-3 py-2 text-sm font-semibold rounded-lg bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 md:ml-auto ${empty param.keyword ? 'hidden' : ''}">
+                ← Back to summary
+            </button>
+        </div>
 
     </div>
 
@@ -164,32 +172,41 @@
     <div id="inventory-detail-view"
          class="overflow-x-auto rounded-lg border border-gray-200 ${empty param.keyword ? 'hidden' : ''}">
 
-        <div class="flex items-center px-4 pt-4 pb-2">
-            <button type="button"
-                    id="btn-back-to-summary"
-                    class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200">
-                ← Back to summary
-            </button>
+        <div class="flex flex-wrap items-center justify-between gap-3 px-4 pt-4 pb-2">
+            <div class="flex-1 text-center">
+                <div id="detail-product-title"
+                     class="text-lg md:text-xl font-extrabold text-gray-900 tracking-tight">
+                    Inventory details
+                </div>
+                <div id="detail-product-subtitle" class="text-xs text-gray-500">
+                    Grouped by import batch and import price
+                </div>
+            </div>
         </div>
 
         <table class="w-full text-sm text-left text-gray-600">
 
             <thead class="text-xs uppercase bg-gray-50 text-gray-700 font-semibold">
                 <tr>
-                    <th class="px-4 py-3">ID</th>
+                    <th class="px-4 py-3">#</th>
                     <th class="px-4 py-3">Product Name</th>
-                    <th class="px-4 py-3">IMEI</th>
                     <th class="px-4 py-3 text-right">Import Price</th>
                     <th class="px-4 py-3 text-center">Status</th>
+                    <th class="px-4 py-3 text-center">Quantity</th>
                     <th class="px-4 py-3 text-center">Actions</th>
                 </tr>
             </thead>
 
-            <tbody class="divide-y divide-gray-200">
+            <tbody id="inventory-detail-tbody" class="divide-y divide-gray-200">
 
                 <c:forEach items="${listInventory}" var="it" varStatus="stt">
                     <tr class="hover:bg-gray-50 transition-colors"
-                        data-variant-id="${it.variant_id}">
+                        data-inventory-id="${it.inventory_id}"
+                        data-variant-id="${it.variant_id}"
+                        data-receipt-item-id="${it.receipt_item_id}"
+                        data-status="${it.status}"
+                        data-product-name="${it.productName}"
+                        data-import-price="${it.import_price}">
 
                         <td class="px-4 py-3 font-mono text-gray-700">
                             #${stt.count}
@@ -206,12 +223,7 @@
                             </c:choose>
                         </td>
 
-                        <td class="px-4 py-3 font-mono">
-                            ${it.imei}
-                        </td>
-
-                        <td class="px-4 py-3 text-right font-semibold"
-                            data-import-price="${it.import_price}">
+                        <td class="px-4 py-3 text-right font-semibold">
                             <fmt:formatNumber value="${it.import_price}"
                                               type="number"
                                               groupingUsed="true"
@@ -238,16 +250,13 @@
                             </c:choose>
                         </td>
 
-                        <td class="px-4 py-3 text-center space-x-2">
-                            <a href="inventory?action=edit&id=${it.inventory_id}"
-                               class="text-blue-600 hover:text-blue-800 font-medium hover:underline">
-                                Edit
-                            </a>
-                            <a href="inventory?action=delete&id=${it.inventory_id}"
-                               onclick="return confirm('Delete inventory item #${it.inventory_id}?')"
-                               class="text-red-600 hover:text-red-800 font-medium hover:underline">
-                                Delete
-                            </a>
+                        <td class="px-4 py-3 text-center">
+                            <span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-gray-100 text-gray-700">
+                                1
+                            </span>
+                        </td>
+
+                        <td class="px-4 py-3 text-center">
                             <a href="inventory?action=view&id=${it.inventory_id}"
                                class="text-gray-600 hover:text-gray-800 font-medium hover:underline">
                                 Details
@@ -277,40 +286,121 @@
     (function () {
         const summaryView = document.getElementById('inventory-summary-view');
         const detailView = document.getElementById('inventory-detail-view');
+        const detailTbody = document.getElementById('inventory-detail-tbody');
         const detailRows = detailView ? detailView.querySelectorAll('tbody tr[data-variant-id]') : null;
         const btnRowDetails = document.querySelectorAll('.btn-summary-view-detail');
         const btnBack = document.getElementById('btn-back-to-summary');
+        const detailTitle = document.getElementById('detail-product-title');
 
         if (!summaryView || !detailView) {
             return;
         }
 
-        function parsePrice(text) {
-            if (!text) return 0;
-            const digits = text.replace(/[^0-9]/g, '');
-            if (!digits) return 0;
-            return parseInt(digits, 10);
+        // Snapshot all inventory rows from DOM (keeps IMEI in DB, not shown here)
+        const allItems = [];
+        if (detailRows) {
+            detailRows.forEach(function (row) {
+                const ds = row.dataset || {};
+                allItems.push({
+                    inventoryId: ds.inventoryId,
+                    variantId: ds.variantId,
+                    receiptItemId: ds.receiptItemId,
+                    status: ds.status,
+                    productName: ds.productName || '',
+                    importPrice: ds.importPrice
+                });
+            });
         }
 
-        function formatPrice(value) {
-            try {
-                return value.toLocaleString('vi-VN');
-            } catch (e) {
-                return value;
+        function renderGroupedRows(filterVariantId) {
+            if (!detailTbody) return;
+
+            const items = allItems.filter(function (it) {
+                if (!filterVariantId) return true;
+                return String(it.variantId) === String(filterVariantId);
+            });
+
+            // Group key: same import batch (receipt_item_id) + same import price + same status + same product
+            const groups = new Map();
+            items.forEach(function (it) {
+                const key = [it.receiptItemId, it.importPrice, it.status, it.productName].join('|');
+                if (!groups.has(key)) {
+                    groups.set(key, {
+                        productName: it.productName,
+                        importPrice: it.importPrice,
+                        status: it.status,
+                        receiptItemId: it.receiptItemId,
+                        quantity: 0,
+                        firstInventoryId: it.inventoryId
+                    });
+                }
+                const g = groups.get(key);
+                g.quantity += 1;
+                // keep smallest inventoryId for stable Details link
+                if (g.firstInventoryId == null || (it.inventoryId != null && Number(it.inventoryId) < Number(g.firstInventoryId))) {
+                    g.firstInventoryId = it.inventoryId;
+                }
+            });
+
+            const grouped = Array.from(groups.values()).sort(function (a, b) {
+                // sort by receipt_item_id then import price then product name
+                const ra = Number(a.receiptItemId || 0);
+                const rb = Number(b.receiptItemId || 0);
+                if (ra !== rb) return ra - rb;
+                const pa = Number(a.importPrice || 0);
+                const pb = Number(b.importPrice || 0);
+                if (pa !== pb) return pa - pb;
+                return String(a.productName || '').localeCompare(String(b.productName || ''));
+            });
+
+            // Helper: render status badge same style as before
+            function statusBadge(status) {
+                const s = String(status || '');
+                if (s === 'IN_STOCK') {
+                    return '<span class="px-2 py-1 text-xs font-semibold rounded-full text-green-700 bg-green-100">IN_STOCK</span>';
+                }
+                if (s === 'SOLD') {
+                    return '<span class="px-2 py-1 text-xs font-semibold rounded-full text-blue-700 bg-blue-100">SOLD</span>';
+                }
+                return '<span class="px-2 py-1 text-xs font-semibold rounded-full text-gray-700 bg-gray-100">' + s + '</span>';
             }
-        }
 
-        function updateDetailSummary() {
-            if (!detailRows) {
+            function formatVND(value) {
+                const n = Number(value || 0);
+                try {
+                    return n.toLocaleString('vi-VN');
+                } catch (e) {
+                    return String(value || 0);
+                }
+            }
+
+            // Rebuild tbody
+            detailTbody.innerHTML = '';
+            if (grouped.length === 0) {
+                detailTbody.innerHTML = '<tr><td colspan="6" class="px-4 py-12 text-center text-gray-500 italic">No inventory data.</td></tr>';
                 return;
             }
-            // Hiện tại chỉ giữ nguyên logic chọn variant,
-            // không hiển thị thêm tổng số lượng / tổng tiền ở header chi tiết.
-            // Nếu cần dùng lại sau có thể tính lại tại đây.
+
+            grouped.forEach(function (g, idx) {
+                const safeName = (g.productName && g.productName.trim()) ? g.productName : '—';
+                const detailsHref = g.firstInventoryId ? ('inventory?action=view&id=' + encodeURIComponent(g.firstInventoryId)) : '#';
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors';
+                row.innerHTML = ''
+                        + '<td class="px-4 py-3 font-mono text-gray-700">#' + (idx + 1) + '</td>'
+                        + '<td class="px-4 py-3 font-medium text-gray-900">' + safeName + '</td>'
+                        + '<td class="px-4 py-3 text-right font-semibold">' + formatVND(g.importPrice) + ' ₫</td>'
+                        + '<td class="px-4 py-3 text-center">' + statusBadge(g.status) + '</td>'
+                        + '<td class="px-4 py-3 text-center"><span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-gray-100 text-gray-700">' + g.quantity + '</span></td>'
+                        + '<td class="px-4 py-3 text-center">'
+                        + (g.firstInventoryId ? ('<a href="' + detailsHref + '" class="text-gray-600 hover:text-gray-800 font-medium hover:underline">Details</a>') : '—')
+                        + '</td>';
+                detailTbody.appendChild(row);
+            });
         }
 
         // From summary row: view detail for a specific variant
-        if (btnRowDetails && detailRows) {
+        if (btnRowDetails) {
             btnRowDetails.forEach(function (btn) {
                 btn.addEventListener('click', function () {
                     const variantId = btn.getAttribute('data-variant-id');
@@ -318,21 +408,24 @@
                         return;
                     }
 
+                    // Set big title from summary row product name
+                    const summaryRow = btn.closest('tr');
+                    const productCell = summaryRow ? summaryRow.querySelector('td[data-col="product"]') : null;
+                    const productName = productCell ? productCell.textContent.trim() : '';
+                    if (detailTitle) {
+                        detailTitle.textContent = productName ? productName : 'Inventory details';
+                    }
+
                     // Show detail view
                     summaryView.classList.add('hidden');
                     detailView.classList.remove('hidden');
 
-                    // Filter rows by variant id
-                    detailRows.forEach(function (row) {
-                        const rowVariantId = row.getAttribute('data-variant-id');
-                        if (rowVariantId === variantId) {
-                            row.classList.remove('hidden');
-                        } else {
-                            row.classList.add('hidden');
-                        }
-                    });
+                    if (btnBack) {
+                        btnBack.classList.remove('hidden');
+                    }
 
-                    updateDetailSummary();
+                    // Render grouped rows for this variant
+                    renderGroupedRows(variantId);
 
                     // Scroll to detail table
                     detailView.scrollIntoView({behavior: 'smooth', block: 'start'});
@@ -341,25 +434,31 @@
         }
 
         // Back from detail to summary: show all summary + all detail rows
-        if (btnBack && detailRows) {
+        if (btnBack) {
             btnBack.addEventListener('click', function () {
                 // Show summary, hide detail
                 summaryView.classList.remove('hidden');
                 detailView.classList.add('hidden');
 
-                // Reset all detail rows to visible for next time
-                detailRows.forEach(function (row) {
-                    row.classList.remove('hidden');
-                });
-
-                updateDetailSummary();
+                // Reset title
+                if (detailTitle) {
+                    detailTitle.textContent = 'Inventory details';
+                }
+                if (btnBack) {
+                    btnBack.classList.add('hidden');
+                }
 
                 summaryView.scrollIntoView({behavior: 'smooth', block: 'start'});
             });
         }
 
-        // Khi load trang lần đầu, nếu đang ở chế độ chi tiết (ví dụ sau redirect),
-        // vẫn tính tổng số máy và tổng tiền đang hiển thị.
-        updateDetailSummary();
+        // Initial render (search mode): show grouped table for all items
+        // If the page is loaded with keyword search, the detail view is already visible.
+        if (!detailView.classList.contains('hidden')) {
+            renderGroupedRows(null);
+            if (btnBack) {
+                btnBack.classList.remove('hidden');
+            }
+        }
     })();
 </script>

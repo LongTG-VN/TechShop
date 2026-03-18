@@ -6,6 +6,7 @@ package dao;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import model.CartItem;
@@ -18,21 +19,27 @@ import utils.DBContext;
  */
 public class CartItemDAO extends DBContext {
 
-    // 1. GET ALL (Lấy toàn bộ - Dùng cho Admin xem chơi thôi)
+    private CartItem mapCartItem(ResultSet rs) throws SQLException {
+        return new CartItem(
+                rs.getInt("cart_item_id"),
+                rs.getInt("customer_id"),
+                rs.getInt("variant_id"),
+                rs.getInt("quantity"),
+                rs.getTimestamp("created_at")
+        );
+    }
+
+    // 1) Lấy toàn bộ cart_items (ít dùng, chủ yếu debug/admin)
     public List<CartItem> getAllCartItems() {
         List<CartItem> list = new ArrayList<>();
-        String sql = "SELECT * FROM cart_items";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery();
+        if (conn == null) {
+            return list;
+        }
+        String sql = "SELECT cart_item_id, customer_id, variant_id, quantity, created_at FROM cart_items";
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                list.add(new CartItem(
-                        rs.getInt("cart_item_id"),
-                        rs.getInt("customer_id"),
-                        rs.getInt("variant_id"),
-                        rs.getInt("quantity"),
-                        rs.getTimestamp("created_at")
-                ));
+                list.add(mapCartItem(rs));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -40,22 +47,19 @@ public class CartItemDAO extends DBContext {
         return list;
     }
 
-    // 2. GET BY CUSTOMER ID (Quan trọng: Lấy giỏ hàng của 1 khách)
+    // 2) Lấy giỏ hàng (raw) của 1 khách
     public List<CartItem> getCartByCustomerId(int customerId) {
         List<CartItem> list = new ArrayList<>();
-        String sql = "SELECT * FROM cart_items WHERE customer_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        if (conn == null) {
+            return list;
+        }
+        String sql = "SELECT cart_item_id, customer_id, variant_id, quantity, created_at FROM cart_items WHERE customer_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, customerId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                list.add(new CartItem(
-                        rs.getInt("cart_item_id"),
-                        rs.getInt("customer_id"),
-                        rs.getInt("variant_id"),
-                        rs.getInt("quantity"),
-                        rs.getTimestamp("created_at")
-                ));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapCartItem(rs));
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -63,21 +67,18 @@ public class CartItemDAO extends DBContext {
         return list;
     }
 
-    // 3. GET BY ID (Lấy 1 dòng cụ thể)
+    // 3) Lấy 1 dòng cart_item theo id
     public CartItem getCartItemById(int id) {
-        String sql = "SELECT * FROM cart_items WHERE cart_item_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        if (conn == null) {
+            return null;
+        }
+        String sql = "SELECT cart_item_id, customer_id, variant_id, quantity, created_at FROM cart_items WHERE cart_item_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return new CartItem(
-                        rs.getInt("cart_item_id"),
-                        rs.getInt("customer_id"),
-                        rs.getInt("variant_id"),
-                        rs.getInt("quantity"),
-                        rs.getTimestamp("created_at")
-                );
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapCartItem(rs);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -85,16 +86,16 @@ public class CartItemDAO extends DBContext {
         return null;
     }
 
-    // 4. INSERT (Thêm vào giỏ)
-    // Lưu ý: customer_id và variant_id không được trùng cặp đã có
+    // 4) Thêm item vào giỏ
     public boolean insertCartItem(CartItem item) {
+        if (conn == null || item == null) {
+            return false;
+        }
         String sql = "INSERT INTO cart_items (customer_id, variant_id, quantity) VALUES (?, ?, ?)";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, item.getCustomer_id());
             ps.setInt(2, item.getVariant_id());
             ps.setInt(3, item.getQuantity());
-            // created_at tự động lấy GETDATE() bên SQL
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -102,11 +103,13 @@ public class CartItemDAO extends DBContext {
         return false;
     }
 
-    // 5. UPDATE (Sửa số lượng)
+    // 5) Update số lượng theo cart_item_id
     public boolean updateCartItem(CartItem item) {
+        if (conn == null || item == null) {
+            return false;
+        }
         String sql = "UPDATE cart_items SET quantity = ? WHERE cart_item_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, item.getQuantity());
             ps.setInt(2, item.getCart_item_id());
             return ps.executeUpdate() > 0;
@@ -116,11 +119,13 @@ public class CartItemDAO extends DBContext {
         return false;
     }
 
-    // 6. DELETE (Xóa khỏi giỏ)
+    // 6) Xóa 1 dòng khỏi giỏ
     public void deleteCartItem(int id) {
+        if (conn == null) {
+            return;
+        }
         String sql = "DELETE FROM cart_items WHERE cart_item_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             ps.executeUpdate();
         } catch (Exception e) {
@@ -132,6 +137,9 @@ public class CartItemDAO extends DBContext {
      * Xóa toàn bộ giỏ hàng của một khách (sau khi đặt hàng thành công).
      */
     public void deleteCartByCustomerId(int customerId) {
+        if (conn == null) {
+            return;
+        }
         String sql = "DELETE FROM cart_items WHERE customer_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, customerId);
@@ -141,22 +149,19 @@ public class CartItemDAO extends DBContext {
         }
     }
 
-    // 7. Lấy 1 dòng giỏ theo customer + variant (để add: nếu có thì update quantity)
+    // 7) Lấy 1 dòng theo (customer_id, variant_id) để check tồn tại trước khi add
     public CartItem getByCustomerAndVariant(int customerId, int variantId) {
-        String sql = "SELECT * FROM cart_items WHERE customer_id = ? AND variant_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        if (conn == null) {
+            return null;
+        }
+        String sql = "SELECT cart_item_id, customer_id, variant_id, quantity, created_at FROM cart_items WHERE customer_id = ? AND variant_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, customerId);
             ps.setInt(2, variantId);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return new CartItem(
-                        rs.getInt("cart_item_id"),
-                        rs.getInt("customer_id"),
-                        rs.getInt("variant_id"),
-                        rs.getInt("quantity"),
-                        rs.getTimestamp("created_at")
-                );
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapCartItem(rs);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -164,34 +169,37 @@ public class CartItemDAO extends DBContext {
         return null;
     }
 
-    // 8. Lấy giỏ của 1 khách kèm tên SP, SKU, giá (để hiển thị trang cart)
+    // 8) Lấy giỏ để hiển thị trang cart (kèm tên sp, sku, giá, thumbnail)
     public List<CartItemDisplay> getCartDisplayByCustomerId(int customerId) {
         List<CartItemDisplay> list = new ArrayList<>();
+        if (conn == null) {
+            return list;
+        }
+        // Lấy thumbnail bằng subquery TOP 1 để khỏi phải GROUP BY/MAX.
         String sql = "SELECT c.cart_item_id, c.variant_id, c.quantity, "
                 + "p.name AS product_name, pv.sku, pv.selling_price, "
-                + "MAX(CAST(CASE WHEN pi.is_thumbnail = 1 THEN pi.image_url ELSE NULL END AS VARCHAR(255))) AS thumbnail_url, "
-                + "MAX(c.created_at) AS created_at "
+                + "(SELECT TOP 1 pi.image_url "
+                + " FROM product_images pi "
+                + " WHERE pi.product_id = p.product_id AND pi.is_thumbnail = 1) AS thumbnail_url "
                 + "FROM cart_items c "
                 + "JOIN product_variants pv ON c.variant_id = pv.variant_id "
                 + "JOIN products p ON pv.product_id = p.product_id "
-                + "LEFT JOIN product_images pi ON p.product_id = pi.product_id "
                 + "WHERE c.customer_id = ? "
-                + "GROUP BY c.cart_item_id, c.variant_id, c.quantity, p.name, pv.sku, pv.selling_price "
-                + "ORDER BY created_at DESC";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+                + "ORDER BY c.created_at DESC";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, customerId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                list.add(new CartItemDisplay(
-                        rs.getInt("cart_item_id"),
-                        rs.getInt("variant_id"),
-                        rs.getString("product_name"),
-                        rs.getString("sku"),
-                        rs.getLong("selling_price"),
-                        rs.getInt("quantity"),
-                        rs.getString("thumbnail_url")
-                ));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new CartItemDisplay(
+                            rs.getInt("cart_item_id"),
+                            rs.getInt("variant_id"),
+                            rs.getString("product_name"),
+                            rs.getString("sku"),
+                            rs.getLong("selling_price"),
+                            rs.getInt("quantity"),
+                            rs.getString("thumbnail_url")
+                    ));
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -203,13 +211,16 @@ public class CartItemDAO extends DBContext {
      * Tổng số lượng sản phẩm trong giỏ (tổng quantity các dòng)
      */
     public int getCartTotalQuantityByCustomerId(int customerId) {
+        if (conn == null) {
+            return 0;
+        }
         String sql = "SELECT COALESCE(SUM(quantity), 0) FROM cart_items WHERE customer_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, customerId);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -221,49 +232,20 @@ public class CartItemDAO extends DBContext {
      * Số dòng sản phẩm trong giỏ (số sản phẩm khác nhau)
      */
     public int getCartItemCountByCustomerId(int customerId) {
+        if (conn == null) {
+            return 0;
+        }
         String sql = "SELECT COUNT(*) FROM cart_items WHERE customer_id = ?";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, customerId);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return 0;
-    }
-
-    // --- MAIN TEST ---
-    public static void main(String[] args) {
-        CartItemDAO dao = new CartItemDAO();
-
-        // 1. List All
-        System.out.println("--- LIST ALL ---");
-        List<CartItem> list = dao.getAllCartItems();
-        for (CartItem c : list) {
-            System.out.println(c);
-        }
-
-        // 2. Insert Test
-        // YÊU CẦU: Phải có Customer ID = 1 và Variant ID = 1 trong DB trước
-        System.out.println("--- INSERT ---");
-        // Giả sử khách hàng ID 1 mua sản phẩm ID 1, số lượng 2
-        CartItem newItem = new CartItem(0, 1, 2, 2, null);
-        dao.insertCartItem(newItem);
-        System.out.println("Da them vao gio hang.");
-
-        // 3. Update Test (Sửa số lượng)
-        // Giả sử item vừa thêm có ID là 1 (bạn cần thay ID thực tế)
-        // CartItem itemToUpdate = dao.getCartItemById(1);
-        // if(itemToUpdate != null) {
-        //     itemToUpdate.setQuantity(5); // Tăng lên 5 cái
-        //     dao.updateCartItem(itemToUpdate);
-        //     System.out.println("Da update so luong thanh 5.");
-        // }
-        // 4. Delete Test
-        // dao.deleteCartItem(1);
-        // System.out.println("Da xoa khoi gio hang.");
     }
 }

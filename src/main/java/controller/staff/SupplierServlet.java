@@ -24,6 +24,21 @@ public class SupplierServlet extends HttpServlet {
         dao = new SupplierDAO();
     }
 
+    private void redirectToSupplierManagement(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.sendRedirect(request.getContextPath() + "/staffservlet?action=supplierManagement");
+    }
+
+    private int parseIntSafe(String s, int defaultValue) {
+        if (s == null) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(s.trim());
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -32,95 +47,78 @@ public class SupplierServlet extends HttpServlet {
 
         String action = request.getParameter("action");
 
-        if ("add".equals(action)) {
-            // Show add form (inside staff template)
-            request.setAttribute("contentPage", "/pages/SupplierManagementPage/addSupplier.jsp");
-            request.getRequestDispatcher("/template/staffTemplate.jsp").forward(request, response);
+        if (action == null || action.isBlank()) {
+            redirectToSupplierManagement(request, response);
             return;
         }
 
-        if ("view".equals(action)) {
-            String idStr = request.getParameter("id");
-            if (idStr != null && !idStr.isEmpty()) {
-                try {
-                    int id = Integer.parseInt(idStr);
+        String page = "/pages/SupplierManagementPage/supplierManagement.jsp";
+        switch (action) {
+            case "add":
+                page = "/pages/SupplierManagementPage/addSupplier.jsp";
+                break;
+            case "view": {
+                int id = parseIntSafe(request.getParameter("id"), 0);
+                if (id > 0) {
                     Supplier s = (Supplier) dao.getSupplierById(id);
                     request.setAttribute("supplier", s);
-                } catch (NumberFormatException e) {
-                    e.printStackTrace();
                 }
+                page = "/pages/SupplierManagementPage/viewSupplier.jsp";
+                break;
             }
-            request.setAttribute("contentPage", "/pages/SupplierManagementPage/viewSupplier.jsp");
-            request.getRequestDispatcher("/template/staffTemplate.jsp").forward(request, response);
-            return;
-        }
-
-        if ("edit".equals(action)) {
-            String idStr = request.getParameter("id");
-            if (idStr != null && !idStr.isEmpty()) {
-                try {
-                    int id = Integer.parseInt(idStr);
+            case "edit": {
+                int id = parseIntSafe(request.getParameter("id"), 0);
+                if (id > 0) {
                     Supplier s = (Supplier) dao.getSupplierById(id);
                     request.setAttribute("supplier", s);
-                } catch (NumberFormatException e) {
-                    e.printStackTrace();
                 }
+                page = "/pages/SupplierManagementPage/editSupplier.jsp";
+                break;
             }
-            request.setAttribute("contentPage", "/pages/SupplierManagementPage/editSupplier.jsp");
-            request.getRequestDispatcher("/template/staffTemplate.jsp").forward(request, response);
-            return;
-        }
-
-        if ("deactivate".equals(action)) {
-            String idStr = request.getParameter("id");
-            if (idStr != null && !idStr.isEmpty()) {
-                try {
-                    int id = Integer.parseInt(idStr);
+            case "deactivate": {
+                int id = parseIntSafe(request.getParameter("id"), 0);
+                if (id > 0) {
                     dao.deactivateSupplier(id);
                     setMsg(request.getSession(), "Supplier deactivated.", "success");
-                } catch (NumberFormatException e) {
+                } else {
                     setMsg(request.getSession(), "Invalid ID.", "danger");
                 }
+                redirectToSupplierManagement(request, response);
+                return;
             }
-            response.sendRedirect(request.getContextPath() + "/staffservlet?action=supplierManagement");
-            return;
-        }
-
-        if ("restore".equals(action)) {
-            String idStr = request.getParameter("id");
-            if (idStr != null && !idStr.isEmpty()) {
-                try {
-                    int id = Integer.parseInt(idStr);
+            case "restore": {
+                int id = parseIntSafe(request.getParameter("id"), 0);
+                if (id > 0) {
                     dao.restoreSupplier(id);
                     setMsg(request.getSession(), "Supplier reactivated.", "success");
-                } catch (NumberFormatException e) {
+                } else {
                     setMsg(request.getSession(), "Invalid ID.", "danger");
                 }
+                redirectToSupplierManagement(request, response);
+                return;
             }
-            response.sendRedirect(request.getContextPath() + "/staffservlet?action=supplierManagement");
-            return;
-        }
-
-        if ("delete".equals(action)) {
-            String idStr = request.getParameter("id");
-            if (idStr != null && !idStr.isEmpty()) {
-                try {
-                    int id = Integer.parseInt(idStr);
+            case "delete": {
+                int id = parseIntSafe(request.getParameter("id"), 0);
+                if (id > 0) {
                     if (dao.deleteSupplierIfNoReferences(id)) {
                         setMsg(request.getSession(), "Supplier deleted.", "success");
                     } else {
                         setMsg(request.getSession(), "Cannot delete: supplier is used in import receipts.", "danger");
                     }
-                } catch (NumberFormatException e) {
+                } else {
                     setMsg(request.getSession(), "Invalid ID.", "danger");
                 }
+                redirectToSupplierManagement(request, response);
+                return;
             }
-            response.sendRedirect(request.getContextPath() + "/staffservlet?action=supplierManagement");
-            return;
+            default: {
+                redirectToSupplierManagement(request, response);
+                return;
+            }
         }
 
-        // Default: redirect to list
-        response.sendRedirect(request.getContextPath() + "/staffservlet?action=supplierManagement");
+        request.setAttribute("contentPage", page);
+        request.getRequestDispatcher("/template/staffTemplate.jsp").forward(request, response);
     }
 
     @Override
@@ -131,57 +129,74 @@ public class SupplierServlet extends HttpServlet {
 
         String action = request.getParameter("action");
 
-        if ("add".equals(action)) {
-            String name = request.getParameter("supplier_name");
-            String phone = request.getParameter("phone");
-            String isActive = request.getParameter("is_active");
-
-            if (name != null && !name.trim().isEmpty() && phone != null && !phone.trim().isEmpty()) {
-                if (!phone.matches("[0-9]{10}")) {
-                    setMsg(request.getSession(), "Phone must be exactly 10 digits.", "danger");
-                } else {
-                    Supplier s = new Supplier(0, name.trim(), phone.trim(), "1".equals(isActive));
-                    dao.insertSupplier(s);
-                    setMsg(request.getSession(), "Supplier added successfully.", "success");
-                }
-            } else {
-                setMsg(request.getSession(), "Please fill in name and phone.", "danger");
-            }
-            response.sendRedirect(request.getContextPath() + "/staffservlet?action=supplierManagement");
+        if (action == null || action.isBlank()) {
+            redirectToSupplierManagement(request, response);
             return;
         }
 
-        if ("update".equals(action)) {
-            String idStr = request.getParameter("supplier_id");
-            String name = request.getParameter("supplier_name");
-            String phone = request.getParameter("phone");
-            String isActive = request.getParameter("is_active");
+        switch (action) {
+            case "add": {
+                String name = request.getParameter("supplier_name");
+                String phone = request.getParameter("phone");
+                String isActive = request.getParameter("is_active");
 
-            if (idStr != null && !idStr.isEmpty() && name != null && !name.trim().isEmpty() && phone != null && !phone.trim().isEmpty()) {
-                if (!phone.matches("[0-9]{10}")) {
-                    setMsg(request.getSession(), "Phone must be exactly 10 digits.", "danger");
-                } else {
-                    try {
-                        int id = Integer.parseInt(idStr);
-                        Supplier s = new Supplier(id, name.trim(), phone.trim(), "1".equals(isActive));
-                        dao.updateSupplier(s);
-                        setMsg(request.getSession(), "Supplier updated successfully.", "success");
-                    } catch (NumberFormatException e) {
-                        setMsg(request.getSession(), "Invalid ID.", "danger");
+                if (name != null && !name.trim().isEmpty() && phone != null && !phone.trim().isEmpty()) {
+                    if (!phone.matches("[0-9]{10}")) {
+                        setMsg(request.getSession(), "Phone must be exactly 10 digits.", "danger");
+                    } else {
+                        Supplier s = new Supplier(0, name.trim(), phone.trim(), "1".equals(isActive));
+                        dao.insertSupplier(s);
+                        setMsg(request.getSession(), "Supplier added successfully.", "success");
                     }
+                } else {
+                    setMsg(request.getSession(), "Please fill in name and phone.", "danger");
                 }
-            } else {
-                setMsg(request.getSession(), "Please fill in all required fields.", "danger");
+                break;
             }
-            response.sendRedirect(request.getContextPath() + "/staffservlet?action=supplierManagement");
-            return;
+            case "update": {
+                String idStr = request.getParameter("supplier_id");
+                String name = request.getParameter("supplier_name");
+                String phone = request.getParameter("phone");
+                String isActive = request.getParameter("is_active");
+
+                if (idStr != null && !idStr.isEmpty() && name != null && !name.trim().isEmpty() && phone != null && !phone.trim().isEmpty()) {
+                    if (!phone.matches("[0-9]{10}")) {
+                        setMsg(request.getSession(), "Phone must be exactly 10 digits.", "danger");
+                    } else {
+                        try {
+                            int id = parseIntSafe(idStr, 0);
+                            Supplier s = new Supplier(id, name.trim(), phone.trim(), "1".equals(isActive));
+                            dao.updateSupplier(s);
+                            setMsg(request.getSession(), "Supplier updated successfully.", "success");
+                        } catch (Exception e) {
+                            setMsg(request.getSession(), "Invalid ID.", "danger");
+                        }
+                    }
+                } else {
+                    setMsg(request.getSession(), "Please fill in all required fields.", "danger");
+                }
+                break;
+            }
+            default: {
+                break;
+            }
         }
 
-        response.sendRedirect(request.getContextPath() + "/staffservlet?action=supplierManagement");
+        redirectToSupplierManagement(request, response);
     }
 
     private void setMsg(HttpSession session, String msg, String type) {
         session.setAttribute("msg", msg);
         session.setAttribute("msgType", type);
+    }
+
+    /**
+     * Returns a short description of the servlet.
+     *
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo() {
+        return "Short description";
     }
 }

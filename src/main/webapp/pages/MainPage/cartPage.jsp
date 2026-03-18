@@ -31,14 +31,14 @@
             if (t)
                 t.remove();
         }, 3000);</script>
-</c:if>
+    </c:if>
 
 <c:if test="${not empty requestScope.cartErrorMsg}">
     <div class="max-w-[1200px] mx-auto px-4 mt-4">
         <div class="mb-4 flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-2xl px-5 py-4">
             <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
             </svg>
             <div>
                 <p class="font-bold text-sm">Order failed — Product out of stock</p>
@@ -172,16 +172,19 @@
 <script>
     (function () {
         var container = document.getElementById('cartItemsContainer');
-        if (!container) return;
+        if (!container)
+            return;
 
         function formatVnd(num) {
             return Number(num).toLocaleString('vi-VN') + 'đ';
         }
 
         function showCartErrorBanner(message) {
-            if (!message) return;
+            if (!message)
+                return;
             var wrap = document.querySelector('.max-w-[1200px]');
-            if (!wrap) return;
+            if (!wrap)
+                return;
             var existing = document.getElementById('cart-error-banner');
             if (existing) {
                 existing.querySelector('.cart-error-text').textContent = message;
@@ -189,18 +192,19 @@
                 return;
             }
             var html = ''
-                + '<div id="cart-error-banner" class="mb-6 flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-2xl px-5 py-4">'
-                + '  <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">'
-                + '    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>'
-                + '  </svg>'
-                + '  <div>'
-                + '    <p class="font-bold text-sm">Order failed — Product out of stock</p>'
-                + '    <p class="text-sm mt-0.5 cart-error-text"></p>'
-                + '  </div>'
-                + '</div>';
+                    + '<div id="cart-error-banner" class="mb-6 flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-2xl px-5 py-4">'
+                    + '  <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">'
+                    + '    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>'
+                    + '  </svg>'
+                    + '  <div>'
+                    + '    <p class="font-bold text-sm">Order failed — Product out of stock</p>'
+                    + '    <p class="text-sm mt-0.5 cart-error-text"></p>'
+                    + '  </div>'
+                    + '</div>';
             wrap.insertAdjacentHTML('afterbegin', html);
             var textEl = document.querySelector('#cart-error-banner .cart-error-text');
-            if (textEl) textEl.textContent = message;
+            if (textEl)
+                textEl.textContent = message;
         }
 
         function submitCartQtyAjax(form, newQty, oldQty) {
@@ -226,7 +230,8 @@
                 },
                 body: params.toString()
             }).then(function (r) {
-                if (!r.ok) throw new Error('HTTP ' + r.status);
+                if (!r.ok)
+                    throw new Error('HTTP ' + r.status);
                 var ct = (r.headers.get('content-type') || '').toLowerCase();
                 if (ct.indexOf('application/json') === -1) {
                     form.classList.remove('opacity-60', 'pointer-events-none');
@@ -235,14 +240,18 @@
                 return r.json();
             }).then(function (data) {
                 form.classList.remove('opacity-60', 'pointer-events-none');
-                if (!data) return;
+                if (!data)
+                    return;
                 if (data.success !== true) {
                     // revert UI
                     var qtyInput = form.querySelector('input[name="quantity"]');
                     var displayEl = form.querySelector('.cart-qty-display');
-                    if (qtyInput) qtyInput.value = oldQty;
-                    if (displayEl) displayEl.textContent = oldQty;
-                    if (data.message) showCartErrorBanner(data.message);
+                    if (qtyInput)
+                        qtyInput.value = oldQty;
+                    if (displayEl)
+                        displayEl.textContent = oldQty;
+                    if (data.message)
+                        showCartErrorBanner(data.message);
                     return;
                 }
                 // update subtotal & totals
@@ -252,14 +261,18 @@
                 if (typeof data.totalAmount === 'number') {
                     var subEl = document.getElementById('cartSubtotal');
                     var totalEl = document.getElementById('cartTotal');
-                    if (subEl) subEl.textContent = formatVnd(data.totalAmount);
-                    if (totalEl) totalEl.textContent = formatVnd(data.totalAmount);
+                    if (subEl)
+                        subEl.textContent = formatVnd(data.totalAmount);
+                    if (totalEl)
+                        totalEl.textContent = formatVnd(data.totalAmount);
                 }
                 var badge = document.getElementById('navbarCartCount');
                 if (badge && typeof data.cartCount === 'number') {
                     badge.textContent = data.cartCount;
-                    if (data.cartCount > 0) badge.classList.remove('hidden');
-                    else badge.classList.add('hidden');
+                    if (data.cartCount > 0)
+                        badge.classList.remove('hidden');
+                    else
+                        badge.classList.add('hidden');
                 }
             }).catch(function () {
                 form.classList.remove('opacity-60', 'pointer-events-none');
@@ -269,23 +282,28 @@
         // Gán click listener trực tiếp cho nút +/-
         container.addEventListener('click', function (e) {
             var btn = e.target.closest('.cart-qty-minus, .cart-qty-plus');
-            if (!btn) return;
+            if (!btn)
+                return;
             e.preventDefault();
             var form = btn.closest('form');
-            if (!form || !form.classList.contains('cart-qty-form')) return;
+            if (!form || !form.classList.contains('cart-qty-form'))
+                return;
 
             var qtyInput = form.querySelector('input[name="quantity"]');
             var displayEl = form.querySelector('.cart-qty-display');
-            if (!qtyInput) return;
+            if (!qtyInput)
+                return;
 
             var cur = parseInt(qtyInput.value, 10) || 1;
             var delta = btn.classList.contains('cart-qty-minus') ? -1 : 1;
             var newQty = cur + delta;
-            if (newQty < 1) newQty = 1;
+            if (newQty < 1)
+                newQty = 1;
 
             // Update UI ngay lập tức
             qtyInput.value = newQty;
-            if (displayEl) displayEl.textContent = newQty;
+            if (displayEl)
+                displayEl.textContent = newQty;
 
             // Gửi AJAX để sync với server / kiểm tra kho
             submitCartQtyAjax(form, newQty, cur);

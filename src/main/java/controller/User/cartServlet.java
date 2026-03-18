@@ -19,6 +19,39 @@ import java.util.List;
 @WebServlet(name = "cartServlet", urlPatterns = {"/cartservlet"})
 public class cartServlet extends HttpServlet {
 
+    private void redirectToCart(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.sendRedirect(request.getContextPath() + "/cartservlet");
+    }
+
+    private void redirectToLogin(HttpServletRequest request, HttpServletResponse response, String from) throws IOException {
+        String url = request.getContextPath() + "/userservlet?action=loginPage";
+        if (from != null && !from.isBlank()) {
+            url += "&from=" + from;
+        }
+        response.sendRedirect(url);
+    }
+
+    private void setMsg(HttpServletRequest request, String msg, String type) {
+        request.getSession().setAttribute("msg", msg);
+        request.getSession().setAttribute("msgType", type);
+    }
+
+    private int parseIntSafe(String s, int defaultValue) {
+        if (s == null) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(s.trim());
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    private boolean isAjax(HttpServletRequest request) {
+        return "XMLHttpRequest".equals(request.getHeader("X-Requested-With"))
+                || "1".equals(request.getParameter("ajax"));
+    }
+
     private int getCustomerId(HttpServletRequest request) {
         Object sid = request.getSession(false) != null ? request.getSession().getAttribute("customerId") : null;
         if (sid instanceof Integer) {
@@ -62,6 +95,22 @@ public class cartServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Trả về customerId hợp lệ (>0) và tồn tại trong DB. Nếu session/cookie bị
+     * "cũ" (customer không còn), sẽ auto clear session và trả về -1.
+     */
+    private int getValidCustomerId(HttpServletRequest request) {
+        int customerId = getCustomerId(request);
+        if (customerId <= 0) {
+            return -1;
+        }
+        if (new CustomerDAO().getCustomerById(customerId) == null) {
+            request.getSession().removeAttribute("customerId");
+            return -1;
+        }
+        return customerId;
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -69,11 +118,7 @@ public class cartServlet extends HttpServlet {
         response.setHeader("Pragma", "no-cache");
         response.setDateHeader("Expires", 0);
 
-        int customerId = getCustomerId(request);
-        if (customerId > 0 && new CustomerDAO().getCustomerById(customerId) == null) {
-            request.getSession().removeAttribute("customerId");
-            customerId = -1;
-        }
+        int customerId = getValidCustomerId(request);
         List<CartItemDisplay> listCart = new java.util.ArrayList<>();
         if (customerId > 0) {
             CartItemDAO cartDao = new CartItemDAO();
@@ -108,274 +153,235 @@ public class cartServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
-        boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"))
-                || "1".equals(request.getParameter("ajax"));
+        boolean ajax = isAjax(request);
 
-        if ("add".equals(action)) {
-            int customerId = getCustomerId(request);
-            if (customerId <= 0) {
-                if (isAjax) {
-                    sendJson(response, false, 0, 0, "Please log in to add items to your cart.");
-                } else {
-                    response.sendRedirect(request.getContextPath() + "/userservlet?action=loginPage&from=cart");
-                }
-                return;
-            }
-            if (new CustomerDAO().getCustomerById(customerId) == null) {
-                request.getSession().removeAttribute("customerId");
-                String msg = "Your session is no longer valid. Please log in again.";
-                if (isAjax) {
-                    sendJson(response, false, 0, 0, msg);
-                } else {
-                    request.getSession().setAttribute("msg", msg);
-                    request.getSession().setAttribute("msgType", "danger");
-                    response.sendRedirect(request.getContextPath() + "/userservlet?action=loginPage");
-                }
-                return;
-            }
-
-            String vParam = request.getParameter("variant_id");
-            String qParam = request.getParameter("quantity");
-            if (vParam == null || vParam.isEmpty() || qParam == null || qParam.isEmpty()) {
-                if (isAjax) {
-                    sendJson(response, false, 0, 0, "Invalid product data.");
-                } else {
-                    response.sendRedirect(request.getContextPath() + "/cartservlet");
-                }
-                return;
-            }
-
-            int variantId;
-            int quantity;
-            try {
-                variantId = Integer.parseInt(vParam);
-                quantity = Integer.parseInt(qParam);
-                if (quantity < 1) {
-                    quantity = 1;
-                }
-            } catch (NumberFormatException e) {
-                if (isAjax) {
-                    sendJson(response, false, 0, 0, "Invalid quantity.");
-                } else {
-                    response.sendRedirect(request.getContextPath() + "/cartservlet");
-                }
-                return;
-            }
-
-            CartItemDAO cartDao = new CartItemDAO();
-            CartItem existing = cartDao.getByCustomerAndVariant(customerId, variantId);
-
-            // Kiểm tra tồn kho để không cho giỏ vượt quá số lượng còn trong kho
-            InventoryItemDAO invDao = new InventoryItemDAO();
-            int available = invDao.countAvailableByVariantId(variantId);
-            if (available <= 0) {
-                String msg = "This product is out of stock. Please choose another.";
-                if (isAjax) {
-                    sendJson(response, false, 0, 0, msg);
-                } else {
-                    request.getSession().setAttribute("msg", msg);
-                    request.getSession().setAttribute("msgType", "danger");
-                    response.sendRedirect(request.getContextPath() + "/cartservlet");
-                }
-                return;
-            }
-
-            int currentQty = (existing != null) ? existing.getQuantity() : 0;
-            int targetQty = currentQty + quantity;
-            if (targetQty > available) {
-                targetQty = available; // không cho vượt quá tồn kho
-            }
-
-            boolean saved;
-            if (existing != null) {
-                existing.setQuantity(targetQty);
-                saved = cartDao.updateCartItem(existing);
-            } else {
-                CartItem newItem = new CartItem(0, customerId, variantId, targetQty, null);
-                saved = cartDao.insertCartItem(newItem);
-            }
-
-            if (!saved) {
-                String msg = "Could not add item to cart. Please try again.";
-                if (isAjax) {
-                    sendJson(response, false, 0, 0, msg);
-                } else {
-                    request.getSession().setAttribute("msg", msg);
-                    request.getSession().setAttribute("msgType", "danger");
-                    response.sendRedirect(request.getContextPath() + "/cartservlet");
-                }
-                return;
-            }
-
-            if (isAjax) {
-                long totalAmount = 0;
-                List<CartItemDisplay> list = cartDao.getCartDisplayByCustomerId(customerId);
-                int cartCountAjax = (list != null) ? list.size() : 0; // Số sản phẩm khác nhau (như trong giỏ)
-                for (CartItemDisplay d : list) {
-                    totalAmount += d.getSubtotal();
-                }
-                request.getSession().setAttribute("cartCount", cartCountAjax);
-
-                String addMsg;
-                if (quantity > available || currentQty + quantity > available) {
-                    addMsg = "Added to cart with maximum available quantity (" + targetQty + " item(s)).";
-                } else {
-                    addMsg = "Added to cart.";
-                }
-
-                sendJson(response, true, totalAmount, cartCountAjax, addMsg);
-            } else {
-                String addMsg;
-                if (quantity > available || currentQty + quantity > available) {
-                    addMsg = "Added to cart with maximum available quantity (" + targetQty + " item(s)).";
-                    request.getSession().setAttribute("msgType", "danger");
-                } else {
-                    addMsg = "Added to cart.";
-                    request.getSession().setAttribute("msgType", "success");
-                }
-                request.getSession().setAttribute("msg", addMsg);
-                response.sendRedirect(request.getContextPath() + "/cartservlet");
-            }
+        if (action == null || action.isBlank()) {
+            redirectToCart(request, response);
             return;
         }
 
-        if ("update".equals(action)) {
-            int customerId = getCustomerId(request);
-            if (customerId <= 0) {
-                if (isAjax) {
-                    sendJson(response, false, 0, 0, "Please log in again to update your cart.");
+        switch (action) {
+            case "add": {
+                int customerId = getValidCustomerId(request);
+                if (customerId <= 0) {
+                    if (ajax) {
+                        sendJson(response, false, 0, 0, "Please log in to add items to your cart.");
+                    } else {
+                        redirectToLogin(request, response, "cart");
+                    }
+                    return;
+                }
+
+                int variantId = parseIntSafe(request.getParameter("variant_id"), 0);
+                int quantity = parseIntSafe(request.getParameter("quantity"), 1);
+                if (quantity < 1) {
+                    quantity = 1;
+                }
+                if (variantId <= 0) {
+                    if (ajax) {
+                        sendJson(response, false, 0, 0, "Invalid product data.");
+                    } else {
+                        redirectToCart(request, response);
+                    }
+                    return;
+                }
+
+                CartItemDAO cartDao = new CartItemDAO();
+                CartItem existing = cartDao.getByCustomerAndVariant(customerId, variantId);
+
+                // Không cho số lượng trong giỏ vượt quá tồn kho hiện tại.
+                int available = new InventoryItemDAO().countAvailableByVariantId(variantId);
+                if (available <= 0) {
+                    String msg = "This product is out of stock. Please choose another.";
+                    if (ajax) {
+                        sendJson(response, false, 0, 0, msg);
+                    } else {
+                        setMsg(request, msg, "danger");
+                        redirectToCart(request, response);
+                    }
+                    return;
+                }
+
+                int currentQty = (existing != null) ? existing.getQuantity() : 0;
+                int targetQty = currentQty + quantity;
+                if (targetQty > available) {
+                    targetQty = available;
+                }
+
+                boolean saved;
+                if (existing != null) {
+                    existing.setQuantity(targetQty);
+                    saved = cartDao.updateCartItem(existing);
                 } else {
-                    response.sendRedirect(request.getContextPath() + "/cartservlet");
+                    saved = cartDao.insertCartItem(new CartItem(0, customerId, variantId, targetQty, null));
+                }
+
+                if (!saved) {
+                    String msg = "Could not add item to cart. Please try again.";
+                    if (ajax) {
+                        sendJson(response, false, 0, 0, msg);
+                    } else {
+                        setMsg(request, msg, "danger");
+                        redirectToCart(request, response);
+                    }
+                    return;
+                }
+
+                // Trả lại tổng tiền + cartCount để UI cập nhật.
+                List<CartItemDisplay> list = cartDao.getCartDisplayByCustomerId(customerId);
+                int cartCount = (list != null) ? list.size() : 0;
+                long totalAmount = 0;
+                if (list != null) {
+                    for (CartItemDisplay d : list) {
+                        totalAmount += d.getSubtotal();
+                    }
+                }
+                request.getSession().setAttribute("cartCount", cartCount);
+
+                boolean clippedToStock = (currentQty + quantity) > available;
+                String addMsg = clippedToStock
+                        ? "Added to cart with maximum available quantity (" + targetQty + " item(s))."
+                        : "Added to cart.";
+
+                if (ajax) {
+                    sendJson(response, true, totalAmount, cartCount, addMsg);
+                } else {
+                    setMsg(request, addMsg, clippedToStock ? "danger" : "success");
+                    redirectToCart(request, response);
                 }
                 return;
             }
-            if (new CustomerDAO().getCustomerById(customerId) == null) {
-                request.getSession().removeAttribute("customerId");
-                if (isAjax) {
-                    sendJson(response, false, 0, 0, "Your session is no longer valid. Please log in again.");
-                } else {
-                    response.sendRedirect(request.getContextPath() + "/userservlet?action=loginPage");
+            case "update": {
+                int customerId = getValidCustomerId(request);
+                if (customerId <= 0) {
+                    if (ajax) {
+                        sendJson(response, false, 0, 0, "Please log in again to update your cart.");
+                    } else {
+                        redirectToCart(request, response);
+                    }
+                    return;
                 }
-                return;
-            }
-            CartItemDAO cartDao = new CartItemDAO();
-            String idParam = request.getParameter("cart_item_id");
-            String qParam = request.getParameter("quantity");
-            if (idParam != null && qParam != null) {
-                try {
-                    int cartItemId = Integer.parseInt(idParam);
-                    int quantity = Integer.parseInt(qParam);
-                    if (quantity >= 1) {
-                        CartItem item = cartDao.getCartItemById(cartItemId);
-                        if (item != null && item.getCustomer_id() == customerId) {
 
-                            // Kiểm tra tồn kho trước khi cập nhật số lượng
-                            InventoryItemDAO invDao = new InventoryItemDAO();
-                            int available = invDao.countAvailableByVariantId(item.getVariant_id());
+                CartItemDAO cartDao = new CartItemDAO();
+                int cartItemId = parseIntSafe(request.getParameter("cart_item_id"), 0);
+                int quantity = parseIntSafe(request.getParameter("quantity"), 0);
 
-                            if (isAjax) {
-                                // Với AJAX: nếu không đủ hàng thì giữ nguyên quantity cũ và trả lỗi để JS hiển thị thông báo + revert UI
-                                if (available <= 0 || quantity > available) {
-                                    ProductVariantDAO pvDao = new ProductVariantDAO();
-                                    ProductVariant v = pvDao.getVariantById(item.getVariant_id());
-                                    String productName = (v != null && v.getProductName() != null) ? v.getProductName() : "product";
-                                    String errorMsg = "Product \"" + productName + "\" does not have enough stock. Please update your cart or contact the store.";
-                                    sendJson(response, false, 0, 0, errorMsg);
-                                    return;
-                                }
-                                // Đủ hàng -> cập nhật đúng quantity user chọn
-                                item.setQuantity(quantity);
-                                if (!cartDao.updateCartItem(item)) {
-                                    sendJson(response, false, 0, 0, "Could not update cart. Please try again.");
-                                    return;
-                                }
+                if (cartItemId > 0 && quantity >= 1) {
+                    CartItem item = cartDao.getCartItemById(cartItemId);
+                    if (item != null && item.getCustomer_id() == customerId) {
+                        int available = new InventoryItemDAO().countAvailableByVariantId(item.getVariant_id());
+
+                        if (ajax) {
+                            // AJAX: không đủ hàng thì trả lỗi để JS tự revert UI.
+                            if (available <= 0 || quantity > available) {
+                                ProductVariant v = new ProductVariantDAO().getVariantById(item.getVariant_id());
+                                String productName = (v != null && v.getProductName() != null) ? v.getProductName() : "product";
+                                String errorMsg = "Product \"" + productName + "\" does not have enough stock. Please update your cart or contact the store.";
+                                sendJson(response, false, 0, 0, errorMsg);
+                                return;
+                            }
+
+                            item.setQuantity(quantity);
+                            if (!cartDao.updateCartItem(item)) {
+                                sendJson(response, false, 0, 0, "Could not update cart. Please try again.");
+                                return;
+                            }
+                        } else {
+                            // Submit thường: tự clamp theo tồn kho và dùng toast.
+                            if (available <= 0) {
+                                cartDao.deleteCartItem(cartItemId);
+                                setMsg(request, "Item is out of stock and has been removed from your cart.", "danger");
                             } else {
-                                // Không phải AJAX (submit thường): tự động chỉnh quantity để khớp tồn kho và dùng toast
-                                if (available <= 0) {
-                                    cartDao.deleteCartItem(cartItemId);
-                                    request.getSession().setAttribute("msg", "Item is out of stock and has been removed from your cart.");
-                                    request.getSession().setAttribute("msgType", "danger");
-                                } else {
-                                    int newQty = quantity;
-                                    if (quantity > available) {
-                                        newQty = available; // tự chỉnh về mức tối đa còn trong kho
-                                        ProductVariantDAO pvDao = new ProductVariantDAO();
-                                        ProductVariant v = pvDao.getVariantById(item.getVariant_id());
-                                        String productName = (v != null && v.getProductName() != null) ? v.getProductName() : "product";
-                                        String warnMsg = "Product \"" + productName + "\" only has " + available + " in stock. Cart quantity has been adjusted to " + available + ".";
-                                        request.getSession().setAttribute("msg", warnMsg);
-                                        request.getSession().setAttribute("msgType", "danger");
-                                    }
-                                    item.setQuantity(newQty);
-                                    if (!cartDao.updateCartItem(item)) {
-                                        request.getSession().setAttribute("msg", "Could not update cart. Please try again.");
-                                        request.getSession().setAttribute("msgType", "danger");
-                                    }
+                                int newQty = quantity;
+                                if (quantity > available) {
+                                    newQty = available;
+                                    ProductVariant v = new ProductVariantDAO().getVariantById(item.getVariant_id());
+                                    String productName = (v != null && v.getProductName() != null) ? v.getProductName() : "product";
+                                    String warnMsg = "Product \"" + productName + "\" only has " + available + " in stock. Cart quantity has been adjusted to " + available + ".";
+                                    setMsg(request, warnMsg, "danger");
+                                }
+                                item.setQuantity(newQty);
+                                if (!cartDao.updateCartItem(item)) {
+                                    setMsg(request, "Could not update cart. Please try again.", "danger");
                                 }
                             }
                         }
                     }
-                } catch (NumberFormatException ignored) {
                 }
-            }
-            if (isAjax) {
-                long totalAmount = 0;
-                List<CartItemDisplay> list = cartDao.getCartDisplayByCustomerId(customerId);
-                int cartCountAjax = (list != null) ? list.size() : 0; // Số sản phẩm khác nhau (như badge)
-                for (CartItemDisplay d : list) {
-                    totalAmount += d.getSubtotal();
-                }
-                request.getSession().setAttribute("cartCount", cartCountAjax);
-                sendJson(response, true, totalAmount, cartCountAjax, null);
-            } else {
-                response.sendRedirect(request.getContextPath() + "/cartservlet");
-            }
-            return;
-        }
 
-        if ("remove".equals(action)) {
-            int customerId = getCustomerId(request);
-            if (customerId <= 0) {
-                response.sendRedirect(request.getContextPath() + "/cartservlet");
+                if (ajax) {
+                    List<CartItemDisplay> list = cartDao.getCartDisplayByCustomerId(customerId);
+                    int cartCount = (list != null) ? list.size() : 0;
+                    long totalAmount = 0;
+                    if (list != null) {
+                        for (CartItemDisplay d : list) {
+                            totalAmount += d.getSubtotal();
+                        }
+                    }
+                    request.getSession().setAttribute("cartCount", cartCount);
+                    sendJson(response, true, totalAmount, cartCount, null);
+                } else {
+                    redirectToCart(request, response);
+                }
                 return;
             }
-            if (new CustomerDAO().getCustomerById(customerId) == null) {
-                request.getSession().removeAttribute("customerId");
-                response.sendRedirect(request.getContextPath() + "/userservlet?action=loginPage");
-                return;
-            }
-            String idParam = request.getParameter("cart_item_id");
-            if (idParam != null) {
-                try {
-                    int cartItemId = Integer.parseInt(idParam);
+            case "remove": {
+                int customerId = getValidCustomerId(request);
+                if (customerId <= 0) {
+                    redirectToCart(request, response);
+                    return;
+                }
+
+                int cartItemId = parseIntSafe(request.getParameter("cart_item_id"), 0);
+                if (cartItemId > 0) {
                     CartItemDAO cartDao = new CartItemDAO();
                     CartItem item = cartDao.getCartItemById(cartItemId);
                     if (item != null && item.getCustomer_id() == customerId) {
                         cartDao.deleteCartItem(cartItemId);
                     }
-                } catch (NumberFormatException ignored) {
                 }
+                redirectToCart(request, response);
+                return;
             }
-            response.sendRedirect(request.getContextPath() + "/cartservlet");
-            return;
+            default:
+                redirectToCart(request, response);
+                return;
         }
-
-        response.sendRedirect(request.getContextPath() + "/cartservlet");
     }
 
     /**
      * Trả JSON cho AJAX: { "success": true/false, "totalAmount": number,
      * "cartCount": number, "message": "..." }
      */
-    private void sendJson(HttpServletResponse response, boolean success, long totalAmount, int cartCount) throws IOException {
-        sendJson(response, success, totalAmount, cartCount, null);
-    }
-
     private void sendJson(HttpServletResponse response, boolean success, long totalAmount, int cartCount, String message) throws IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        String msg = message != null ? ",\"message\":\"" + message.replace("\\", "\\\\").replace("\"", "\\\"") + "\"" : "";
-        response.getWriter().print("{\"success\":" + success + ",\"totalAmount\":" + totalAmount + ",\"cartCount\":" + cartCount + msg + "}");
+        String safeMessage = escapeJson(message == null ? "" : message);
+
+        StringBuilder json = new StringBuilder();
+        json.append("{");
+        json.append("\"success\":").append(success).append(",");
+        json.append("\"totalAmount\":").append(totalAmount).append(",");
+        json.append("\"cartCount\":").append(cartCount).append(",");
+        json.append("\"message\":\"").append(safeMessage).append("\"");
+        json.append("}");
+
+        response.getWriter().print(json.toString());
+    }
+
+    private String escapeJson(String s) {
+        // Escape tối thiểu để string không làm vỡ JSON.
+        return s.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    /**
+     * Returns a short description of the servlet.
+     *
+     * @return a String containing servlet description
+     */
+    @Override
+    public String getServletInfo() {
+        return "Short description";
     }
 
 }

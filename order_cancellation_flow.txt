@@ -1,0 +1,131 @@
+TỔNG HỢP LUỒNG HỦY ĐƠN HÀNG (USER SIDE)
+
+1. TẠO ĐƠN HÀNG
+- User đặt hàng → hệ thống:
+  - Gọi OrderDAO.insertOrder để tạo record trong bảng orders.
+  - Tạo các dòng trong order_items, mỗi dòng gắn với một inventory_id (mỗi IMEI = 1 sản phẩm).
+- Lịch sử đơn hàng (orderHistoryPage.jsp) dùng:
+  - OrderDAO.getOrdersByCustomerWithSummary để lấy danh sách đơn cho một customer (join orders + customers + vouchers + sản phẩm đại diện).
+
+2. GIAO DIỆN LỊCH SỬ ĐƠN HÀNG
+- Servlet: controller.User.orderHistoryPageServlet
+  - doGet:
+    - Lấy currentUserId từ cookie "cookieID".
+    - Nếu action = "orderDetail" → gọi handleOrderDetail.
+    - Ngược lại → gọi handleOrderHistory.
+  - doPost:
+    - Nếu action = "cancelOrder" → gọi OrderDAO.cancelOrderByCustomer(orderId, currentUserId), sau đó redirect về trang lịch sử.
+
+3. BẤM "CANCEL ORDER" Ở LỊCH SỬ ĐƠN
+- View: pages/MainPage/orderHistoryPage.jsp
+  - Với mỗi order, nếu trạng thái và paymentStatus cho phép hủy:
+    - Render form:
+      - method="post"
+      - action="orderhistorypageservlet"
+      - hidden input action="cancelOrder"
+      - hidden input orderId = ID đơn.
+    - Button "Cancel Order".
+- Khi bấm:
+  - Gửi POST → orderhistorypageservlet → doPost → OrderDAO.cancelOrderByCustomer.
+
+4. LOGIC HỦY ĐƠN Ở DAO
+- Class: dao.OrderDAO
+- Hàm: cancelOrderByCustomer(int orderId, int customerId)
+  1) Kiểm tra quyền:
+     - SELECT từ orders WHERE order_id = ? AND customer_id = ?.
+     - Nếu không tìm thấy → return false.
+  2) Snapshot chi tiết đơn sang bảng lịch sử:
+     - Bảng mới: cancelled_order_items.
+     - Câu lệnh:
+       INSERT INTO cancelled_order_items (order_id, inventory_id, quantity, unit_price, snapshot_created_at)
+       SELECT oi.order_id,
+              oi.inventory_id,
+              1 AS quantity,                 -- mỗi inventory_id = 1 sản phẩm
+              oi.selling_price AS unit_price,
+              GETDATE()
+       FROM order_items oi
+       WHERE oi.order_id = ?;
+  3) Hoàn kho:
+     - UPDATE inventory_items
+       SET status = 'IN_STOCK'
+       WHERE inventory_id IN (SELECT inventory_id FROM order_items WHERE order_id = ?);
+  4) Xóa chi tiết trong order_items:
+     - DELETE FROM order_items WHERE order_id = ?;
+  5) Cập nhật trạng thái đơn:
+     - Lấy mã CANCELLED bằng getCancelledStatusCode().
+     - UPDATE orders SET status = 'CANCELLED' WHERE order_id = ?;
+  6) Trả về true nếu không lỗi, false nếu có Exception.
+
+5. BẢNG MỚI: CANCELLED_ORDER_ITEMS
+- Mục đích: lưu lại "bản chụp" chi tiết sản phẩm của những đơn đã hủy để sau này vẫn xem lại được.
+- Các cột chính (thiết kế đề xuất):
+  - id                (INT, IDENTITY, PK)
+  - order_id          (INT, FK → orders.order_id)
+  - inventory_id      (INT, FK → inventory_items.inventory_id)
+  - quantity          (INT)              -- hiện tại luôn bằng 1
+  - unit_price        (DECIMAL/NUMERIC)  -- giá bán tại thời điểm đó
+  - snapshot_created_at (DATETIME)
+
+6. HIỂN THỊ ĐƠN ĐÃ HỦY – BÊN TRONG (ORDER DETAIL)
+- Servlet: orderHistoryPageServlet.handleOrderDetail
+  - Gọi OrderDAO.getOrderById(orderId) → đối tượng Order (thông tin khách, địa chỉ, status, paymentStatus,...).
+  - Nếu order != null và thuộc về currentUserId:
+    - Nếu order.status = 'CANCELLED':
+      - Gọi OrderDAO.getCancelledOrderDetails(orderId) để lấy danh sách items từ cancelled_order_items.
+      - Nếu danh sách rỗng (trường hợp hiếm) → fallback sang getOrderDetails(orderId).
+    - Ngược lại (chưa hủy):
+      - Gọi OrderDAO.getOrderDetails(orderId) để lấy items từ order_items.
+    - Set attribute "order" và "items", forward sang pages/MainPage/orderDetailCustomer.jsp.
+- View: orderDetailCustomer.jsp
+  - Dùng ${order} để hiển thị thông tin đơn (customer, địa chỉ, status, payment method, total).
+  - Duyệt ${items} để render bảng:
+    - Hình sản phẩm: item.imageUrl
+    - Tên sản phẩm: item.productName
+    - SKU: item.sku
+    - Quantity: item.quantity
+    - Giá: item.price * item.quantity
+
+7. HIỂN THỊ ĐƠN ĐÃ HỦY – BÊN NGOÀI (DANH SÁCH LỊCH SỬ)
+- DAO: OrderDAO.getOrdersByCustomerWithSummary(int customerId)
+  - Lấy danh sách orders của customer.
+  - Tên sản phẩm đại diện (representative_product):
+    - COALESCE(
+        (SELECT TOP 1 p.name FROM order_items ... WHERE oi.order_id = o.order_id),
+        (SELECT TOP 1 p.name FROM cancelled_order_items ... WHERE coi.order_id = o.order_id)
+      )
+  - Ảnh sản phẩm đại diện (product_image_url):
+    - COALESCE(
+        (SELECT TOP 1 pi.image_url FROM order_items ...),
+        (SELECT TOP 1 pi.image_url FROM cancelled_order_items ...)
+      )
+  - Tổng số items (total_items):
+    - (SELECT COUNT(*) FROM order_items WHERE order_id = o.order_id)
+      + (SELECT ISNULL(SUM(quantity), 0) FROM cancelled_order_items WHERE order_id = o.order_id)
+  - Sau khi lấy:
+    - Nếu representative_product != null → dùng làm orderName.
+    - Nếu total_items > 1 → thêm "(+X items)" phía sau.
+    - Nếu không có gì → orderName = "No products".
+
+- View: orderHistoryPage.jsp
+  - Hiển thị:
+    - Order ID, ngày tạo, trạng thái (badge).
+    - Ảnh sản phẩm: order.productImageUrl (hoặc placeholder nếu null).
+    - Tên đơn: order.orderName (đã tính sẵn).
+    - Địa chỉ giao hàng, tổng tiền.
+  - Đơn đã hủy (status = CANCELLED) vẫn hiển thị:
+    - Đúng tên sản phẩm.
+    - Đúng ảnh sản phẩm.
+    - Tổng tiền giữ nguyên.
+
+8. TÓM TẮT Ý TƯỞNG CHÍNH
+- Khi hủy, KHÔNG xóa orders:
+  - Chỉ:
+    - Snapshot chi tiết vào cancelled_order_items.
+    - Trả lại hàng về IN_STOCK.
+    - Xóa order_items gốc.
+    - Đổi status đơn sang CANCELLED.
+- Khi xem:
+  - Trang danh sách và trang chi tiết đều đọc dữ liệu từ cả order_items lẫn cancelled_order_items (tùy trạng thái) để:
+    - Không mất thông tin đơn.
+    - Không bị trùng inventory_id khi khách mua lại sau này.
+

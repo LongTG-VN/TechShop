@@ -85,9 +85,18 @@
             <tbody class="divide-y divide-gray-200">
                 <c:forEach items="${listdata}" var="r">
                     <c:set var="supplierName" value="—"/>
-                    <c:forEach items="${listSuppliers}" var="s"><c:if test="${s.supplier_id == r.supplier_id}"><c:set var="supplierName" value="${s.supplier_name}"/></c:if></c:forEach>
+                    <c:forEach items="${listSuppliers}" var="s">
+                        <c:if test="${s.supplier_id == r.supplier_id}">
+                            <c:set var="supplierName" value="${s.supplier_name}"/>
+                        </c:if>
+                    </c:forEach>
+
                     <c:set var="empName" value="—"/>
-                    <c:forEach items="${listEmployees}" var="e"><c:if test="${e.employeeId == r.employee_id}"><c:set var="empName" value="${e.fullName}"/></c:if></c:forEach>
+                    <c:forEach items="${listEmployees}" var="e">
+                        <c:if test="${e.employeeId == r.employee_id}">
+                            <c:set var="empName" value="${e.fullName}"/>
+                        </c:if>
+                    </c:forEach>
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3 font-medium text-gray-500">#${r.receipt_id}</td>
                         <td class="px-4 py-3 font-medium text-gray-900">${supplierName}</td>
@@ -96,9 +105,22 @@
                         <td class="px-4 py-3 text-xs">${r.import_date != null ? r.import_date : '—'}</td>
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-center gap-2">
-                                <a href="${pageContext.request.contextPath}/staffservlet?action=inventoryReceiptDetail&id=${r.receipt_id}" class="inline-flex items-center p-1.5 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-600 hover:text-white" title="Detail">Detail</a>
-                                <a href="${pageContext.request.contextPath}/staffservlet?action=inventoryReceiptEdit&id=${r.receipt_id}" class="inline-flex items-center p-1.5 text-amber-600 bg-amber-50 rounded-lg hover:bg-amber-500 hover:text-white" title="Edit">Edit</a>
-                                <a href="${pageContext.request.contextPath}/staffservlet?action=inventoryReceiptDelete&id=${r.receipt_id}" onclick="return confirm('Delete this receipt? All receipt items will also be removed.');" class="inline-flex items-center p-1.5 text-red-600 bg-red-50 rounded-lg hover:bg-red-600 hover:text-white" title="Delete">Delete</a>
+                                <a href="${pageContext.request.contextPath}/staffservlet?action=inventoryReceiptDetail&id=${r.receipt_id}"
+                                   class="inline-flex items-center p-1.5 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-600 hover:text-white"
+                                   title="Detail">
+                                    Detail
+                                </a>
+                                <a href="${pageContext.request.contextPath}/staffservlet?action=inventoryReceiptEdit&id=${r.receipt_id}"
+                                   class="inline-flex items-center p-1.5 text-amber-600 bg-amber-50 rounded-lg hover:bg-amber-500 hover:text-white"
+                                   title="Edit">
+                                    Edit
+                                </a>
+                                <a href="${pageContext.request.contextPath}/staffservlet?action=inventoryReceiptDelete&id=${r.receipt_id}"
+                                   onclick="return confirm('Delete this receipt? All receipt items will also be removed.');"
+                                   class="inline-flex items-center p-1.5 text-red-600 bg-red-50 rounded-lg hover:bg-red-600 hover:text-white"
+                                   title="Delete">
+                                    Delete
+                                </a>
                             </div>
                         </td>
                     </tr>
