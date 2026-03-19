@@ -240,11 +240,7 @@ public class adminServlet extends HttpServlet {
                     page = "/pages/DashboardPage/adminDashboard.jsp";
 
                     break;
-                case "searchByYear":
-                    page = "/pages/OrderStatusManagementPage/orderStatusManagement.jsp";
-
-                    page = "/pages/DashboardPage/adminDashboard.jsp";
-                    break;
+                
                 case "profile":
                     int currentUserId = -1;
                     jakarta.servlet.http.Cookie[] cookies = request.getCookies();
