@@ -24,6 +24,7 @@
         </figure>
     </div>
 
+    <%-- 2. NEW PRODUCT TABS --%>
     <div class="w-full my-8 bg-white p-6 rounded-2xl shadow-sm">
         <h3 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center gap-2">
             <span class="text-yellow-400">⭐</span> New Product
@@ -32,155 +33,68 @@
         <div class="ant-tabs ant-tabs-top">
             <div class="ant-tabs-nav" role="tablist">
                 <div class="ant-tabs-nav-wrap border-b border-gray-200">
-                    <div class="ant-tabs-nav-list flex gap-6 md:gap-8">
-                        <div class="ant-tabs-tab tab-item active cursor-pointer pb-3 border-b-2 border-blue-600 text-blue-600 font-bold transition-colors"
-                             onclick="switchTab(event, 'tab-1')">
-                            <div class="ant-tabs-tab-btn text-base">Smartphone</div>
-                        </div>
-                        <div class="ant-tabs-tab tab-item cursor-pointer pb-3 border-b-2 border-transparent text-gray-500 hover:text-blue-500 transition-colors"
-                             onclick="switchTab(event, 'tab-2')">
-                            <div class="ant-tabs-tab-btn text-base">Laptop</div>
-                        </div>
-                        <div class="ant-tabs-tab tab-item cursor-pointer pb-3 border-b-2 border-transparent text-gray-500 hover:text-blue-500 transition-colors"
-                             onclick="switchTab(event, 'tab-3')">
-                            <div class="ant-tabs-tab-btn text-base">Accessories</div>
-                        </div>
-                        <div class="ant-tabs-tab tab-item cursor-pointer pb-3 border-b-2 border-transparent text-gray-500 hover:text-blue-500 transition-colors"
-                             onclick="switchTab(event, 'tab-4')">
-                            <div class="ant-tabs-tab-btn text-base">Watch</div>
-                        </div>
+                    <div class="ant-tabs-nav-list flex gap-6 md:gap-8 overflow-x-auto no-scrollbar">
+                        <c:forEach var="cat" items="${activeCategories}" varStatus="status">
+                            <div class="ant-tabs-tab tab-item cursor-pointer pb-3 border-b-2 transition-all duration-300 ${status.first ? 'active border-blue-600 text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-blue-500 font-bold'}"
+                                 onclick="switchTab(event, 'tab-cat-${cat.categoryId}')">
+                                <div class="ant-tabs-tab-btn text-base whitespace-nowrap font-bold">${cat.categoryName}</div>
+                            </div>
+                        </c:forEach>
                     </div>
                 </div>
             </div>
 
             <div class="ant-tabs-content-holder mt-6">
-                <!-- Tab 1: Điện thoại -->
-                <div id="tab-1" class="tab-pane block fade-in">
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                        <c:forEach var="p" items="${phoneList}">
-                            <a href="detailservlet?productId=${p.productId}"
-                               class="bg-white p-4 border border-gray-100 rounded-xl shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 group cursor-pointer flex flex-col h-full block">
-                                <div
-                                    class="relative overflow-hidden mb-4 flex-shrink-0 rounded-lg bg-gray-50 p-2">
-                                    <img class="w-full h-44 object-contain group-hover:scale-110 group-hover:-translate-y-2 transition-all duration-500"
-                                         src="${empty p.thumbnailUrl ? '../assets/img/product/default.png' : p.thumbnailUrl}"
-                                         alt="${p.name}">
-                                </div>
-                                <h3
-                                    class="text-[14px] font-semibold leading-snug text-gray-800 mb-2 group-hover:text-blue-600 line-clamp-2 min-h-[40px]">
-                                    ${p.name}
-                                </h3>
-                                <div class="mt-auto mb-2">
-                                    <strong class="text-red-600 text-lg block">
-                                        <fmt:formatNumber value="${p.minPrice != null ? p.minPrice : 0}"
-                                                          type="number" groupingUsed="true" />₫
-                                    </strong>
-                                </div>
-                            </a>
-                        </c:forEach>
-                        <c:if test="${empty phoneList}">
-                            <div
-                                class="col-span-full bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300 text-center text-gray-400 font-medium">
-                                There are no products yet</div>
-                            </c:if>
-                    </div>
-                </div>
+                <c:forEach var="entry" items="${newProductTabs}" varStatus="status">
+                    <div id="tab-cat-${entry.key}" class="tab-pane ${status.first ? 'block' : 'hidden'} fade-in">
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                            <c:forEach var="p" items="${entry.value}">
+                                <a href="detailservlet?productId=${p.productId}"
+                                   class="bg-white p-4 border border-gray-100 rounded-xl shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 group cursor-pointer flex flex-col h-full block">
 
-                <!-- Tab 2: Laptop -->
-                <div id="tab-2" class="tab-pane hidden fade-in">
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                        <c:forEach var="p" items="${laptopList}">
-                            <a href="detailservlet?productId=${p.productId}"
-                               class="bg-white p-4 border border-gray-100 rounded-xl shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 group cursor-pointer flex flex-col h-full block">
-                                <div
-                                    class="relative overflow-hidden mb-4 flex-shrink-0 rounded-lg bg-gray-50 p-2">
-                                    <img class="w-full h-44 object-contain group-hover:scale-110 group-hover:-translate-y-2 transition-all duration-500"
-                                         src="${empty p.thumbnailUrl ? '../assets/img/product/default.png' : p.thumbnailUrl}"
-                                         alt="${p.name}">
-                                </div>
-                                <h3
-                                    class="text-[14px] font-semibold leading-snug text-gray-800 mb-2 group-hover:text-blue-600 line-clamp-2 min-h-[40px]">
-                                    ${p.name}
-                                </h3>
-                                <div class="mt-auto mb-2">
-                                    <strong class="text-red-600 text-lg block">
-                                        <fmt:formatNumber value="${p.minPrice != null ? p.minPrice : 0}"
-                                                          type="number" groupingUsed="true" />₫
-                                    </strong>
-                                </div>
-                            </a>
-                        </c:forEach>
-                        <c:if test="${empty laptopList}">
-                            <div
-                                class="col-span-full bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300 text-center text-gray-400 font-medium">
-                                There are no products yet</div>
-                            </c:if>
-                    </div>
-                </div>
+                                    <div class="relative overflow-hidden mb-4 flex-shrink-0 rounded-lg bg-gray-50 p-2">
+                                        <img class="w-full h-44 object-contain group-hover:scale-110 group-hover:-translate-y-2 transition-all duration-500"
+                                             src="${empty p.thumbnailUrl ? '../assets/img/product/default.png' : p.thumbnailUrl}"
+                                             alt="${p.name}">
+                                    </div>
 
-                <!-- Tab 3: Phụ kiện -->
-                <div id="tab-3" class="tab-pane hidden fade-in">
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                        <c:forEach var="p" items="${accessoryList}">
-                            <a href="detailservlet?productId=${p.productId}"
-                               class="bg-white p-4 border border-gray-100 rounded-xl shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 group cursor-pointer flex flex-col h-full block">
-                                <div
-                                    class="relative overflow-hidden mb-4 flex-shrink-0 rounded-lg bg-gray-50 p-2">
-                                    <img class="w-full h-44 object-contain group-hover:scale-110 group-hover:-translate-y-2 transition-all duration-500"
-                                         src="${empty p.thumbnailUrl ? '../assets/img/product/default.png' : p.thumbnailUrl}"
-                                         alt="${p.name}">
-                                </div>
-                                <h3
-                                    class="text-[14px] font-semibold leading-snug text-gray-800 mb-2 group-hover:text-blue-600 line-clamp-2 min-h-[40px]">
-                                    ${p.name}
-                                </h3>
-                                <div class="mt-auto mb-2">
-                                    <strong class="text-red-600 text-lg block">
-                                        <fmt:formatNumber value="${p.minPrice != null ? p.minPrice : 0}"
-                                                          type="number" groupingUsed="true" />₫
-                                    </strong>
-                                </div>
-                            </a>
-                        </c:forEach>
-                        <c:if test="${empty accessoryList}">
-                            <div
-                                class="col-span-full bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300 text-center text-gray-400 font-medium">
-                                There are no products yet</div>
-                            </c:if>
-                    </div>
-                </div>
+                                    <h3 class="text-[14px] font-bold text-gray-800 mb-1 group-hover:text-blue-600 line-clamp-2 min-h-[40px]">
+                                        ${p.name}
+                                    </h3>
 
-                <!-- Tab 4: Watch -->
-                <div id="tab-4" class="tab-pane hidden fade-in">
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                        <c:forEach var="p" items="${watchList}">
-                            <a href="detailservlet?productId=${p.productId}"
-                               class="bg-white p-4 border border-gray-100 rounded-xl shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 group cursor-pointer flex flex-col h-full block">
-                                <div
-                                    class="relative overflow-hidden mb-4 flex-shrink-0 rounded-lg bg-gray-50 p-2">
-                                    <img class="w-full h-44 object-contain group-hover:scale-110 group-hover:-translate-y-2 transition-all duration-500"
-                                         src="${empty p.thumbnailUrl ? '../assets/img/product/default.png' : p.thumbnailUrl}"
-                                         alt="${p.name}">
+                                    <div class="flex items-center gap-1 mb-2">
+                                        <div class="flex text-yellow-400 text-sm">
+                                            <c:set var="fullStars" value="${p.averageRating != null ? p.averageRating : 0}" />
+                                            <c:forEach var="i" begin="1" end="5">
+                                                <c:choose>
+                                                    <c:when test="${i <= fullStars + 0.5}">
+                                                        <span>★</span>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span class="text-gray-300">★</span>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </c:forEach>
+                                        </div>
+                                        <span class="text-[10px] text-gray-500">(${p.reviewCount != null ? p.reviewCount : 0})</span>
+                                    </div>
+
+                                    <div class="mt-auto">
+                                        <strong class="text-red-600 text-lg block font-bold">
+                                            <fmt:formatNumber value="${p.minPrice != null ? p.minPrice : 0}" type="number" groupingUsed="true" />₫
+                                        </strong>
+                                    </div>
+                                </a>
+                            </c:forEach>
+                            <c:if test="${empty entry.value}">
+                                <div class="col-span-full bg-gray-50 p-8 rounded-xl border border-dashed border-gray-300 text-center text-gray-400 font-medium">
+                                    <span class="text-3xl block mb-2">📦</span>
+                                    There are no products yet in this category.
                                 </div>
-                                <h3
-                                    class="text-[14px] font-semibold leading-snug text-gray-800 mb-2 group-hover:text-blue-600 line-clamp-2 min-h-[40px]">
-                                    ${p.name}
-                                </h3>
-                                <div class="mt-auto mb-2">
-                                    <strong class="text-red-600 text-lg block">
-                                        <fmt:formatNumber value="${p.minPrice != null ? p.minPrice : 0}"
-                                                          type="number" groupingUsed="true" />₫
-                                    </strong>
-                                </div>
-                            </a>
-                        </c:forEach>
-                        <c:if test="${empty watchList}">
-                            <div
-                                class="col-span-full bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300 text-center text-gray-400 font-medium">
-                                There are no products yet</div>
                             </c:if>
+                        </div>
                     </div>
-                </div>
+                </c:forEach>
             </div>
         </div>
     </div>

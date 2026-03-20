@@ -117,8 +117,20 @@
                                 ${p.name}
                             </h3>
                             <div class="mt-2 flex items-center gap-1">
-                                <span class="text-yellow-400 text-sm">★★★★★</span>
-                                <span class="text-xs text-gray-500">(50)</span>
+                                <div class="flex text-yellow-400 text-sm">
+                                    <c:set var="fullStars" value="${p.averageRating != null ? p.averageRating : 0}" />
+                                    <c:forEach var="i" begin="1" end="5">
+                                        <c:choose>
+                                            <c:when test="${i <= fullStars + 0.5}">
+                                                <span>★</span>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <span class="text-gray-300">★</span>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </c:forEach>
+                                </div>
+                                <span class="text-xs text-gray-500">(${p.reviewCount != null ? p.reviewCount : 0})</span>
                             </div>
                             <div class="mt-auto pt-3">
                                 <p class="text-red-600 font-bold text-lg">

@@ -830,10 +830,10 @@
         <%-- Left: Gallery --%>
         <div class="gallery-section">
             <a id="mainImageLink"
-               href="${not empty images ? pageContext.request.contextPath.concat('/').concat(images[0].imageUrl) : pageContext.request.contextPath.concat('/assets/img/product/placeholder.jpg')}"
+               href="${not empty images ? pageContext.request.contextPath.concat('/').concat(images[0].imageUrl) : pageContext.request.contextPath.concat('/assets/img/product/default.jpg')}"
                data-fancybox="gallery" class="main-image-wrap">
                 <img id="mainImage"
-                     src="${not empty images ? pageContext.request.contextPath.concat('/').concat(images[0].imageUrl) : pageContext.request.contextPath.concat('/assets/img/product/placeholder.jpg')}"
+                     src="${not empty images ? pageContext.request.contextPath.concat('/').concat(images[0].imageUrl) : pageContext.request.contextPath.concat('/assets/img/product/default.jpg')}"
                      alt="${product.name}">
             </a>
             <div class="thumb-list">
@@ -978,7 +978,10 @@
                 <c:forEach begin="1" end="5" step="1" var="star">
                     <c:set var="idx" value="${6 - star}" />
                     <div class="bar-row">
-                        <span class="bar-label"><span style="font-size: 15px;">${idx}</span> stars</span>
+                        <span class="bar-label">
+                            <span style="font-size: 15px;">${idx}</span> 
+                            <span style="color: #f59e0b; font-size: 14px; margin-left: 2px;">★</span>
+                        </span>
                         <div class="bar-track">
                             <div class="bar-fill" style="width: ${starPercentages[idx]}%"></div>
                         </div>

@@ -27,6 +27,8 @@ public class Product {
     private String thumbnailUrl;
     // Tổng tồn kho hiện tại (dùng cho màn nhập hàng)
     private Integer stockQuantity;
+    private Double averageRating;
+    private Integer reviewCount;
 
     public Double getMinPrice() {
         return minPrice;
@@ -66,6 +68,22 @@ public class Product {
 
     public void setBrandName(String brandName) {
         this.brandName = brandName;
+    }
+
+    public Double getAverageRating() {
+        return averageRating;
+    }
+
+    public void setAverageRating(Double averageRating) {
+        this.averageRating = averageRating;
+    }
+
+    public Integer getReviewCount() {
+        return reviewCount;
+    }
+
+    public void setReviewCount(Integer reviewCount) {
+        this.reviewCount = reviewCount;
     }
 
     public Product() {

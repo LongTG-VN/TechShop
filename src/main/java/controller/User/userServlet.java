@@ -4,6 +4,7 @@
  */
 package controller.User;
 
+import dao.CategoryDAO;
 import dao.CustomerAddressDAO;
 import dao.CustomerDAO;
 import dao.EmployeesDAO;
@@ -17,9 +18,12 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
+import java.util.Map;
+import model.Category;
 import model.Customer;
 import model.CustomerAddress;
 import model.Employees;
+import model.Product;
 
 /**
  *
@@ -77,22 +81,37 @@ public class userServlet extends HttpServlet {
 
         if (action != null) {
             switch (action) {
-                case "errorpage": 
-                  page = "/pages/MainPage/error404.jsp"; // Bạn cần tạo file này
+                case "errorpage":
+                    page = "/pages/MainPage/error404.jsp"; // Bạn cần tạo file này
                     break;
                 case "homePage":
                     page = "/pages/MainPage/homePage.jsp";
-                    ProductDAO productDAO = new ProductDAO();
+                    ProductDAO pdao = new ProductDAO();
+                    CategoryDAO cdao = new CategoryDAO();
                     InventoryItemDAO aO = new InventoryItemDAO();
-                    request.setAttribute("phoneList", productDAO.getProductsByCategoryId(1, 10));     // ID 1: Smartphone
-                    request.setAttribute("laptopList", productDAO.getProductsByCategoryId(2, 10));    // ID 2: Laptop
-                    request.setAttribute("accessoryList", productDAO.getProductsByCategoryId(3, 10)); // ID 3: Accessory
-                    request.setAttribute("watchList", productDAO.getProductsByCategoryId(4, 10));     // ID 4: Watch
-                    
-                    request.setAttribute("appleList", productDAO.getProductsByBrandId(1, 10));
-                    request.setAttribute("samsungList", productDAO.getProductsByBrandId(2, 10));
-                    request.setAttribute("inventory", aO.getAllInventory());
+                    // 1. Lấy tất cả danh mục đang hoạt động để làm tiêu đề Tab
+                    List<Category> allCategories = cdao.getAllCategory();
+                    List<Category> activeCategories = new java.util.ArrayList<>();
+                    // 2. Tạo Map chứa sản phẩm cho từng danh mục (Giữ thứ tự LinkedHashMap)
+                    Map<Integer, List<Product>> newProductTabs = new java.util.LinkedHashMap<>();
+                    if (allCategories != null) {
+                        for (Category cat : allCategories) {
+                            if (cat.isIsActive()) {
+                                activeCategories.add(cat);
+                                // Lấy 10 sản phẩm mới nhất cho mỗi danh mục
+                                List<Product> products = pdao.getProductsByCategoryId(cat.getCategoryId(), 10);
+                                newProductTabs.put(cat.getCategoryId(), products);
+                            }
+                        }
+                    }
+                    // Đẩy dữ liệu cho phần New Product (Tabs)
+                    request.setAttribute("activeCategories", activeCategories);
+                    request.setAttribute("newProductTabs", newProductTabs);
 
+                    // Giữ nguyên các phần Brand và Inventory cũ của bạn
+                    request.setAttribute("appleList", pdao.getProductsByBrandId(1, 10));
+                    request.setAttribute("samsungList", pdao.getProductsByBrandId(2, 10));
+                    request.setAttribute("inventory", aO.getAllInventory());
                     break;
                 case "loginPage":
                     page = "/pages/MainPage/loginPage.jsp"; // Bạn cần tạo file này
@@ -104,11 +123,11 @@ public class userServlet extends HttpServlet {
                     page = "/pages/DashboardPage/userDashboard.jsp";
                     int customerID = Integer.parseInt(request.getParameter("id"));
                     String role = request.getParameter("role");
-                    CustomerDAO cdao = new CustomerDAO();
+                    CustomerDAO Cdao = new CustomerDAO();
                     EmployeesDAO Edao = new EmployeesDAO();
                     CustomerAddressDAO cadd = new CustomerAddressDAO();
 
-                    Customer customer = cdao.getCustomerById(customerID);
+                    Customer customer = Cdao.getCustomerById(customerID);
                     request.setAttribute("customer", customer);
                     List<CustomerAddress> listdata = cadd.getAddressesByCustomerId(customerID);
                     request.setAttribute("listAddress", listdata);

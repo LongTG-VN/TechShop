@@ -234,7 +234,17 @@ public class ProductDAO extends DBContext {
         List<Product> list = new ArrayList<>();
         String sql = "SELECT TOP (?) p.*, c.category_name, b.brand_name, "
                 + "MIN(pv.selling_price) as min_price, "
-                + "MAX(CAST(CASE WHEN pi.is_thumbnail = 1 THEN pi.image_url ELSE NULL END AS VARCHAR(255))) as thumbnail_url "
+                + "MAX(CAST(CASE WHEN pi.is_thumbnail = 1 THEN pi.image_url ELSE NULL END AS VARCHAR(255))) as thumbnail_url, "
+                + "(SELECT AVG(CAST(r.rating AS FLOAT)) FROM reviews r "
+                + "  JOIN order_items oi ON r.order_item_id = oi.order_item_id "
+                + "  JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
+                + "  JOIN product_variants pv2 ON ii.variant_id = pv2.variant_id "
+                + "  WHERE pv2.product_id = p.product_id AND r.status = 'VISIBLE') as avg_rating, "
+                + "(SELECT COUNT(*) FROM reviews r "
+                + "  JOIN order_items oi ON r.order_item_id = oi.order_item_id "
+                + "  JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
+                + "  JOIN product_variants pv2 ON ii.variant_id = pv2.variant_id "
+                + "  WHERE pv2.product_id = p.product_id AND r.status = 'VISIBLE') as review_count "
                 + "FROM products p "
                 + "LEFT JOIN categories c ON p.category_id = c.category_id "
                 + "LEFT JOIN brands b ON p.brand_id = b.brand_id "
@@ -260,12 +270,61 @@ public class ProductDAO extends DBContext {
         return list;
     }
 
+    public List<Product> getNewProducts(int limit) {
+        List<Product> list = new ArrayList<>();
+        String sql = "SELECT TOP (?) p.*, c.category_name, b.brand_name, "
+                + "MIN(pv.selling_price) as min_price, "
+                + "MAX(CAST(CASE WHEN pi.is_thumbnail = 1 THEN pi.image_url ELSE NULL END AS VARCHAR(255))) as thumbnail_url, "
+                + "(SELECT AVG(CAST(r.rating AS FLOAT)) FROM reviews r "
+                + "  JOIN order_items oi ON r.order_item_id = oi.order_item_id "
+                + "  JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
+                + "  JOIN product_variants pv2 ON ii.variant_id = pv2.variant_id "
+                + "  WHERE pv2.product_id = p.product_id AND r.status = 'VISIBLE') as avg_rating, "
+                + "(SELECT COUNT(*) FROM reviews r "
+                + "  JOIN order_items oi ON r.order_item_id = oi.order_item_id "
+                + "  JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
+                + "  JOIN product_variants pv2 ON ii.variant_id = pv2.variant_id "
+                + "  WHERE pv2.product_id = p.product_id AND r.status = 'VISIBLE') as review_count "
+                + "FROM products p "
+                + "LEFT JOIN categories c ON p.category_id = c.category_id "
+                + "LEFT JOIN brands b ON p.brand_id = b.brand_id "
+                + "LEFT JOIN product_variants pv ON p.product_id = pv.product_id AND pv.is_active = 1 "
+                + "LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_thumbnail = 1 "
+                + "WHERE p.status = 'ACTIVE' "
+                + "GROUP BY p.product_id, p.name, p.category_id, p.brand_id, p.description, p.status, p.created_at, p.created_by, p.updated_by, p.updated_at, c.category_name, b.brand_name "
+                + "ORDER BY p.product_id DESC";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, limit);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Product p = mapResultSetToProduct(rs);
+                p.setCategoryName(rs.getString("category_name"));
+                p.setBrandName(rs.getString("brand_name"));
+                list.add(p);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     // 10. Lấy sản phẩm theo Brand (Có ảnh và giá)
     public List<Product> getProductsByBrandId(int brandId, int limit) {
         List<Product> list = new ArrayList<>();
         String sql = "SELECT TOP (?) p.*, c.category_name, b.brand_name, "
                 + "MIN(pv.selling_price) as min_price, "
-                + "MAX(CAST(CASE WHEN pi.is_thumbnail = 1 THEN pi.image_url ELSE NULL END AS VARCHAR(255))) as thumbnail_url "
+                + "MAX(CAST(CASE WHEN pi.is_thumbnail = 1 THEN pi.image_url ELSE NULL END AS VARCHAR(255))) as thumbnail_url, "
+                + "(SELECT AVG(CAST(r.rating AS FLOAT)) FROM reviews r "
+                + "  JOIN order_items oi ON r.order_item_id = oi.order_item_id "
+                + "  JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
+                + "  JOIN product_variants pv2 ON ii.variant_id = pv2.variant_id "
+                + "  WHERE pv2.product_id = p.product_id AND r.status = 'VISIBLE') as avg_rating, "
+                + "(SELECT COUNT(*) FROM reviews r "
+                + "  JOIN order_items oi ON r.order_item_id = oi.order_item_id "
+                + "  JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
+                + "  JOIN product_variants pv2 ON ii.variant_id = pv2.variant_id "
+                + "  WHERE pv2.product_id = p.product_id AND r.status = 'VISIBLE') as review_count "
                 + "FROM products p "
                 + "LEFT JOIN categories c ON p.category_id = c.category_id "
                 + "LEFT JOIN brands b ON p.brand_id = b.brand_id "
@@ -298,7 +357,17 @@ public class ProductDAO extends DBContext {
         StringBuilder sql = new StringBuilder(
                 "SELECT p.*, c.category_name, b.brand_name, "
                 + "MIN(pv.selling_price) as min_price, "
-                + "MAX(CAST(CASE WHEN pi.is_thumbnail = 1 THEN pi.image_url ELSE NULL END AS VARCHAR(255))) as thumbnail_url "
+                + "MAX(CAST(CASE WHEN pi.is_thumbnail = 1 THEN pi.image_url ELSE NULL END AS VARCHAR(255))) as thumbnail_url, "
+                + "(SELECT AVG(CAST(r.rating AS FLOAT)) FROM reviews r "
+                + "  JOIN order_items oi ON r.order_item_id = oi.order_item_id "
+                + "  JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
+                + "  JOIN product_variants pv2 ON ii.variant_id = pv2.variant_id "
+                + "  WHERE pv2.product_id = p.product_id AND r.status = 'VISIBLE') as avg_rating, "
+                + "(SELECT COUNT(*) FROM reviews r "
+                + "  JOIN order_items oi ON r.order_item_id = oi.order_item_id "
+                + "  JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
+                + "  JOIN product_variants pv2 ON ii.variant_id = pv2.variant_id "
+                + "  WHERE pv2.product_id = p.product_id AND r.status = 'VISIBLE') as review_count "
                 + "FROM products p "
                 + "LEFT JOIN categories c ON p.category_id = c.category_id "
                 + "LEFT JOIN brands b ON p.brand_id = b.brand_id "
@@ -405,6 +474,7 @@ public class ProductDAO extends DBContext {
         }
         return 0;
     }
+
     private Product mapResultSetToProduct(ResultSet rs) throws Exception {
         Product p = new Product();
         p.setProductId(rs.getInt("product_id"));
@@ -434,6 +504,12 @@ public class ProductDAO extends DBContext {
             }
             if (colName.equalsIgnoreCase("stock_quantity")) {
                 p.setStockQuantity(rs.getInt("stock_quantity"));
+            }
+            if (colName.equalsIgnoreCase("avg_rating")) {
+                p.setAverageRating(rs.getDouble("avg_rating"));
+            }
+            if (colName.equalsIgnoreCase("review_count")) {
+                p.setReviewCount(rs.getInt("review_count"));
             }
         }
 
