@@ -44,8 +44,7 @@ import dao.InventoryItemDAO;
 public class staffServlet extends HttpServlet {
 
     /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
      *
      * @param request servlet request
      * @param response servlet response
@@ -83,6 +82,7 @@ public class staffServlet extends HttpServlet {
             throws ServletException, IOException {
         response.setCharacterEncoding("UTF-8");
         response.setContentType("text/html;charset=UTF-8");
+        OrderDAO orderDAO = new OrderDAO();
 
         // 2. Lấy tham số 'action' từ URL (ví dụ: adminservlet?action=dashboard)
         String action = request.getParameter("action");
@@ -102,6 +102,9 @@ public class staffServlet extends HttpServlet {
 
                     List<Voucher> listV = new VoucherDAO().getVouchersByYear(year);
                     List<Order> listOrders = new OrderDAO().getOrdersByYear(year);
+
+                    List<Order> top5RecentOrders = orderDAO.getTop5RecentOrders();
+                    request.setAttribute("top5RecentOrders", top5RecentOrders);
 
                     long activeV = listV.stream()
                             .filter(v -> v.getStatus().equalsIgnoreCase("Active"))
@@ -152,7 +155,9 @@ public class staffServlet extends HttpServlet {
                     List<ImportReceipts> allReceiptsDashboard = new ImportReceiptsDAO().getAllReceipts();
                     List<ImportReceipts> filteredReceiptsDashboard = new ArrayList<>();
                     for (ImportReceipts r : allReceiptsDashboard) {
-                        if (r == null || r.getImport_date() == null) continue;
+                        if (r == null || r.getImport_date() == null) {
+                            continue;
+                        }
                         Calendar cal = Calendar.getInstance();
                         cal.setTime(r.getImport_date());
                         int rYear = cal.get(Calendar.YEAR);
@@ -161,9 +166,15 @@ public class staffServlet extends HttpServlet {
                         }
                     }
                     filteredReceiptsDashboard.sort((a, b) -> {
-                        if (a.getImport_date() == null && b.getImport_date() == null) return 0;
-                        if (a.getImport_date() == null) return 1;
-                        if (b.getImport_date() == null) return -1;
+                        if (a.getImport_date() == null && b.getImport_date() == null) {
+                            return 0;
+                        }
+                        if (a.getImport_date() == null) {
+                            return 1;
+                        }
+                        if (b.getImport_date() == null) {
+                            return -1;
+                        }
                         return b.getImport_date().compareTo(a.getImport_date());
                     });
                     int limitDashboard = 5; // end="4" in JSP
@@ -178,7 +189,9 @@ public class staffServlet extends HttpServlet {
                     int dashboardInventorySoldTotal = 0;
                     int dashboardInventoryInStockTotal = 0;
                     for (InventorySummary s : dashboardInventorySummary) {
-                        if (s == null) continue;
+                        if (s == null) {
+                            continue;
+                        }
                         dashboardInventoryImportedTotal += s.getImported();
                         dashboardInventorySoldTotal += s.getSold();
                         dashboardInventoryInStockTotal += s.getInStock();
@@ -207,6 +220,7 @@ public class staffServlet extends HttpServlet {
                     if (month == -1) {
                         request.setAttribute("listDataCustomer", new CustomerDAO().getCustomersByYear(yearForMonth));
                         request.setAttribute("listDataEmployee", new EmployeesDAO().getEmployeesByYear(yearForMonth));
+                        request.setAttribute("top5RecentOrders", orderDAO.getTop5RecentOrders());
 
                         List<Voucher> listVM = new VoucherDAO().getVouchersByYear(yearForMonth);
                         List<Order> listOrdersYear = new OrderDAO().getOrdersByYear(yearForMonth);
@@ -253,7 +267,9 @@ public class staffServlet extends HttpServlet {
                         List<ImportReceipts> allReceiptsYear = new ImportReceiptsDAO().getAllReceipts();
                         List<ImportReceipts> filteredReceiptsYear = new ArrayList<>();
                         for (ImportReceipts r : allReceiptsYear) {
-                            if (r == null || r.getImport_date() == null) continue;
+                            if (r == null || r.getImport_date() == null) {
+                                continue;
+                            }
                             Calendar cal = Calendar.getInstance();
                             cal.setTime(r.getImport_date());
                             int rYear = cal.get(Calendar.YEAR);
@@ -262,9 +278,15 @@ public class staffServlet extends HttpServlet {
                             }
                         }
                         filteredReceiptsYear.sort((a, b) -> {
-                            if (a.getImport_date() == null && b.getImport_date() == null) return 0;
-                            if (a.getImport_date() == null) return 1;
-                            if (b.getImport_date() == null) return -1;
+                            if (a.getImport_date() == null && b.getImport_date() == null) {
+                                return 0;
+                            }
+                            if (a.getImport_date() == null) {
+                                return 1;
+                            }
+                            if (b.getImport_date() == null) {
+                                return -1;
+                            }
                             return b.getImport_date().compareTo(a.getImport_date());
                         });
                         int limitYear = 5;
@@ -277,7 +299,7 @@ public class staffServlet extends HttpServlet {
                         request.setAttribute("listDataEmployee", new EmployeesDAO().getEmployeesByMonth(month));
 
                         List<Voucher> listVM = new VoucherDAO().getVouchersByMonth(month);
-                        List<Order> listOrdersMonth = new OrderDAO().getOrdersByMonth(month);
+                        List<Order> listOrdersMonth = new OrderDAO().getOrdersByMonthStaff(month);
 
                         long activeVM = listVM.stream()
                                 .filter(v -> v.getStatus().equalsIgnoreCase("Active"))
@@ -317,11 +339,20 @@ public class staffServlet extends HttpServlet {
 
                         request.setAttribute("listDataVoucher", listVM);
 
+                        List<Order> top5Month = new ArrayList<>();
+                        if (listOrdersMonth != null && !listOrdersMonth.isEmpty()) {
+                            top5Month = listOrdersMonth.stream().limit(5).collect(java.util.stream.Collectors.toList());
+                        }
+
+                        request.setAttribute("top5RecentOrders", top5Month);
+
                         request.setAttribute("listSuppliers", new SupplierDAO().getAllSuppliers());
                         List<ImportReceipts> allReceiptsMonth = new ImportReceiptsDAO().getAllReceipts();
                         List<ImportReceipts> filteredReceiptsMonth = new ArrayList<>();
                         for (ImportReceipts r : allReceiptsMonth) {
-                            if (r == null || r.getImport_date() == null) continue;
+                            if (r == null || r.getImport_date() == null) {
+                                continue;
+                            }
                             Calendar cal = Calendar.getInstance();
                             cal.setTime(r.getImport_date());
                             int rYear = cal.get(Calendar.YEAR);
@@ -331,9 +362,15 @@ public class staffServlet extends HttpServlet {
                             }
                         }
                         filteredReceiptsMonth.sort((a, b) -> {
-                            if (a.getImport_date() == null && b.getImport_date() == null) return 0;
-                            if (a.getImport_date() == null) return 1;
-                            if (b.getImport_date() == null) return -1;
+                            if (a.getImport_date() == null && b.getImport_date() == null) {
+                                return 0;
+                            }
+                            if (a.getImport_date() == null) {
+                                return 1;
+                            }
+                            if (b.getImport_date() == null) {
+                                return -1;
+                            }
                             return b.getImport_date().compareTo(a.getImport_date());
                         });
                         int limitMonth = 5;
@@ -355,7 +392,9 @@ public class staffServlet extends HttpServlet {
                     int monthInventorySoldTotal = 0;
                     int monthInventoryInStockTotal = 0;
                     for (InventorySummary s : monthInventorySummary) {
-                        if (s == null) continue;
+                        if (s == null) {
+                            continue;
+                        }
                         monthInventoryImportedTotal += s.getImported();
                         monthInventorySoldTotal += s.getSold();
                         monthInventoryInStockTotal += s.getInStock();
@@ -526,7 +565,7 @@ public class staffServlet extends HttpServlet {
                     List<Map<String, String>> statusList = orderDao.getAllOrderStatuses();
                     request.setAttribute("statusList", statusList);
                     break;
-                 case "profile":
+                case "profile":
                     int currentUserId = -1;
                     jakarta.servlet.http.Cookie[] cookies = request.getCookies();
                     if (cookies != null) {
@@ -551,7 +590,7 @@ public class staffServlet extends HttpServlet {
 
                     // 4. Kiểm tra xem page có bị rỗng không trước khi forward
                     request.setAttribute("employee", e);
-                    break;   
+                    break;
 
                 default:
                     page = "/pages/DashboardPage/staffDashboard.jsp";
@@ -576,10 +615,16 @@ public class staffServlet extends HttpServlet {
      */
     private int getStaffEmployeeId(HttpServletRequest request) {
         jakarta.servlet.http.Cookie[] cookies = request.getCookies();
-        if (cookies == null) return 0;
+        if (cookies == null) {
+            return 0;
+        }
         for (jakarta.servlet.http.Cookie c : cookies) {
             if ("cookieID".equals(c.getName())) {
-                try { return Integer.parseInt(c.getValue()); } catch (NumberFormatException e) { return 0; }
+                try {
+                    return Integer.parseInt(c.getValue());
+                } catch (NumberFormatException e) {
+                    return 0;
+                }
             }
         }
         return 0;
@@ -652,7 +697,13 @@ public class staffServlet extends HttpServlet {
             String vp = request.getParameter("variant_id");
             int variantId = (vp != null && !vp.isEmpty()) ? Integer.parseInt(vp) : 0;
             double importPrice = 0;
-            try { String ip = request.getParameter("import_price"); if (ip != null && !ip.isEmpty()) importPrice = Double.parseDouble(ip); } catch (NumberFormatException e) { }
+            try {
+                String ip = request.getParameter("import_price");
+                if (ip != null && !ip.isEmpty()) {
+                    importPrice = Double.parseDouble(ip);
+                }
+            } catch (NumberFormatException e) {
+            }
             String qp = request.getParameter("quantity");
             int qty = (qp != null && !qp.isEmpty()) ? Integer.parseInt(qp) : 0;
             if (variantId <= 0) {
@@ -681,7 +732,13 @@ public class staffServlet extends HttpServlet {
             String vp = request.getParameter("variant_id");
             int variantId = (vp != null && !vp.isEmpty()) ? Integer.parseInt(vp) : 0;
             double importPrice = 0;
-            try { String px = request.getParameter("import_price"); if (px != null && !px.isEmpty()) importPrice = Double.parseDouble(px); } catch (NumberFormatException e) { }
+            try {
+                String px = request.getParameter("import_price");
+                if (px != null && !px.isEmpty()) {
+                    importPrice = Double.parseDouble(px);
+                }
+            } catch (NumberFormatException e) {
+            }
             String qp = request.getParameter("quantity");
             int qty = (qp != null && !qp.isEmpty()) ? Integer.parseInt(qp) : 0;
             if (variantId <= 0) {

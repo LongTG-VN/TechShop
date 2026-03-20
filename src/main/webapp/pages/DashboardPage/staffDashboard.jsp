@@ -32,35 +32,60 @@
 </div>
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
 
+    <!-- Bảng 5 Đơn hàng gần nhất -->
     <div class="relative overflow-x-auto bg-white shadow-md rounded-lg border border-blue-200">
-        <div class="bg-blue-600 px-4 py-3">
+        <div class="bg-blue-600 px-4 py-3 flex justify-between items-center">
             <h3 class="font-bold text-white flex items-center">
-                <span class="mr-2">👤</span> Order
+                <span class="mr-2">🛒</span> Recent Orders
             </h3>
+            <a href="staffservlet?action=processOrderManagement" class="text-xs bg-white text-blue-600 px-2 py-1 rounded font-bold hover:bg-blue-50">VIEW ALL</a>
         </div>
         <table class="w-full text-sm text-left text-gray-600">
             <thead class="text-xs uppercase bg-blue-50 text-blue-800 border-b">
                 <tr>
-                    <th class="px-4 py-3 font-semibold">Username</th>
-                    <th class="px-4 py-3 font-semibold">Phone</th>
+                    <th class="px-4 py-3 font-semibold">Order / Customer</th>
+                    <th class="px-4 py-3 font-semibold">Product</th>
+                    <th class="px-4 py-3 font-semibold text-center">Amount</th>
                     <th class="px-4 py-3 font-semibold text-center">Status</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-                <c:forEach items="${listDataCustomer}" var="cus" end="4">
+                <c:if test="${empty top5RecentOrders}">
+                    <tr>
+                        <td colspan="4" class="px-4 py-10 text-center text-gray-500 italic">No recent orders.</td>
+                    </tr>
+                </c:if>
+
+                <c:forEach items="${top5RecentOrders}" var="o">
                     <tr class="hover:bg-blue-50 transition-colors">
                         <td class="px-4 py-3">
-                            <div class="font-medium text-gray-900">@${cus.userName}</div>
-                            <div class="text-xs text-gray-400">${cus.fullname}</div>
+                            <div class="font-bold text-blue-700">#${o.orderId}</div>
+                            <div class="text-xs text-gray-500">${o.customerName}</div>
+                            <div class="text-[10px] text-gray-400">
+                                <fmt:formatDate value="${o.createdAt}" pattern="dd/MM HH:mm"/>
+                            </div>
                         </td>
-                        <td class="px-4 py-3">${cus.phoneNumber}</td>
+                        <td class="px-4 py-3">
+                            <div class="text-xs font-medium text-gray-900 truncate max-w-[150px]" title="${o.orderName}">
+                                ${o.orderName}
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-center font-bold text-gray-900">
+                            <fmt:formatNumber value="${o.totalAmount}" type="number" groupingUsed="true"/> đ
+                        </td>
                         <td class="px-4 py-3 text-center">
                             <c:choose>
-                                <c:when test="${cus.status eq 'Active' || cus.status eq 'ACTIVE'}">
-                                    <span class="px-2 py-1 text-[10px] font-bold text-green-700 bg-green-100 rounded-full border border-green-200">ACTIVE</span>
+                                <c:when test="${o.status eq 'PENDING'}">
+                                    <span class="px-2 py-1 text-[10px] font-bold text-yellow-700 bg-yellow-100 rounded-full border border-yellow-200 uppercase">Pending</span>
+                                </c:when>
+                                <c:when test="${o.status eq 'SHIPPED' || o.status eq 'APPROVED'}">
+                                    <span class="px-2 py-1 text-[10px] font-bold text-green-700 bg-green-100 rounded-full border border-green-200 uppercase">Success</span>
+                                </c:when>
+                                <c:when test="${o.status eq 'CANCELLED'}">
+                                    <span class="px-2 py-1 text-[10px] font-bold text-red-700 bg-red-100 rounded-full border border-red-200 uppercase">Canceled</span>
                                 </c:when>
                                 <c:otherwise>
-                                    <span class="px-2 py-1 text-[10px] font-bold text-red-700 bg-red-100 rounded-full border border-red-200">LOCKED</span>
+                                    <span class="px-2 py-1 text-[10px] font-bold text-blue-700 bg-blue-100 rounded-full border border-blue-200 uppercase">${o.status}</span>
                                 </c:otherwise>
                             </c:choose>
                         </td>
@@ -155,7 +180,7 @@
                     <tr class="hover:bg-orange-50 transition-colors">
                         <td class="px-4 py-3">
                             <div class="font-medium text-gray-900">#${st.count}</div>
-                                <div class="text-xs text-gray-500 whitespace-nowrap overflow-hidden text-ellipsis">
+                            <div class="text-xs text-gray-500 whitespace-nowrap overflow-hidden text-ellipsis">
                                 <fmt:formatDate value="${r.import_date}" pattern="yyyy-MM-dd"/>
                             </div>
                         </td>
@@ -259,7 +284,8 @@
     window.addEventListener('load', function () {
         const statsEl = document.getElementById('staffDashboardStats');
         const getNum = (key) => {
-            if (!statsEl) return 0;
+            if (!statsEl)
+                return 0;
             const raw = statsEl.dataset[key];
             return Number(raw || 0);
         };

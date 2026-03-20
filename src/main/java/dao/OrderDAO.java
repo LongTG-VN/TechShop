@@ -360,6 +360,65 @@ public class OrderDAO extends DBContext {
         return list;
     }
 
+    public List<Order> getOrdersByMonthStaff(int month) {
+        List<Order> list = new ArrayList<>();
+        String sql = "SELECT o.*, c.full_name, v.code AS code, "
+                + "(SELECT TOP 1 p.name FROM order_items oi "
+                + " JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
+                + " JOIN product_variants pv ON ii.variant_id = pv.variant_id "
+                + " JOIN products p ON pv.product_id = p.product_id "
+                + " WHERE oi.order_id = o.order_id) as representative_product, "
+                + "(SELECT COUNT(*) FROM order_items WHERE order_id = o.order_id) as total_items "
+                + "FROM orders o "
+                + "JOIN customers c ON o.customer_id = c.customer_id "
+                + "LEFT JOIN vouchers v ON o.voucher_id = v.voucher_id "
+                + "WHERE (MONTH(o.created_at) = ? OR ? = -1) AND YEAR(o.created_at) = 2026 "
+                + "ORDER BY o.created_at DESC";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, month);
+            ps.setInt(2, month);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Voucher voucher = null;
+                int vId = rs.getInt("voucher_id");
+                if (!rs.wasNull()) {
+                    voucher = new Voucher();
+                    voucher.setVoucherId(vId);
+                    voucher.setCode(rs.getString("code"));
+                }
+
+                Order o = new Order(
+                        rs.getInt("order_id"),
+                        rs.getInt("customer_id"),
+                        voucher,
+                        rs.getInt("payment_method_id"),
+                        rs.getString("shipping_address"),
+                        rs.getBigDecimal("total_amount"),
+                        rs.getString("payment_status"),
+                        rs.getString("status"),
+                        rs.getTimestamp("created_at")
+                );
+
+                o.setCustomerName(rs.getString("full_name"));
+
+                // Xử lý tên hiển thị sản phẩm
+                String pName = rs.getString("representative_product");
+                int count = rs.getInt("total_items");
+                String finalName = (pName != null) ? pName : "No products";
+                if (count > 1) {
+                    finalName += " (+" + (count - 1) + " items)";
+                }
+                o.setOrderName(finalName);
+
+                list.add(o);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public List<Map<String, Object>> getOrderDetails(int orderId) {
         List<Map<String, Object>> details = new ArrayList<>();
         String sql = "SELECT p.name, pv.sku, COUNT(*) as quantity, "
@@ -674,6 +733,61 @@ public class OrderDAO extends DBContext {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public List<Order> getTop5RecentOrders() {
+        List<Order> list = new ArrayList<>();
+        String sql = "SELECT TOP 5 o.*, c.full_name, v.code AS code, "
+                + "(SELECT TOP 1 p.name FROM order_items oi "
+                + " JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
+                + " JOIN product_variants pv ON ii.variant_id = pv.variant_id "
+                + " JOIN products p ON pv.product_id = p.product_id "
+                + " WHERE oi.order_id = o.order_id) as representative_product, "
+                + "(SELECT COUNT(*) FROM order_items WHERE order_id = o.order_id) as total_items "
+                + "FROM orders o "
+                + "JOIN customers c ON o.customer_id = c.customer_id "
+                + "LEFT JOIN vouchers v ON o.voucher_id = v.voucher_id "
+                + "ORDER BY o.created_at DESC";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Voucher voucher = null;
+                int vId = rs.getInt("voucher_id");
+                if (!rs.wasNull()) {
+                    voucher = new Voucher();
+                    voucher.setVoucherId(vId);
+                    voucher.setCode(rs.getString("code"));
+                }
+
+                Order o = new Order(
+                        rs.getInt("order_id"),
+                        rs.getInt("customer_id"),
+                        voucher,
+                        rs.getInt("payment_method_id"),
+                        rs.getString("shipping_address"),
+                        rs.getBigDecimal("total_amount"),
+                        rs.getString("payment_status"),
+                        rs.getString("status"),
+                        rs.getTimestamp("created_at")
+                );
+
+                o.setCustomerName(rs.getString("full_name"));
+
+                // Logic xử lý tên hiển thị: Tên SP đại diện + số lượng món thêm
+                String pName = rs.getString("representative_product");
+                int count = rs.getInt("total_items");
+                String finalName = (pName != null) ? pName : "No products";
+                if (count > 1) {
+                    finalName += " (+" + (count - 1) + " items)";
+                }
+                o.setOrderName(finalName);
+
+                list.add(o);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     //Test
