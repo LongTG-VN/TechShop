@@ -90,7 +90,7 @@ public class addressUserServlet extends HttpServlet {
             case "add":
                 page = "/pages/AddressManagementPage/addAddress.jsp";
                 request.setAttribute("hasDefaultAddress", utils.IO.checkDefaultAddress(currentUserId));
-                request.setAttribute("cart", "");
+                request.setAttribute("state", "");
                 break;
             case "addIncart":
                 page = "/pages/AddressManagementPage/addAddress.jsp";

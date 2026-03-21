@@ -93,6 +93,7 @@ public class customerServlet extends HttpServlet {
                     if (!isDeleted) {
                         // Nếu xóa thất bại
                         request.setAttribute("errorMessage", "Deletion failed! This customer has related data (address, order details, etc.) so it cannot be deleted.");
+                        cdao.softDeleteCustomer(idD);
                     } else {
                         // Nêu xóa thành công (bạn có thể thêm để thông báo cho rõ ràng)
                         request.setAttribute("successMessage", "Customer successfully deleted!");

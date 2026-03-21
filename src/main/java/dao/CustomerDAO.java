@@ -133,6 +133,20 @@ public class CustomerDAO extends DBContext {
         }
         return false;
     }
+    
+    public boolean softDeleteCustomer(int id) {
+        // Cập nhật status thành 'Locked' thay vì xóa bản ghi
+        String sql = "UPDATE customers SET status = 'Locked' WHERE customer_id = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, id);
+            
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 
     public boolean addCustomer(Customer c) {
         String sql = "INSERT INTO customers (username, password_hash, full_name, email, phone_number, status, created_at) "

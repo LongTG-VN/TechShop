@@ -382,7 +382,7 @@
                 messageDiv.innerHTML = '<span class="text-red-500 font-medium">Invalid discount code!</span>';
             }
         }
-
+discountDisplay.innerText = '-' + formatMoney(currentDiscount);
         // 3. Cập nhật lại HTML hiển thị giá tiền
         let afterDiscount = subTotal - currentDiscount;
         const SHIP_FEE = 30000;
