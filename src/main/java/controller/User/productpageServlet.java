@@ -61,26 +61,29 @@ public class productpageServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // 1. Khởi tạo các thành phần giao diện mặc định
+        // 1. Khởi tạo các thành phần giao diện mặc định (Giữ nguyên) 
         String headerComponent = "/components/navbar.jsp";
         String footerComponent = "/components/footer.jsp";
         String page = "/pages/MainPage/productPage.jsp";
 
-        // 2. Lấy các tham số lọc từ Request
+        // 2. Lấy các tham số lọc từ Request (Giữ nguyên) 
         String keyword = request.getParameter("keyword");
         String categoryIdParam = request.getParameter("categoryId");
         String brandIdParam = request.getParameter("brandId");
         String priceRange = request.getParameter("priceRange");
-
-        // THÊM: Lấy tham số sắp xếp từ dropdown
         String sortOrder = request.getParameter("sortOrder");
+
+        // --- BỔ SUNG: Lấy tham số phân trang ---
+        int pageSize = 9; // Bạn có thể chỉnh số lượng sản phẩm mỗi trang ở đây
+        String pageParam = request.getParameter("page");
+        int pageIndex = (pageParam == null || pageParam.isEmpty()) ? 1 : Integer.parseInt(pageParam);
 
         Integer categoryId = null;
         Integer brandId = null;
         Double minPrice = null;
         Double maxPrice = null;
 
-        // 3. Xử lý ép kiểu và logic khoảng giá
+        // 3. Xử lý ép kiểu và logic khoảng giá (Giữ nguyên) 
         try {
             if (categoryIdParam != null && !categoryIdParam.trim().isEmpty()) {
                 categoryId = Integer.parseInt(categoryIdParam);
@@ -111,32 +114,42 @@ public class productpageServlet extends HttpServlet {
             e.printStackTrace();
         }
 
-        // 4. Gọi DAO để lấy danh sách sản phẩm đã lọc và sắp xếp
         ProductDAO pdao = new ProductDAO();
-        // Cập nhật: Truyền thêm sortOrder vào hàm lấy dữ liệu
-        List<Product> productList = pdao.getFilteredProducts(keyword, categoryId, brandId, minPrice, maxPrice, sortOrder);
 
-        // 5. Lấy dữ liệu bổ trợ cho các bộ lọc Sidebar
+        // --- CẬP NHẬT: Gọi DAO theo kiểu phân trang ---
+        // Lấy tổng số để tính endPage 
+        int totalProducts = pdao.getTotalFilteredProducts(keyword, categoryId, brandId, minPrice, maxPrice);
+        int endPage = (int) Math.ceil((double) totalProducts / pageSize);
+
+        // Lấy danh sách sản phẩm theo trang hiện tại 
+        List<Product> productList = pdao.getFilteredProductsWithPaging(
+                keyword, categoryId, brandId, minPrice, maxPrice, sortOrder, pageIndex, pageSize);
+
+        // 5. Lấy dữ liệu bổ trợ cho các bộ lọc Sidebar (Giữ nguyên) 
         dao.CategoryDAO cdao = new dao.CategoryDAO();
         dao.BrandDAO bdao = new dao.BrandDAO();
 
-        // 6. Đưa dữ liệu lên Request Attribute để hiển thị trên JSP
+        // 6. Đưa dữ liệu lên Request Attribute (Giữ nguyên + Thêm tag phân trang) 
         request.setAttribute("categoryList", cdao.getAllCategory());
         request.setAttribute("brandList", bdao.getAllBrand());
         request.setAttribute("productList", productList);
 
-        // Giữ lại trạng thái các bộ lọc để UI không bị reset
+        // Thêm các attribute cho phân trang
+        request.setAttribute("endP", endPage);
+        request.setAttribute("tag", pageIndex);
+
+        // Giữ lại trạng thái các bộ lọc để UI không bị reset (Giữ nguyên) 
         request.setAttribute("keyword", keyword);
         request.setAttribute("categoryId", categoryId);
         request.setAttribute("brandId", brandId);
         request.setAttribute("priceRange", priceRange);
-        request.setAttribute("sortOrder", sortOrder); // Gửi sortOrder về JSP để selected option [cite: 304]
+        request.setAttribute("sortOrder", sortOrder);
 
         request.setAttribute("HeaderComponent", headerComponent);
         request.setAttribute("FooterComponent", footerComponent);
         request.setAttribute("ContentPage", page);
 
-        // 7. Forward đến Template người dùng
+        // 7. Forward đến Template người dùng (Giữ nguyên) 
         request.getRequestDispatcher("/template/userTemplate.jsp").forward(request, response);
     }
 

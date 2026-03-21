@@ -5,6 +5,7 @@
 <div class="max-w-[1200px] mx-auto px-4 py-8 font-sans text-gray-800">
     <div class="flex flex-col lg:flex-row gap-8">
 
+        <%-- SIDEBAR: BỘ LỌC --%>
         <aside class="w-full lg:w-1/4 flex flex-col gap-6">
             <form action="productpageservlet" method="GET" id="filterForm">
                 <input type="hidden" name="keyword" value="${keyword}" />
@@ -92,8 +93,10 @@
             </form>
         </aside>
 
+        <%-- NỘI DUNG CHÍNH --%>
         <main class="w-full lg:w-3/4">
 
+            <%-- Thanh sắp xếp --%>
             <div class="flex justify-between items-center mb-6 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
                 <span class="text-sm font-medium">Sort by:</span>
                 <select name="sortOrder" form="filterForm" onchange="this.form.submit()"
@@ -103,6 +106,7 @@
                 </select>
             </div>
 
+            <%-- Lưới sản phẩm --%>
             <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 <c:forEach var="p" items="${productList}">
                     <div class="group bg-white border border-gray-100 rounded-2xl p-4 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col relative">
@@ -113,7 +117,7 @@
                         </div>
 
                         <div class="flex flex-col flex-1">
-                            <h3 class="font-semibold text-gray-800 text-sm md:text-base line-clamp-2 hover:text-red-600 cursor-pointer">
+                            <h3 class="font-bold text-gray-800 text-sm md:text-base line-clamp-2 hover:text-red-600 cursor-pointer">
                                 ${p.name}
                             </h3>
                             <div class="mt-2 flex items-center gap-1">
@@ -151,7 +155,37 @@
                         No products found matching your current filters.
                     </div>
                 </c:if>
-            </div>
+            </div> <%-- Kết thúc grid sản phẩm --%>
+
+            <%-- PHÂN TRANG --%>
+            <c:if test="${endP > 1}">
+                <div class="flex justify-center items-center gap-2 mt-12 pb-8">
+                    <%-- Nút Previous --%>
+                    <c:if test="${tag > 1}">
+                        <a href="productpageservlet?page=${tag - 1}&keyword=${keyword}&categoryId=${categoryId}&brandId=${brandId}&priceRange=${priceRange}&sortOrder=${sortOrder}" 
+                           class="p-2 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        </a>
+                    </c:if>
+
+                    <%-- Các số trang --%>
+                    <c:forEach begin="1" end="${endP}" var="i">
+                        <a href="productpageservlet?page=${i}&keyword=${keyword}&categoryId=${categoryId}&brandId=${brandId}&priceRange=${priceRange}&sortOrder=${sortOrder}" 
+                           class="w-10 h-10 flex items-center justify-center rounded-lg border transition-all duration-300
+                           ${tag == i ? 'bg-red-600 text-white border-red-600 font-bold shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:border-red-500 hover:text-red-500'}">
+                            ${i}
+                        </a>
+                    </c:forEach>
+
+                    <%-- Nút Next --%>
+                    <c:if test="${tag < endP}">
+                        <a href="productpageservlet?page=${tag + 1}&keyword=${keyword}&categoryId=${categoryId}&brandId=${brandId}&priceRange=${priceRange}&sortOrder=${sortOrder}" 
+                           class="p-2 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+                    </c:if>
+                </div>
+            </c:if>
 
         </main>
     </div>

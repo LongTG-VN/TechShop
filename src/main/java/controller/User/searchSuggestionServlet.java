@@ -26,7 +26,7 @@ public class searchSuggestionServlet extends HttpServlet {
             ProductDAO pdao = new ProductDAO();
 
             // Lấy danh sách sản phẩm theo từ khoá tìm kiếm
-            List<Product> list = pdao.getFilteredProducts(keyword, null, null, null, null, null);
+            List<Product> list = pdao.getFilteredProductsWithPaging(keyword, null, null, null, null, null, 1, 10);
 
             // Chỉ lấy max 5 sản phẩn hiển thị quick search
             if (list.size() > 5) {
