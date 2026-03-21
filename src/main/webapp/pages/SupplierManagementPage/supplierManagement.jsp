@@ -2,14 +2,44 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <c:if test="${not empty sessionScope.msg}">
-    <div class="mb-4">
-        <div class="px-4 py-3 rounded border
-             ${sessionScope.msgType == 'danger' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-green-50 text-green-800 border-green-200'}">
-            ${sessionScope.msg}
+    <div id="supplier-toast"
+         class="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] w-[420px] max-w-[calc(100vw-2rem)] rounded-2xl border shadow-lg
+         ${sessionScope.msgType == 'danger' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-gray-50 text-gray-800 border-emerald-200'}">
+        <div class="px-5 py-4 pr-12 relative">
+            <button type="button"
+                    onclick="document.getElementById('supplier-toast').remove()"
+                    class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+
+            <div class="flex items-start gap-3">
+                <span class="mt-0.5 inline-flex items-center justify-center w-7 h-7 rounded-full
+                      ${sessionScope.msgType == 'danger' ? 'bg-red-100 text-red-600 border border-red-200' : 'bg-emerald-100 text-emerald-600 border border-emerald-300'}">
+                    <c:choose>
+                        <c:when test="${sessionScope.msgType == 'danger'}">!</c:when>
+                        <c:otherwise>&#10003;</c:otherwise>
+                    </c:choose>
+                </span>
+                <div>
+                    <p class="font-semibold ${sessionScope.msgType == 'danger' ? 'text-red-800' : 'text-gray-800'}">
+                        ${sessionScope.msgType == 'danger' ? 'Action failed' : 'Action completed'}
+                    </p>
+                    <p class="text-sm ${sessionScope.msgType == 'danger' ? 'text-red-700' : 'text-gray-500'}">
+                        ${sessionScope.msg}
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
     <c:remove var="msg" scope="session" />
     <c:remove var="msgType" scope="session" />
+
+    <script>
+        setTimeout(function () {
+            var toast = document.getElementById('supplier-toast');
+            if (toast) {
+                toast.remove();
+            }
+        }, 3500);
+    </script>
 </c:if>
 
 <div class="bg-white rounded-xl shadow-lg p-5">
@@ -100,7 +130,7 @@
                             </c:choose>
                             <span class="text-gray-300 mx-1">|</span>
                             <a href="supplier?action=delete&id=${s.supplier_id}"
-                               onclick="return confirm('Delete supplier #${s.supplier_id}? If it is used in import receipts, deletion may fail.');"
+                               onclick="return confirm('Bạn có chắc muốn xóa nhà cung cấp #${s.supplier_id} không? Nếu đang dùng trong phiếu nhập thì sẽ không xóa được.');"
                                class="text-red-600 hover:text-red-800 font-medium hover:underline">Delete</a>
                         </td>
                     </tr>

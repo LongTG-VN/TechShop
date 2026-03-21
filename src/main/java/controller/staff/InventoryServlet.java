@@ -84,9 +84,9 @@ public class InventoryServlet extends HttpServlet {
                     ok = dao.deleteInventory(id);
                 }
                 if (ok) {
-                    setMsg(request.getSession(), "Inventory item deleted.", "success");
+                    setMsg(request.getSession(), "Đã xóa sản phẩm trong kho.", "success");
                 } else {
-                    setMsg(request.getSession(), "Delete failed (invalid ID or item in use).", "danger");
+                    setMsg(request.getSession(), "Xóa chưa được, có thể do ID không đúng hoặc sản phẩm đang được dùng.", "danger");
                 }
                 redirectToInventoryManagement(request, response);
                 return;
@@ -128,26 +128,26 @@ public class InventoryServlet extends HttpServlet {
                     } else {
                         receiptItemId = new ImportReceiptItemDAO().getFirstReceiptItemId();
                         if (receiptItemId == 0) {
-                            setMsg(request.getSession(), "No receipt item available. Create an import receipt first.", "danger");
+                            setMsg(request.getSession(), "Chưa có phiếu nhập phù hợp. Bạn tạo phiếu nhập trước nhé.", "danger");
                             redirectToInventoryManagement(request, response);
                             return;
                         }
                     }
                     double importPrice = Double.parseDouble(importPriceStr != null ? importPriceStr : "0");
                     if (imei == null || imei.trim().isEmpty()) {
-                        setMsg(request.getSession(), "Please enter IMEI.", "danger");
+                        setMsg(request.getSession(), "Bạn nhập IMEI giúp mình nhé.", "danger");
                     } else {
                         String normalizedStatus = (status == null || status.trim().isEmpty()) ? "IN_STOCK" : status.trim();
                         InventoryItem item = new InventoryItem(0, variantId, receiptItemId, imei.trim(), importPrice, normalizedStatus);
                         boolean ok = dao.insertInventory(item);
                         if (ok) {
-                            setMsg(request.getSession(), "Item added.", "success");
+                            setMsg(request.getSession(), "Đã thêm sản phẩm vào kho.", "success");
                         } else {
-                            setMsg(request.getSession(), "Add failed (duplicate IMEI or invalid data).", "danger");
+                            setMsg(request.getSession(), "Thêm chưa được, có thể IMEI đã tồn tại hoặc dữ liệu chưa đúng.", "danger");
                         }
                     }
                 } catch (NumberFormatException e) {
-                    setMsg(request.getSession(), "Invalid data (variant or import price).", "danger");
+                    setMsg(request.getSession(), "Dữ liệu chưa hợp lệ (biến thể hoặc giá nhập).", "danger");
                 }
 
                 redirectToInventoryManagement(request, response);
@@ -162,7 +162,7 @@ public class InventoryServlet extends HttpServlet {
                     int inventoryId = parseIntSafe(request.getParameter("inventory_id"), 0);
                     InventoryItem existing = dao.getInventoryById(inventoryId);
                     if (existing == null) {
-                        setMsg(request.getSession(), "Item not found.", "danger");
+                        setMsg(request.getSession(), "Không tìm thấy sản phẩm cần cập nhật.", "danger");
                         redirectToInventoryManagement(request, response);
                         return;
                     }
@@ -170,19 +170,19 @@ public class InventoryServlet extends HttpServlet {
                     double importPrice = Double.parseDouble(importPriceStr != null ? importPriceStr : "0");
 
                     if (imei == null || imei.trim().isEmpty()) {
-                        setMsg(request.getSession(), "Please enter IMEI.", "danger");
+                        setMsg(request.getSession(), "Bạn nhập IMEI giúp mình nhé.", "danger");
                     } else {
                         String normalizedStatus = (status == null || status.trim().isEmpty()) ? "IN_STOCK" : status.trim();
                         InventoryItem item = new InventoryItem(inventoryId, variantId, existing.getReceipt_item_id(), imei.trim(), importPrice, normalizedStatus);
                         boolean ok = dao.updateInventory(item);
                         if (ok) {
-                            setMsg(request.getSession(), "Item updated.", "success");
+                            setMsg(request.getSession(), "Cập nhật sản phẩm trong kho thành công.", "success");
                         } else {
-                            setMsg(request.getSession(), "Update failed.", "danger");
+                            setMsg(request.getSession(), "Cập nhật chưa thành công, bạn thử lại giúp mình nhé.", "danger");
                         }
                     }
                 } catch (NumberFormatException e) {
-                    setMsg(request.getSession(), "Invalid data.", "danger");
+                    setMsg(request.getSession(), "Dữ liệu chưa hợp lệ, bạn kiểm tra lại nhé.", "danger");
                 }
 
                 redirectToInventoryManagement(request, response);

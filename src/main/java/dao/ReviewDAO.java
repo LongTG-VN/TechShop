@@ -277,6 +277,29 @@ public class ReviewDAO extends DBContext {
         return stats;
     }
 
+    public Map<Integer, Integer> getReviewStatsByMonth(int year, int month) {
+        Map<Integer, Integer> stats = new HashMap<>();
+        for (int i = 1; i <= 5; i++) {
+            stats.put(i, 0);
+        }
+        String sql = "SELECT rating, COUNT(*) as count "
+                + "FROM reviews "
+                + "WHERE YEAR(created_at) = ? AND MONTH(created_at) = ? "
+                + "GROUP BY rating";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, year);
+            ps.setInt(2, month);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                stats.put(rs.getInt("rating"), rs.getInt("count"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return stats;
+    }
+
     private Review mapResultSet(ResultSet rs) throws Exception {
         Review r = new Review();
         r.setReviewId(rs.getInt("review_id"));

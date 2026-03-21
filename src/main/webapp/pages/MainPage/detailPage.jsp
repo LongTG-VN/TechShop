@@ -351,6 +351,13 @@
         background: #dc2626;
         color: #fff;
     }
+    .btn-add-cart.disabled,
+    .btn-add-cart:disabled {
+        border-color: #d1d5db;
+        background: #f3f4f6;
+        color: #9ca3af;
+        cursor: not-allowed;
+    }
 
     /* Bottom sections */
     .bottom-grid {
@@ -867,11 +874,13 @@
                 </span>
                 <span class="rating-count">(${totalReviews} reviews)</span>
                 <span class="dot-sep"></span>
-                <span class="in-stock">
+                <c:set var="initialVariantId" value="${not empty variants ? variants[0].variantId : 0}" />
+                <c:set var="initialStock" value="${variantStockMap[initialVariantId]}" />
+                <span class="in-stock" id="stockStatus">
                     <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                     </svg>
-                    In Stock
+                    ${initialStock gt 0 ? 'In Stock' : 'Out of Stock'}
                 </span>
             </div>
 
@@ -911,7 +920,7 @@
                         <input type="text" id="qtyInput" name="quantity" value="1" class="qty-input" readonly>
                         <button type="button" class="qty-btn" onclick="updateQuantity(1)">+</button>
                     </div>
-                    <button type="submit" class="btn-add-cart">
+                    <button type="submit" class="btn-add-cart ${initialStock gt 0 ? '' : 'disabled'}" id="addToCartBtn" ${initialStock gt 0 ? '' : 'disabled'}>
                         🛒 Add to Cart
                     </button>
                 </div>
@@ -1089,6 +1098,7 @@
                             id: ${v.variantId},
                             sku: '${fn:replace(v.sku, "'", "\\'")}',
                             price: ${v.sellingPrice},
+                            stock: ${variantStockMap[v.variantId] != null ? variantStockMap[v.variantId] : 0},
                             specs: {}
                         };
     </c:forEach>
@@ -1207,6 +1217,7 @@
                             selectedVariantId = variant.id;
                             document.getElementById('formVariantId').value = variant.id;
                             document.getElementById('displayPrice').textContent = formatPrice(variant.price);
+                            syncStockStatus(variant);
 
                             var dynamicContainer = document.getElementById('dynamic-variant-specs');
                             if (dynamicContainer) {
@@ -1220,6 +1231,21 @@
                                     dynamicContainer.appendChild(row);
                                 }
                             }
+                        }
+
+                        function syncStockStatus(variant) {
+                            var addBtn = document.getElementById('addToCartBtn');
+                            var stockStatus = document.getElementById('stockStatus');
+                            if (!addBtn || !stockStatus || !variant) {
+                                return;
+                            }
+                            var inStock = (variant.stock || 0) > 0;
+                            addBtn.disabled = !inStock;
+                            addBtn.classList.toggle('disabled', !inStock);
+                            stockStatus.innerHTML = '<svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">'
+                                    + '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />'
+                                    + '</svg>'
+                                    + (inStock ? 'In Stock' : 'Out of Stock');
                         }
 
                         function buildVariantUI() {
@@ -1387,6 +1413,11 @@
                             if (!form)
                                 return;
                             form.addEventListener('submit', function (e) {
+                                var activeVariant = VARIANTS[selectedVariantId];
+                                if (!activeVariant || (activeVariant.stock || 0) <= 0) {
+                                    e.preventDefault();
+                                    return;
+                                }
                                 e.preventDefault();
                                 showAddToCartLoading();
                                 var url = form.getAttribute('action') + (form.getAttribute('action').indexOf('?') >= 0 ? '&' : '?') + 'ajax=1';

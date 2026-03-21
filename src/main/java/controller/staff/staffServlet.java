@@ -381,7 +381,9 @@ public class staffServlet extends HttpServlet {
                     }
 
                     ReviewDAO rdStats = new ReviewDAO();
-                    Map<Integer, Integer> rsStats = rdStats.getReviewStats();
+                    Map<Integer, Integer> rsStats = (month == -1)
+                            ? rdStats.getReviewStats()
+                            : rdStats.getReviewStatsByMonth(yearForMonth, month);
                     for (int i = 1; i <= 5; i++) {
                         request.setAttribute("star" + i, rsStats.get(i));
                     }

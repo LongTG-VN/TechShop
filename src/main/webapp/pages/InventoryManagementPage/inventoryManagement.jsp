@@ -2,40 +2,44 @@
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 
-<!-- Toast message -->
 <c:if test="${not empty sessionScope.msg}">
-    <div id="toast-notification"
-         class="fixed top-10 left-1/2 -translate-x-1/2 z-[9999] min-w-[320px] transition-all duration-500">
+    <div id="inventory-toast"
+         class="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] w-[420px] max-w-[calc(100vw-2rem)] rounded-2xl border shadow-lg
+         ${sessionScope.msgType == 'danger' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-gray-50 text-gray-800 border-emerald-200'}">
+        <div class="px-5 py-4 pr-12 relative">
+            <button type="button"
+                    onclick="document.getElementById('inventory-toast').remove()"
+                    class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
 
-        <c:choose>
-            <c:when test="${sessionScope.msgType == 'danger'}">
-                <div class="flex items-center justify-center p-4 rounded-xl shadow-2xl border-2 bg-red-50 text-red-800 border-red-200">
-                    <span class="font-bold uppercase tracking-wider text-sm">
+            <div class="flex items-start gap-3">
+                <span class="mt-0.5 inline-flex items-center justify-center w-7 h-7 rounded-full
+                      ${sessionScope.msgType == 'danger' ? 'bg-red-100 text-red-600 border border-red-200' : 'bg-emerald-100 text-emerald-600 border border-emerald-300'}">
+                    <c:choose>
+                        <c:when test="${sessionScope.msgType == 'danger'}">!</c:when>
+                        <c:otherwise>&#10003;</c:otherwise>
+                    </c:choose>
+                </span>
+                <div>
+                    <p class="font-semibold ${sessionScope.msgType == 'danger' ? 'text-red-800' : 'text-gray-800'}">
+                        ${sessionScope.msgType == 'danger' ? 'Action failed' : 'Action completed'}
+                    </p>
+                    <p class="text-sm ${sessionScope.msgType == 'danger' ? 'text-red-700' : 'text-gray-500'}">
                         ${sessionScope.msg}
-                    </span>
+                    </p>
                 </div>
-            </c:when>
-            <c:otherwise>
-                <div class="flex items-center justify-center p-4 rounded-xl shadow-2xl border-2 bg-green-50 text-green-800 border-green-200">
-                    <span class="font-bold uppercase tracking-wider text-sm">
-                        ${sessionScope.msg}
-                    </span>
-                </div>
-            </c:otherwise>
-        </c:choose>
-
+            </div>
+        </div>
     </div>
-
     <c:remove var="msg" scope="session"/>
     <c:remove var="msgType" scope="session"/>
 
     <script>
         setTimeout(function () {
-            var toast = document.getElementById("toast-notification");
+            var toast = document.getElementById('inventory-toast');
             if (toast) {
                 toast.remove();
             }
-        }, 3000);
+        }, 3500);
     </script>
 </c:if>
 

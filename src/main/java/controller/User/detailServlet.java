@@ -16,6 +16,7 @@ import dao.ProductImageDAO;
 import dao.ProductVariantDAO;
 import dao.ProductSpecificationValueDAO;
 import dao.VariantSpecValueDAO;
+import dao.InventoryItemDAO;
 import jakarta.servlet.http.HttpServlet;
 import model.Product;
 import model.ProductImage;
@@ -26,6 +27,8 @@ import model.Review;
 import dao.ReviewDAO;
 import java.util.List;
 import jakarta.servlet.http.Cookie;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -90,6 +93,11 @@ public class detailServlet extends HttpServlet {
 
                 ProductVariantDAO variantDao = new ProductVariantDAO();
                 List<ProductVariant> variants = variantDao.getVariantsByProductId(productId);
+                InventoryItemDAO inventoryItemDAO = new InventoryItemDAO();
+                Map<Integer, Integer> variantStockMap = new HashMap<>();
+                for (ProductVariant v : variants) {
+                    variantStockMap.put(v.getVariantId(), inventoryItemDAO.countAvailableByVariantId(v.getVariantId()));
+                }
 
                 ProductSpecificationValueDAO specDao = new ProductSpecificationValueDAO();
                 List<ProductSpecificationValues> specs = specDao.getSpecsByProductId(productId);
@@ -152,6 +160,7 @@ public class detailServlet extends HttpServlet {
                 request.setAttribute("product", p);
                 request.setAttribute("images", images);
                 request.setAttribute("variants", variants);
+                request.setAttribute("variantStockMap", variantStockMap);
                 request.setAttribute("specs", specs);
                 request.setAttribute("variantSpecs", variantSpecs);
 

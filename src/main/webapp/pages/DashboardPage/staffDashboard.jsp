@@ -11,20 +11,20 @@
                 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm
                 cursor-pointer hover:border-gray-400 transition-colors">
 
-            <option value="0">Select</option>
-            <option value="-1">All</option>
-            <option value="1">Month 1</option>
-            <option value="2">Month 2</option>
-            <option value="3">Month 3</option>
-            <option value="4">Month 4</option>
-            <option value="5">Month 5</option>
-            <option value="6">Month 6</option>
-            <option value="7">Month 7</option>
-            <option value="8">Month 8</option>
-            <option value="9">Month 9</option>
-            <option value="10">Month 10</option>
-            <option value="11">Month 11</option>
-            <option value="12">Month 12</option>
+            <option value="0" ${empty param.month || param.month == '0' ? 'selected' : ''}>Select</option>
+            <option value="-1" ${param.month == '-1' ? 'selected' : ''}>All</option>
+            <option value="1" ${param.month == '1' ? 'selected' : ''}>Month 1</option>
+            <option value="2" ${param.month == '2' ? 'selected' : ''}>Month 2</option>
+            <option value="3" ${param.month == '3' ? 'selected' : ''}>Month 3</option>
+            <option value="4" ${param.month == '4' ? 'selected' : ''}>Month 4</option>
+            <option value="5" ${param.month == '5' ? 'selected' : ''}>Month 5</option>
+            <option value="6" ${param.month == '6' ? 'selected' : ''}>Month 6</option>
+            <option value="7" ${param.month == '7' ? 'selected' : ''}>Month 7</option>
+            <option value="8" ${param.month == '8' ? 'selected' : ''}>Month 8</option>
+            <option value="9" ${param.month == '9' ? 'selected' : ''}>Month 9</option>
+            <option value="10" ${param.month == '10' ? 'selected' : ''}>Month 10</option>
+            <option value="11" ${param.month == '11' ? 'selected' : ''}>Month 11</option>
+            <option value="12" ${param.month == '12' ? 'selected' : ''}>Month 12</option>
         </select>
 
         <button type="submit" class="hidden"></button>
