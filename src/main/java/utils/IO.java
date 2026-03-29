@@ -111,32 +111,29 @@ public class IO {
     }
 
     public static boolean checkValidDates(String validFromStr, String validToStr) {
-        // 1. Kiểm tra rỗng (Người dùng chưa chọn ngày)
+      
         if (validFromStr == null || validFromStr.trim().isEmpty()
                 || validToStr == null || validToStr.trim().isEmpty()) {
             return false;
         }
 
         try {
-            // 2. Parse thử để kiểm tra định dạng
+            
             LocalDateTime validFrom = LocalDateTime.parse(validFromStr);
             LocalDateTime validTo = LocalDateTime.parse(validToStr);
 
-            // 3. Kiểm tra logic: Kết thúc phải sau Bắt đầu
+         
             if (!validTo.isAfter(validFrom)) {
                 return false;
             }
 
-            // Nếu bạn muốn check thêm điều kiện bắt đầu từ hôm nay trở đi:
-            // if (validFrom.isBefore(LocalDateTime.now())) {
-            //     return "Thời gian bắt đầu không được nằm trong quá khứ!";
-            // }
+
         } catch (DateTimeParseException e) {
-            // Bắt lỗi nếu dữ liệu truyền lên bị can thiệp sai định dạng
+           
             return false;
         }
 
-        // Nếu vượt qua hết các bước trên -> Hợp lệ
+      
         return true;
     }
 

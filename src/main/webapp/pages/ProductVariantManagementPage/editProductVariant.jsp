@@ -91,8 +91,13 @@
                             <label
                                 class="text-xs font-black text-gray-400 uppercase tracking-widest">SKU
                                 Code</label>
-                            <input type="text" name="sku" value="${variant.sku}" required
-                                   class="w-full mt-2 p-3 bg-gray-50 border-2 border-gray-200 rounded-xl font-black text-gray-900 uppercase">
+                            <input type="text" name="sku" value="${variant.sku}"
+                                   class="w-full mt-2 p-3 bg-gray-50 border-2 border-gray-200 rounded-xl font-black text-gray-900 uppercase"
+                                   required
+                                   pattern="^[A-Z0-9]+(?:-[A-Z0-9]+)+$"                               
+                                   title="Use uppercase letters, numbers, and hyphens only. Must contain at least one hyphen and cannot have leading, trailing, or consecutive hyphens (e.g., IP15-128-BLUE)."                                   class="w-full mt-2 p-4 bg-gray-50 border-2 border-gray-200 rounded-xl font-black text-gray-900 uppercase focus:ring-4 focus:ring-blue-100 outline-none transition-all"
+                                   placeholder="e.g., IP15-128-BLUE"
+                                   oninput="this.value = this.value.toUpperCase()">
                         </div>
                     </div>
                 </div>
@@ -152,7 +157,10 @@
                                 </c:forEach>
                                 <input type="text" name="specValue_${specDef.specId}"
                                        value="${currentVal}"
-                                       placeholder="Nhập ${specDef.specName}..."
+                                       placeholder="Enter ${specDef.specName}..."
+                                       oninput="this.value = this.value.replace(/[^a-zA-Z0-9\s-]/g, '')"
+                                       pattern="^[a-zA-Z0-9\s-]+$"
+                                       title="Only letters, numbers, spaces, and hyphens are allowed."
                                        class="w-full mt-2 p-3 bg-purple-50 border-2 border-purple-200 rounded-xl font-bold text-purple-800 placeholder-purple-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all">
                             </div>
                         </c:forEach>

@@ -79,9 +79,12 @@
                         <label
                             class="text-xs font-bold text-gray-400 uppercase tracking-widest">Product
                             Name</label>
-                        <input type="text" name="name" required
+                        <input type="text" name="name"
                                class="w-full mt-1 p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                               placeholder="Enter product name...">
+                               placeholder="Enter product name..."
+                               required
+                               pattern="^[a-zA-Z0-9](?:[a-zA-Z0-9\s\-]*[a-zA-Z0-9])?$"                               
+                               title="Letters, numbers, spaces, and hyphens (-) only. Cannot start or end with a hyphen." />
                     </div>
 
                     <%-- Category & Brand --%>
@@ -116,7 +119,7 @@
                     <div>
                         <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Product Images</label>
                         <%-- Xóa thuộc tính 'required' ở đây --%>
-                        <input type="file" name="productImage" accept="image/*" multiple
+                        <input type="file" name="productImage" accept=".jpg,.jpeg,.png,.webp,.gif" multiple
                                class="w-full mt-1 p-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
                         <p class="text-[10px] text-gray-400 mt-1 italic">
                             * Optional. If no images are selected, a default placeholder will be used.

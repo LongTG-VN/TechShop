@@ -35,6 +35,8 @@ import model.Supplier;
 import java.util.Map;
 import model.Employees;
 import dao.InventoryItemDAO;
+import dao.ProductVariantDAO;
+import model.ProductVariant;
 
 /**
  *
@@ -728,10 +730,20 @@ public class staffServlet extends HttpServlet {
                 request.getSession().setAttribute("msg", "Import price cannot be less than 0.");
                 request.getSession().setAttribute("msgType", "danger");
             } else {
-                new ImportReceiptItemDAO().insertItem(new ImportReceiptItem(0, receiptId, variantId, importPrice, qty));
-                new ImportReceiptsDAO().recalculateTotalCost(receiptId);
-                request.getSession().setAttribute("msg", "Item added to the receipt.");
-                request.getSession().setAttribute("msgType", "success");
+                ProductVariant pvAdd = new ProductVariantDAO().getVariantById(variantId);
+                if (pvAdd == null) {
+                    request.getSession().setAttribute("msg", "Selected variant was not found.");
+                    request.getSession().setAttribute("msgType", "danger");
+                } else if (importPrice > pvAdd.getSellingPrice()) {
+                    request.getSession().setAttribute("msg",
+                            "Import price cannot exceed selling price (" + String.format("%,d", pvAdd.getSellingPrice()) + " ₫).");
+                    request.getSession().setAttribute("msgType", "danger");
+                } else {
+                    new ImportReceiptItemDAO().insertItem(new ImportReceiptItem(0, receiptId, variantId, importPrice, qty));
+                    new ImportReceiptsDAO().recalculateTotalCost(receiptId);
+                    request.getSession().setAttribute("msg", "Item added to the receipt.");
+                    request.getSession().setAttribute("msgType", "success");
+                }
             }
             response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryReceiptDetail&id=" + receiptId);
             return;
@@ -763,10 +775,20 @@ public class staffServlet extends HttpServlet {
                 request.getSession().setAttribute("msg", "Import price cannot be less than 0.");
                 request.getSession().setAttribute("msgType", "danger");
             } else {
-                new ImportReceiptItemDAO().updateItem(new ImportReceiptItem(itemId, receiptId, variantId, importPrice, qty));
-                new ImportReceiptsDAO().recalculateTotalCost(receiptId);
-                request.getSession().setAttribute("msg", "Receipt item updated successfully.");
-                request.getSession().setAttribute("msgType", "success");
+                ProductVariant pvEdit = new ProductVariantDAO().getVariantById(variantId);
+                if (pvEdit == null) {
+                    request.getSession().setAttribute("msg", "Selected variant was not found.");
+                    request.getSession().setAttribute("msgType", "danger");
+                } else if (importPrice > pvEdit.getSellingPrice()) {
+                    request.getSession().setAttribute("msg",
+                            "Import price cannot exceed selling price (" + String.format("%,d", pvEdit.getSellingPrice()) + " ₫).");
+                    request.getSession().setAttribute("msgType", "danger");
+                } else {
+                    new ImportReceiptItemDAO().updateItem(new ImportReceiptItem(itemId, receiptId, variantId, importPrice, qty));
+                    new ImportReceiptsDAO().recalculateTotalCost(receiptId);
+                    request.getSession().setAttribute("msg", "Receipt item updated successfully.");
+                    request.getSession().setAttribute("msgType", "success");
+                }
             }
             response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryReceiptDetail&id=" + receiptId);
             return;

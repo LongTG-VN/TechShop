@@ -1,5 +1,6 @@
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %> 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -145,7 +146,6 @@
             <c:forEach items="${inventory}" var="item">
                 techShopDB.push({
                     productName: "${item.productName}",
-                    import_price: ${item.import_price != null ? item.import_price : 0},
                     status: "${item.status}",
                     imei: "${item.imei}"
                 });
@@ -160,7 +160,7 @@
             // 3. KHỞI TẠO AI (Có try-catch chống sập do thiếu Key)
             let ai = null;
             try {
-                const API_KEY = "AIzaSyAxQ6xGjhBJx3BNQcz3hX4APPDF51L86FU"; // Hãy đổi lại Key thật của bạn ở đây
+                const API_KEY = "AIzaSyDw5T3o0xZuB7gOtvjjv5PK-KeJexgXzVA"; // Hãy đổi lại Key thật của bạn ở đây
                 ai = new GoogleGenAI({apiKey: API_KEY});
             } catch (error) {
                 console.error("Lỗi khởi tạo AI:", error);

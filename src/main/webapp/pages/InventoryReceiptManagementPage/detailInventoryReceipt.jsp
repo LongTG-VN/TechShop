@@ -217,7 +217,8 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-1">Import Price (₫)</label>
-                            <input type="number" name="import_price" value="${editItem.import_price}" min="0" step="1000" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"/>
+                            <input type="number" name="import_price" value="${editItem.import_price}" min="0" step="1000" required class="w-full px-4 py-2 border border-gray-200 rounded-lg import-price-input"/>
+                            <p class="text-xs text-gray-500 mt-1 import-price-hint" data-default-class="text-xs text-gray-500 mt-1 import-price-hint"></p>
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-1">Quantity</label>
@@ -267,7 +268,8 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1">Import Price (₫)</label>
-                    <input type="number" name="import_price" value="0" min="0" step="1000" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"/>
+                    <input type="number" name="import_price" value="0" min="0" step="1000" required class="w-full px-4 py-2 border border-gray-200 rounded-lg import-price-input"/>
+                    <p class="text-xs text-gray-500 mt-1 import-price-hint" data-default-class="text-xs text-gray-500 mt-1 import-price-hint"></p>
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1">Quantity</label>
@@ -291,6 +293,7 @@
                     data-category-name="${v.categoryName}"
                     data-brand-name="${v.brandName}"
                     data-sku="${v.sku}"
+                    data-selling-price="${v.sellingPrice}"
                     data-is-active="${v.isActive}">
                 ${v.sku} - ${v.productName}
             </option>
@@ -300,6 +303,7 @@
     <script>
         (function () {
             var masterOptions = Array.from(document.querySelectorAll('#variant-master-data option')).map(function (option) {
+                var sp = parseFloat(option.dataset.sellingPrice);
                 return {
                     id: option.value,
                     productId: option.dataset.productId || '',
@@ -307,6 +311,7 @@
                     categoryName: option.dataset.categoryName || 'Uncategorized',
                     brandName: option.dataset.brandName || '',
                     sku: option.dataset.sku || '',
+                    sellingPrice: isNaN(sp) ? 0 : sp,
                     isActive: option.dataset.isActive === 'true'
                 };
             });
@@ -322,7 +327,7 @@
                 return Array.from(map.values());
             }
 
-            function fillSelect(select, placeholder, items, valueKey, labelBuilder, selectedValue) {
+            function fillSelect(select, placeholder, items, valueKey, labelBuilder, selectedValue, onOptionBuilt) {
                 select.innerHTML = '';
                 var placeholderOption = document.createElement('option');
                 placeholderOption.value = '';
@@ -333,6 +338,9 @@
                     var option = document.createElement('option');
                     option.value = item[valueKey];
                     option.textContent = labelBuilder(item);
+                    if (onOptionBuilt) {
+                        onOptionBuilt(option, item);
+                    }
                     if (String(item[valueKey]) === String(selectedValue)) {
                         option.selected = true;
                     }
@@ -386,6 +394,32 @@
                     }
                 }
 
+                function syncImportPriceLimit() {
+                    var inp = container.querySelector('input.import-price-input[name="import_price"]');
+                    var hintPrice = container.querySelector('.import-price-hint');
+                    if (!inp) {
+                        return;
+                    }
+                    var opt = variantSelect.options[variantSelect.selectedIndex];
+                    var sp = (opt && opt.value && opt.dataset.sellingPrice !== undefined)
+                            ? parseFloat(opt.dataset.sellingPrice) : NaN;
+                    if (!isNaN(sp) && sp >= 0 && opt && opt.value) {
+                        inp.setAttribute('max', String(Math.floor(sp)));
+                        inp.title = 'Import price must not exceed selling price (' + Math.floor(sp).toLocaleString('vi-VN') + ' ₫)';
+                        if (hintPrice) {
+                            hintPrice.textContent = 'Selling price (max import): ' + Math.floor(sp).toLocaleString('vi-VN') + ' ₫';
+                            hintPrice.className = 'text-xs text-amber-700 mt-1 import-price-hint';
+                        }
+                    } else {
+                        inp.removeAttribute('max');
+                        inp.title = '';
+                        if (hintPrice) {
+                            hintPrice.textContent = '';
+                            hintPrice.className = hintPrice.getAttribute('data-default-class') || 'text-xs text-gray-500 mt-1 import-price-hint';
+                        }
+                    }
+                }
+
                 function refreshVariants(selectedId) {
                     var categoryName = categorySelect.value;
                     var productId = productSelect.value;
@@ -397,7 +431,9 @@
 
                     fillSelect(variantSelect, '— Select variant —', variants, 'id', function (item) {
                         return item.sku + ' - ' + item.productName;
-                    }, selectedId || '');
+                    }, selectedId || '', function (option, item) {
+                        option.dataset.sellingPrice = String(item.sellingPrice != null ? item.sellingPrice : 0);
+                    });
 
                     if (!categoryName || !productId) {
                         variantSelect.disabled = true;
@@ -412,6 +448,7 @@
                     } else {
                         hint.textContent = 'Showing ' + variants.length + ' variant(s) for the selected product.';
                     }
+                    syncImportPriceLimit();
                 }
 
                 categorySelect.addEventListener('change', function () {
@@ -421,6 +458,10 @@
 
                 productSelect.addEventListener('change', function () {
                     refreshVariants('');
+                });
+
+                variantSelect.addEventListener('change', function () {
+                    syncImportPriceLimit();
                 });
 
                 if (selectedVariant) {

@@ -175,9 +175,9 @@
     </p>
 
     <nav class="inline-flex rounded-lg shadow-sm isolate">
-        <a href="#" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-50">Trước</a>
+        <a href="#" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-50">Before</a>
         <a href="#" class="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-gray-300">1</a>
-        <a href="#" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-50">Sau</a>
+        <a href="#" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-50">After</a>
     </nav>
 </div>
 </div>

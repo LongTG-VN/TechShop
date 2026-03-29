@@ -71,8 +71,8 @@ public class userServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String headerComponent = "/components/navbar.jsp"; // Trang mặc định khi mới vào
-        String footerComponent = "/components/footer.jsp"; // Trang mặc định khi mới vào
+        String headerComponent = "/components/navbar.jsp"; 
+        String footerComponent = "/components/footer.jsp";
         String page = "/pages/MainPage/homePage.jsp"; // Trang mặc định khi mới vào
         String action = request.getParameter("action");
         if (action == null) {
@@ -82,33 +82,28 @@ public class userServlet extends HttpServlet {
         if (action != null) {
             switch (action) {
                 case "errorpage":
-                    page = "/pages/MainPage/error404.jsp"; // Bạn cần tạo file này
+                    page = "/pages/MainPage/error404.jsp"; 
                     break;
                 case "homePage":
                     page = "/pages/MainPage/homePage.jsp";
                     ProductDAO pdao = new ProductDAO();
                     CategoryDAO cdao = new CategoryDAO();
                     InventoryItemDAO aO = new InventoryItemDAO();
-                    // 1. Lấy tất cả danh mục đang hoạt động để làm tiêu đề Tab
                     List<Category> allCategories = cdao.getAllCategory();
                     List<Category> activeCategories = new java.util.ArrayList<>();
-                    // 2. Tạo Map chứa sản phẩm cho từng danh mục (Giữ thứ tự LinkedHashMap)
                     Map<Integer, List<Product>> newProductTabs = new java.util.LinkedHashMap<>();
                     if (allCategories != null) {
                         for (Category cat : allCategories) {
                             if (cat.isIsActive()) {
                                 activeCategories.add(cat);
-                                // Lấy 10 sản phẩm mới nhất cho mỗi danh mục
                                 List<Product> products = pdao.getProductsByCategoryId(cat.getCategoryId(), 10);
                                 newProductTabs.put(cat.getCategoryId(), products);
                             }
                         }
                     }
-                    // Đẩy dữ liệu cho phần New Product (Tabs)
                     request.setAttribute("activeCategories", activeCategories);
                     request.setAttribute("newProductTabs", newProductTabs);
 
-                    // Giữ nguyên các phần Brand và Inventory cũ của bạn
                     request.setAttribute("appleList", pdao.getProductsByBrandId(1, 10));
                     request.setAttribute("samsungList", pdao.getProductsByBrandId(2, 10));
                     request.setAttribute("inventory", aO.getAllInventory());

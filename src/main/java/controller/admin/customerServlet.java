@@ -91,7 +91,7 @@ public class customerServlet extends HttpServlet {
                     break;
                 case "delete":
                     int idD = Integer.parseInt(request.getParameter("id"));
-                    boolean isDeleted = cdao.deleteCustomer(idD); // Mình đổi tên biến Delete thành isDeleted cho đúng chuẩn Java nhé
+                    boolean isDeleted = cdao.deleteCustomer(idD);
                     OrderDAO a = new OrderDAO();
                     InventoryItemDAO c = new InventoryItemDAO();
                     if (!isDeleted) {
@@ -101,17 +101,17 @@ public class customerServlet extends HttpServlet {
                         List<Order> listOrder = a.getOrdersByCustomerWithSummary(idD);
                         for (Order order : listOrder) {
                             if (!order.getStatus().equalsIgnoreCase("Shipped")) {
-                                a.updateOrderCurrentStatus(order.getOrderId(), "Cancelled");
+                                a.updateOrderFull(idD, order.getShippingAddress(), "Cancelled", "UNPAID", "Account locked");
+
                                 a.updateInventoryStatusByOrderId(order.getOrderId(), "IN_STOCK");
                             }
                         }
                     } else {
-                        // Nêu xóa thành công (bạn có thể thêm để thông báo cho rõ ràng)
                         request.setAttribute("successMessage", "Customer successfully deleted!");
                     }
 
                     page = "/pages/CustomerManagementPage/customerManagement.jsp";
-                    listData = new CustomerDAO().getAllCustomer(); // Load lại danh sách mới
+                    listData = new CustomerDAO().getAllCustomer();
                     break;
                 case "deleteAddress":
                     int addressId = Integer.parseInt(request.getParameter("addressId"));
@@ -200,7 +200,7 @@ public class customerServlet extends HttpServlet {
                         request.setAttribute("contentPage", "/pages/CustomerManagementPage/addCustomer.jsp");
                         request.getRequestDispatcher("/template/adminTemplate.jsp").forward(request, response);
                     }
-                    return; // Đừng quên return để không chạy xuống Redirect phía dưới
+                    return;
                 case "edit":
                     int idE = Integer.parseInt(request.getParameter("customerID"));
                     Customer customer = cdao.getCustomerById(idE);
@@ -216,19 +216,33 @@ public class customerServlet extends HttpServlet {
                     String errorNumberE = utils.IO.CheckNumber(phoneE) ? "" : "Invalid phone (10 digits required)";
 
                     if (errorNumberE.isEmpty() && errorEmailE.isEmpty()) {
-                        // OK -> Thêm vào DB
+
                         Customer updatedCus = cdao.getCustomerById(idE);
-                        updatedCus.setCustomerID(idE);
-                        updatedCus.setUserName(usernameE);
-                        updatedCus.setFullname(fullNameE);
-                        updatedCus.setEmail(emailE);
-                        updatedCus.setPhoneNumber(phoneE);
-                        updatedCus.setStatus(statusE);
-                        updatedCus.setPassword(passwordE);
-                        cdao.updateCustomer(updatedCus);
-                        response.sendRedirect("customerservlet?action=all");
+
+                        if (!updatedCus.getPassword().equalsIgnoreCase(passwordE)) {
+                            updatedCus.setCustomerID(idE);
+                            updatedCus.setUserName(usernameE);
+                            updatedCus.setFullname(fullNameE);
+                            updatedCus.setEmail(emailE);
+                            updatedCus.setPhoneNumber(phoneE);
+                            updatedCus.setStatus(statusE);
+                            updatedCus.setPassword(passwordE);
+                            cdao.updateCustomer(updatedCus);
+                            cdao.changePassword(idE, passwordE);
+                            response.sendRedirect("customerservlet?action=all");
+                        } else {
+                            updatedCus.setCustomerID(idE);
+                            updatedCus.setUserName(usernameE);
+                            updatedCus.setFullname(fullNameE);
+                            updatedCus.setEmail(emailE);
+                            updatedCus.setPhoneNumber(phoneE);
+                            updatedCus.setStatus(statusE);
+                            updatedCus.setPassword(passwordE);
+                            cdao.updateCustomer(updatedCus);
+                            response.sendRedirect("customerservlet?action=all");
+                        }
+
                     } else {
-                        // Lỗi -> Forward về trang Add kèm theo dữ liệu đã nhập
 
                         request.setAttribute("errorNumber", errorNumberE);
                         request.setAttribute("errorEmail", errorEmailE);

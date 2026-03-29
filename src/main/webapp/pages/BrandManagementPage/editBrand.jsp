@@ -49,8 +49,13 @@
             </div>
             <div class="col-span-8">
                 <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Brand Name</label>
-                <input type="text" name="brandName" value="${brand.brandName}" required
-                       class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl font-bold text-blue-600 focus:ring-0 outline-none">
+                <input type="text" name="brandName" value="${brand.brandName}"
+                       class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl font-bold text-blue-600 focus:ring-0 outline-none"
+                       placeholder=" " 
+                       required 
+                       pattern="^[a-zA-Z\s]+$" 
+                       title="Please enter only alphabet characters and spaces."
+                       />
             </div>
         </div>
 
@@ -78,7 +83,7 @@
                     <div class="relative [cite: 102]">
                         <c:choose>
                             <c:when test="${not empty brand.imageUrl}">
-                                <%-- SỬA: Thêm contextPath để hiện ảnh hiện tại [cite: 103] --%>
+                                <%-- Thêm contextPath để hiện ảnh hiện tại --%>
                                 <img src="${pageContext.request.contextPath}/${brand.imageUrl}" id="preview" 
                                      class="w-24 h-24 object-contain rounded-2xl border-4 border-white shadow-xl bg-white p-2 [cite: 103]">
                             </c:when>

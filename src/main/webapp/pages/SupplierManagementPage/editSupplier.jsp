@@ -23,15 +23,20 @@
     <div class="bg-white p-5 rounded-xl border shadow-sm max-w-xl">
         <h2 class="text-xl font-bold mb-4">Edit supplier (#${supplier.supplier_id})</h2>
 
-        <form action="supplier" method="POST">
+        <form action="supplier" method="POST" id="editSupplierForm"
+              onsubmit="return validateSupplierNameField(document.getElementById('editSupplierName'));">
             <input type="hidden" name="action" value="update"/>
             <input type="hidden" name="supplier_id" value="${supplier.supplier_id}"/>
 
             <div class="mb-3">
-                <label class="block mb-1 font-medium">Supplier name *</label>
-                <input type="text" name="supplier_name" required maxlength="100"
-                       value="${supplier.supplier_name}"
-                       class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200" placeholder="Nhập tên...">
+                <label class="block mb-1 font-medium" for="editSupplierName">Supplier name *</label>
+                <input id="editSupplierName" type="text" name="supplier_name" required maxlength="100"
+                       value="<c:out value='${supplier.supplier_name}'/>"
+                       class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200" placeholder="Nhập tên..."
+                       title="Letters and spaces only (Unicode / Vietnamese OK)"
+                       autocomplete="organization"
+                       oninput="filterSupplierNameInput(this)">
+                <p class="text-xs text-gray-500 mt-1">Chỉ chữ cái và khoảng trắng; không số, không ký tự đặc biệt.</p>
             </div>
 
             <div class="mb-3">
@@ -58,4 +63,37 @@
                 </div>
             </form>
         </div>
+<script>
+    function filterSupplierNameInput(el) {
+        if (!el) return;
+        try {
+            el.value = el.value.replace(/[^\p{L} ]/gu, '');
+        } catch (e) {
+            el.value = el.value.replace(/[^a-zA-ZÀ-ỹà-ỹĂăÂâĐđÊêÔôƠơƯư\s]/g, '');
+        }
+    }
+    function validateSupplierNameField(el) {
+        if (!el) return true;
+        var v = el.value.replace(/^\s+|\s+$/g, '');
+        el.value = v;
+        if (!v.length) {
+            el.setCustomValidity('Vui lòng nhập tên nhà cung cấp.');
+            el.reportValidity();
+            return false;
+        }
+        var ok;
+        try {
+            ok = /^[\p{L} ]+$/u.test(v);
+        } catch (e) {
+            ok = /^[a-zA-ZÀ-ỹà-ỹĂăÂâĐđÊêÔôƠơƯư ]+$/.test(v);
+        }
+        if (!ok) {
+            el.setCustomValidity('Chỉ được chữ cái và khoảng trắng.');
+            el.reportValidity();
+            return false;
+        }
+        el.setCustomValidity('');
+        return true;
+    }
+</script>
 </c:if>

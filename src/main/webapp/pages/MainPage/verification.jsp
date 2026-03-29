@@ -4,9 +4,9 @@
     <div class="w-full max-w-md bg-white shadow-2xl rounded-2xl p-8 space-y-6">
         
         <div class="text-center">
-            <h2 class="text-2xl font-bold text-gray-800">Xác thực OTP</h2>
+            <h2 class="text-2xl font-bold text-gray-800">OTP verification</h2>
             <p class="text-gray-500 mt-2 text-sm">
-                Nhập mã 6 chữ số đã gửi đến email của bạn
+               Enter the 6-digit code sent to your email.
             </p>
         </div>
 
@@ -30,7 +30,7 @@
                        text-white font-semibold py-3 rounded-xl 
                        transition duration-200 shadow-md hover:shadow-lg"
             >
-                Xác nhận
+                Confirm
             </button>
         </form>
 

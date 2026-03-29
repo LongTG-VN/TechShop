@@ -6,10 +6,12 @@ package dao;
 
 import java.security.SecureRandom;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;  
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import model.ImportReceiptItem;
 import model.InventoryItem;
 import model.InventorySummary;
@@ -24,7 +26,8 @@ public class InventoryItemDAO extends DBContext {
     private static final SecureRandom RANDOM = new SecureRandom();
 
     /**
-     * Lấy danh sách inventory (IMEI-level) kèm tên sản phẩm + người mua (nếu đã bán).
+     * Lấy danh sách inventory (IMEI-level) kèm tên sản phẩm + người mua (nếu đã
+     * bán).
      */
     public List<InventoryItem> getAllInventory() {
         List<InventoryItem> list = new ArrayList<>();
@@ -41,8 +44,7 @@ public class InventoryItemDAO extends DBContext {
                 + "LEFT JOIN orders o ON o.order_id = oi.order_id "
                 + "LEFT JOIN customers c ON c.customer_id = o.customer_id "
                 + "ORDER BY ii.inventory_id DESC";
-        try (PreparedStatement ps = conn.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
+        try (PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(mapRow(rs));
             }
@@ -53,8 +55,8 @@ public class InventoryItemDAO extends DBContext {
     }
 
     /**
-     * Tìm inventory theo keyword đơn giản (id/variant/imei/status/tên sp/tên khách/sku).
-     * Mục tiêu: dễ hiểu, đủ dùng cho trang quản lý.
+     * Tìm inventory theo keyword đơn giản (id/variant/imei/status/tên sp/tên
+     * khách/sku). Mục tiêu: dễ hiểu, đủ dùng cho trang quản lý.
      */
     public List<InventoryItem> searchInventory(String keyword) {
         List<InventoryItem> list = new ArrayList<>();
@@ -115,8 +117,14 @@ public class InventoryItemDAO extends DBContext {
                 rs.getString("status")
         );
         // Một số query không join đủ cột -> đọc "best-effort"
-        try { item.setProductName(rs.getString("product_name")); } catch (Exception ignored) { }
-        try { item.setBuyerName(rs.getString("buyer_name")); } catch (Exception ignored) { }
+        try {
+            item.setProductName(rs.getString("product_name"));
+        } catch (Exception ignored) {
+        }
+        try {
+            item.setBuyerName(rs.getString("buyer_name"));
+        } catch (Exception ignored) {
+        }
         return item;
     }
 
@@ -190,8 +198,8 @@ public class InventoryItemDAO extends DBContext {
     }
 
     /**
-     * Xóa inventory theo id (hard delete).
-     * Lưu ý: có thể fail nếu đang bị FK reference.
+     * Xóa inventory theo id (hard delete). Lưu ý: có thể fail nếu đang bị FK
+     * reference.
      */
     public boolean deleteInventory(int id) {
         if (conn == null) {
@@ -398,8 +406,8 @@ public class InventoryItemDAO extends DBContext {
     }
 
     /**
-     * Thống kê số lượng tồn kho theo trạng thái để hiển thị donut chart trên dashboard staff.
-     * Kết quả: [inStock, sold, other].
+     * Thống kê số lượng tồn kho theo trạng thái để hiển thị donut chart trên
+     * dashboard staff. Kết quả: [inStock, sold, other].
      */
     public int[] getInventoryStatusCounts() {
         if (conn == null) {
@@ -413,8 +421,7 @@ public class InventoryItemDAO extends DBContext {
         int inStock = 0;
         int sold = 0;
         int other = 0;
-        try (PreparedStatement ps = conn.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
+        try (PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
                 inStock = rs.getInt("in_stock");
                 sold = rs.getInt("sold");

@@ -86,7 +86,7 @@ public class forgotPassword extends HttpServlet {
 
         String email = request.getParameter("email");
         CustomerDAO cdao = new CustomerDAO();
-        String errorEmail = utils.IO.checkDuplicationGmail(email) ? "Email Chưa có đăng kí" : "";
+        String errorEmail = utils.IO.checkDuplicationGmail(email) ? "Email not yet registered" : "";
         int idC = 0;
         List<Customer> list = cdao.getAllCustomer();
 

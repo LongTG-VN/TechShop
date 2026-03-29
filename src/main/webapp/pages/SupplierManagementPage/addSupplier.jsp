@@ -15,13 +15,18 @@
 <div class="bg-white p-4 rounded border max-w-xl">
     <h2 class="text-xl font-bold mb-4">Add supplier</h2>
 
-    <form action="supplier" method="POST">
+    <form action="supplier" method="POST" id="addSupplierForm"
+          onsubmit="return validateSupplierNameField(document.getElementById('addSupplierName'));">
         <input type="hidden" name="action" value="add"/>
 
         <div class="mb-3">
-            <label class="block mb-1 font-medium">Supplier name *</label>
-            <input type="text" name="supplier_name" required maxlength="100"
-                   class="w-full px-3 py-2 border rounded" placeholder="Enter supplier name...">
+            <label class="block mb-1 font-medium" for="addSupplierName">Supplier name *</label>
+            <input id="addSupplierName" type="text" name="supplier_name" required maxlength="100"
+                   class="w-full px-3 py-2 border rounded" placeholder="Enter supplier name..."
+                   title="Letters and spaces only (Unicode / Vietnamese OK)"
+                   autocomplete="organization"
+                   oninput="filterSupplierNameInput(this)">
+            <p class="text-xs text-gray-500 mt-1">Only letters and spaces. Numbers and special characters are not allowed.</p>
         </div>
 
         <div class="mb-3">
@@ -45,3 +50,36 @@
         </div>
     </form>
 </div>
+<script>
+    function filterSupplierNameInput(el) {
+        if (!el) return;
+        try {
+            el.value = el.value.replace(/[^\p{L} ]/gu, '');
+        } catch (e) {
+            el.value = el.value.replace(/[^a-zA-ZÀ-ỹà-ỹĂăÂâĐđÊêÔôƠơƯư\s]/g, '');
+        }
+    }
+    function validateSupplierNameField(el) {
+        if (!el) return true;
+        var v = el.value.replace(/^\s+|\s+$/g, '');
+        el.value = v;
+        if (!v.length) {
+            el.setCustomValidity('Please enter supplier name.');
+            el.reportValidity();
+            return false;
+        }
+        var ok;
+        try {
+            ok = /^[\p{L} ]+$/u.test(v);
+        } catch (e) {
+            ok = /^[a-zA-ZÀ-ỹà-ỹĂăÂâĐđÊêÔôƠơƯư ]+$/.test(v);
+        }
+        if (!ok) {
+            el.setCustomValidity('Only letters and spaces are allowed.');
+            el.reportValidity();
+            return false;
+        }
+        el.setCustomValidity('');
+        return true;
+    }
+</script>

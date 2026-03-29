@@ -4,23 +4,23 @@
 <c:if test="${not empty sessionScope.msg}">
     <div id="toast-notification" class="fixed top-10 left-1/2 -translate-x-1/2 z-[9999] min-w-[320px] transition-all duration-500">
         <div class="flex items-center justify-center p-4 rounded-xl shadow-2xl border-2 animate-bounce
-            ${sessionScope.msgType == 'danger' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-green-50 text-green-800 border-green-200'}">
-            
+             ${sessionScope.msgType == 'danger' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-green-50 text-green-800 border-green-200'}">
+
             <div class="flex-shrink-0 mr-3">
                 <c:choose>
                     <c:when test="${sessionScope.msgType == 'danger'}">
                         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
                         </svg>
                     </c:when>
                     <c:otherwise>
                         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                         </svg>
                     </c:otherwise>
                 </c:choose>
             </div>
-            
+
             <span class="font-bold uppercase tracking-wider text-sm">
                 ${sessionScope.msg}
             </span>
@@ -41,7 +41,7 @@
         }, 3000);
     </script>
 </c:if>
-    
+
 <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-md border border-gray-100 mt-10">
     <h2 class="text-2xl font-bold mb-6 text-gray-800 uppercase tracking-wide">EDIT CATEGORY</h2>
 
@@ -61,7 +61,11 @@
                     <label class="block mb-2 text-sm font-medium text-gray-700">Category Name</label>
                     <input type="text" name="categoryName" value="${category.categoryName}" 
                            class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-blue-600" 
-                           required>
+                           placeholder=" " 
+                           required 
+                           pattern="^[a-zA-Z\s]+$" 
+                           title="Please enter only alphabet characters and spaces."
+                           />
                 </div>
             </div>
 

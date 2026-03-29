@@ -12,13 +12,17 @@
 
     <form action="specificationServlet" method="POST" class="space-y-6">
         <input type="hidden" name="action" value="add">
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <%-- Tên thông số --%>
             <div class="space-y-2">
                 <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Spec Name</label>
-                <input type="text" name="specName" required placeholder="e.g. RAM, Screen Size"
-                       class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="text" name="specName"  
+                       class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                       placeholder="e.g. RAM, Screen Size"
+                       required 
+                       pattern="^[a-zA-Z\s]+$" 
+                       title="Please enter only alphabet characters and spaces."/>
             </div>
 
             <%-- Đơn vị đo --%>

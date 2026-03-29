@@ -109,7 +109,7 @@ public class verificationServlet extends HttpServlet {
                 response.sendRedirect("userservlet?action=loginPage");
             } else {
                 // THẤT BẠI: Mã sai
-                request.setAttribute("mess", "Mã xác thực không chính xác. Vui lòng thử lại!");
+                request.setAttribute("mess", "Email not yet registered");
 
                 // Giữ lại các thành phần giao diện để forward ngược về trang OTP
                 request.setAttribute("HeaderComponent", "/components/navbar.jsp");
