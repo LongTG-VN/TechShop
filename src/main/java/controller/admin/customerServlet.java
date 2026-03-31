@@ -91,7 +91,7 @@ public class customerServlet extends HttpServlet {
                     break;
                 case "delete":
                     int idD = Integer.parseInt(request.getParameter("id"));
-                    boolean isDeleted = cdao.deleteCustomer(idD); 
+                    boolean isDeleted = cdao.deleteCustomer(idD);
                     OrderDAO a = new OrderDAO();
                     InventoryItemDAO c = new InventoryItemDAO();
                     if (!isDeleted) {
@@ -102,7 +102,7 @@ public class customerServlet extends HttpServlet {
                         for (Order order : listOrder) {
                             if (!order.getStatus().equalsIgnoreCase("Shipped")) {
                                 a.updateOrderFull(idD, order.getShippingAddress(), "Cancelled", "UNPAID", "Account locked");
-                                
+
                                 a.updateInventoryStatusByOrderId(order.getOrderId(), "IN_STOCK");
                             }
                         }
@@ -111,7 +111,7 @@ public class customerServlet extends HttpServlet {
                     }
 
                     page = "/pages/CustomerManagementPage/customerManagement.jsp";
-                    listData = new CustomerDAO().getAllCustomer(); 
+                    listData = new CustomerDAO().getAllCustomer();
                     break;
                 case "deleteAddress":
                     int addressId = Integer.parseInt(request.getParameter("addressId"));
@@ -200,7 +200,7 @@ public class customerServlet extends HttpServlet {
                         request.setAttribute("contentPage", "/pages/CustomerManagementPage/addCustomer.jsp");
                         request.getRequestDispatcher("/template/adminTemplate.jsp").forward(request, response);
                     }
-                    return; 
+                    return;
                 case "edit":
                     int idE = Integer.parseInt(request.getParameter("customerID"));
                     Customer customer = cdao.getCustomerById(idE);
@@ -216,29 +216,34 @@ public class customerServlet extends HttpServlet {
                     String errorNumberE = utils.IO.CheckNumber(phoneE) ? "" : "Invalid phone (10 digits required)";
 
                     if (errorNumberE.isEmpty() && errorEmailE.isEmpty()) {
-                       
-                      
+
                         Customer updatedCus = cdao.getCustomerById(idE);
-                        
+
                         if (!updatedCus.getPassword().equalsIgnoreCase(passwordE)) {
-                        updatedCus.setCustomerID(idE);
-                        updatedCus.setUserName(usernameE);
-                        updatedCus.setFullname(fullNameE);
-                        updatedCus.setEmail(emailE);
-                        updatedCus.setPhoneNumber(phoneE);
-                        updatedCus.setStatus(statusE);
-                        updatedCus.setPassword(passwordE);
-                        cdao.updateCustomer(updatedCus);
-                        cdao.changePassword(idE, passwordE);
-                        response.sendRedirect("customerservlet?action=all");
+                            updatedCus.setCustomerID(idE);
+                            updatedCus.setUserName(usernameE);
+                            updatedCus.setFullname(fullNameE);
+                            updatedCus.setEmail(emailE);
+                            updatedCus.setPhoneNumber(phoneE);
+                            updatedCus.setStatus(statusE);
+                            updatedCus.setPassword(passwordE);
+                            cdao.updateCustomer(updatedCus);
+                            cdao.changePassword(idE, passwordE);
+                            response.sendRedirect("customerservlet?action=all");
                         } else {
-                         response.sendRedirect("customerservlet?action=all");
+                            updatedCus.setCustomerID(idE);
+                            updatedCus.setUserName(usernameE);
+                            updatedCus.setFullname(fullNameE);
+                            updatedCus.setEmail(emailE);
+                            updatedCus.setPhoneNumber(phoneE);
+                            updatedCus.setStatus(statusE);
+                            updatedCus.setPassword(passwordE);
+                            cdao.updateCustomer(updatedCus);
+
+                            response.sendRedirect("customerservlet?action=all");
                         }
-                        
-                      
-                      
+
                     } else {
-                       
 
                         request.setAttribute("errorNumber", errorNumberE);
                         request.setAttribute("errorEmail", errorEmailE);

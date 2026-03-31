@@ -85,10 +85,13 @@ public class registerServlet extends HttpServlet {
             String phone = request.getParameter("phone_number");
             String email = request.getParameter("email");
             String password = request.getParameter("password");
+            String confirmPassword = request.getParameter("confirmPassword");
 
             String errorUsername = utils.IO.CheckDuplicationUsername(username) ? "" : "Username already exists!";
             String errorNumber = utils.IO.CheckNumber(phone) ? "" : "Invalid phone (10 digits required)";
             String errorEmail = utils.IO.checkDuplicationGmail(email) ? "" : "Gmail already exists";
+            String errorConfirmPassword = password.equalsIgnoreCase(confirmPassword) ? "" : "Password does not match";
+            
 
             // 5. Tạo đối tượng User mới
             Customer u = new Customer();
@@ -103,7 +106,7 @@ public class registerServlet extends HttpServlet {
 
             // 6. Lưu vào Database
 //            boolean isSuccess = cdao.addCustomer(u);
-            if (errorUsername.isEmpty() && errorNumber.isEmpty() && errorEmail.isEmpty()) {
+            if (errorUsername.isEmpty() && errorNumber.isEmpty() && errorEmail.isEmpty() && errorConfirmPassword.isEmpty()) {
                 HttpSession session = request.getSession();
                 String code = utils.EmailUtils.generateToken();
                 session.setMaxInactiveInterval(300);
@@ -127,12 +130,12 @@ public class registerServlet extends HttpServlet {
                 request.setAttribute("errorUsername", errorUsername);
                 request.setAttribute("errorPhone", errorNumber);
                 request.setAttribute("errorEmail", errorEmail);
-
+                
                 request.setAttribute("oldUsername", username);
                 request.setAttribute("oldFullName", fullName);
                 request.setAttribute("oldEmail", email);
                 request.setAttribute("oldPhone", phone);
-                request.setAttribute("oldPassword", password);
+                request.setAttribute("errorConfirmPassword", errorConfirmPassword);
 
                 String headerComponent = "/components/navbar.jsp"; // Trang mặc định khi mới vào
                 String footerComponent = "/components/footer.jsp"; // Trang mặc định khi mới vào

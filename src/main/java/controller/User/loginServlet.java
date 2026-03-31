@@ -148,15 +148,7 @@ public class loginServlet extends HttpServlet {
 
             // Kiểm tra tài khoản bị khóa (phần của người kia)
             if (!customer.getStatus().equalsIgnoreCase("ACTIVE")) {
-                OrderDAO a = new OrderDAO();
-                InventoryItemDAO c = new InventoryItemDAO();
-                List<Order> listOrder = a.getOrdersByCustomerWithSummary(customer.getCustomerID());
-                for (Order order : listOrder) {
-                    if (!order.getStatus().equalsIgnoreCase("Shipped")) {
-                        a.updateOrderFull(order.getOrderId(), order.getShippingAddress(), "Cancelled", "UNPAID", "Account locked");
-                        a.updateInventoryStatusByOrderId(order.getOrderId(), "IN_STOCK");
-                    }
-                }
+                request.setAttribute("username", customer.getUserName());
                 request.setAttribute("error", "Your account has been banned!");
                 request.setAttribute("ContentPage", "/pages/MainPage/loginPage.jsp");
                 request.getRequestDispatcher("/template/userTemplate.jsp").forward(request, response);
