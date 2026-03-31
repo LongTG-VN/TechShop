@@ -13,9 +13,12 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import model.Order;
+import model.OrderItem;
 
 /**
  *
@@ -97,14 +100,34 @@ public class orderStaffServlet extends HttpServlet {
                 case "editOrderPage":
                     int idEdit = Integer.parseInt(request.getParameter("id"));
                     Order orderToEdit = odao.getOrderById(idEdit);
-                    String nextStatus = odao.getNextStatus(orderToEdit.getStatus());
+
+                    List<OrderItem> orderItems = odao.getOrderItemsByOrderId(idEdit);
+                    request.setAttribute("orderItems", orderItems);
+                    request.setAttribute("odao", odao);
+
+                    String currentStatus = (orderToEdit != null && orderToEdit.getStatus() != null)
+                            ? orderToEdit.getStatus().trim()
+                            : "";
+
+                    String nextStatus = odao.getNextStatus(currentStatus);
+                    if (nextStatus != null) {
+                        nextStatus = nextStatus.trim();
+                    }
+
                     String cancelledCode = odao.getCancelledStatusCode();
-                    String nextOfNext = (nextStatus != null) ? odao.getNextStatus(nextStatus) : "";
+                    String nextOfNext = (nextStatus != null && !nextStatus.isEmpty())
+                            ? odao.getNextStatus(nextStatus)
+                            : "";
+
+                    boolean showAllocation = "APPROVED".equalsIgnoreCase(currentStatus)
+                            || "SHIPPING".equalsIgnoreCase(nextStatus);
 
                     request.setAttribute("order", orderToEdit);
                     request.setAttribute("nextStatus", nextStatus != null ? nextStatus : "");
                     request.setAttribute("cancelledCode", cancelledCode);
                     request.setAttribute("nextOfNext", nextOfNext != null ? nextOfNext : "");
+                    request.setAttribute("showAllocation", showAllocation);
+
                     page = "/pages/OrderManagementPage/editOrder.jsp";
                     break;
             }
@@ -136,11 +159,72 @@ public class orderStaffServlet extends HttpServlet {
             String status = request.getParameter("status");
             String paymentStatus = request.getParameter("paymentStatus");
 
-            // Lấy status hiện tại trước khi update
+            // Get current status before update
             Order currentOrder = odao.getOrderById(orderId);
             String oldStatus = currentOrder != null ? currentOrder.getStatus() : "";
 
-            // 1. Đọc thêm cancelReason từ form
+            // ============================================================
+            // PRODUCT ALLOCATION LOGIC
+            // ============================================================
+            if ("SHIPPING".equalsIgnoreCase(status) && "APPROVED".equalsIgnoreCase(oldStatus)) {
+
+                // BƯỚC 1: Kiểm tra số lượng tồn kho TRƯỚC
+                if (!odao.hasEnoughStockForOrder(orderId)) {
+                    session.setAttribute("msg", "Error: Khong du san pham trong kho de phan bo!");
+                    session.setAttribute("msgType", "danger");
+                    response.sendRedirect("orderStaffServlet?action=editOrderPage&id=" + orderId);
+                    return;
+                }
+
+                // BƯỚC 2: Thu thap allocations tu form
+                Map<Integer, Integer> allocations = new HashMap<>();
+                Enumeration<String> params = request.getParameterNames();
+                while (params.hasMoreElements()) {
+                    String paramName = params.nextElement();
+                    if (paramName.startsWith("assign_inv_")) {
+                        int orderItemId = Integer.parseInt(paramName.replace("assign_inv_", ""));
+                        String invIdValue = request.getParameter(paramName);
+                        if (invIdValue != null && !invIdValue.isEmpty()) {
+                            allocations.put(orderItemId, Integer.parseInt(invIdValue));
+                        }
+                    }
+                }
+
+                // BƯỚC 3: VALIDATION - Kiem tra TAT CA cac dropdown deu co gia tri
+                List<OrderItem> itemsInOrder = odao.getOrderItemsByOrderId(orderId);
+                int unselectedCount = 0;
+                StringBuilder unselectedItems = new StringBuilder();
+
+                for (OrderItem item : itemsInOrder) {
+                    if (!allocations.containsKey(item.getOrderItemId()) || allocations.get(item.getOrderItemId()) == 0) {
+                        unselectedCount++;
+                        if (unselectedItems.length() > 0) {
+                            unselectedItems.append(", ");
+                        }
+                        unselectedItems.append(item.getVariantName());
+                    }
+                }
+
+                if (unselectedCount > 0) {
+                    session.setAttribute("msg", "Error: Vui long CHON SERIAL cho tat ca san pham! Chua chon: " + unselectedItems);
+                    session.setAttribute("msgType", "danger");
+                    response.sendRedirect("orderStaffServlet?action=editOrderPage&id=" + orderId);
+                    return;
+                }
+
+                // BƯỚC 4: Thuc hien phan bo
+                if (!allocations.isEmpty()) {
+                    boolean isAllocated = odao.allocateOrderItems(allocations, orderId, status);
+                    if (!isAllocated) {
+                        session.setAttribute("msg", "Error: He thong loi khi phan bo san pham!");
+                        session.setAttribute("msgType", "danger");
+                        response.sendRedirect("orderStaffServlet?action=editOrderPage&id=" + orderId);
+                        return;
+                    }
+                }
+            }
+            // ============================================================
+
             String cancelReason = request.getParameter("cancelReason");
             if (cancelReason != null) {
                 cancelReason = cancelReason.trim();
@@ -149,12 +233,10 @@ public class orderStaffServlet extends HttpServlet {
                 }
             }
 
-// 2. Tính trước isChangingToCancel để dùng lại
             String cancelledCode = odao.getCancelledStatusCode();
             boolean isChangingToCancel = !oldStatus.equalsIgnoreCase(status)
                     && status.equalsIgnoreCase(cancelledCode);
 
-// 3. Truyền thêm cancelReason vào updateOrderFull
             boolean success = odao.updateOrderFull(orderId, address, status, paymentStatus,
                     isChangingToCancel ? cancelReason : null);
 
@@ -166,9 +248,19 @@ public class orderStaffServlet extends HttpServlet {
                         odao.updateInventoryStatusByOrderId(orderId, "IN_STOCK");
                     }
                 }
+
                 session.setAttribute("msg", "Update order success!");
                 session.setAttribute("msgType", "success");
+
+                if ("APPROVED".equalsIgnoreCase(status)) {
+                    response.sendRedirect("orderStaffServlet?action=editOrderPage&id=" + orderId);
+                    return;
+                }
+            } else {
+                session.setAttribute("msg", "Update order failed!");
+                session.setAttribute("msgType", "danger");
             }
+
             response.sendRedirect("orderStaffServlet?action=all");
             return;
         }

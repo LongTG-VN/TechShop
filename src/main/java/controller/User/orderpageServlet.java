@@ -279,12 +279,23 @@ public class orderpageServlet extends HttpServlet {
                 int variantId = item.getVariantId();
                 int qty = item.getQuantity();
                 BigDecimal sellingPrice = BigDecimal.valueOf(item.getSellingPrice());
-                List<Integer> inventoryIds = inventoryDAO.getAvailableInventoryIdsByVariantId(variantId, qty);
-                for (Integer invId : inventoryIds) {
-                    orderItemDAO.insertOrderItem(new OrderItem(orderId, invId, sellingPrice));
-                        // COD/không VNPay: chỉ chuyển sang SOLD khi đơn được SHIPPED.
-                        // Trước đó coi như "RESERVED" để đúng nghiệp vụ theo yêu cầu.
-                        inventoryDAO.updateStatus(invId, "RESERVED");
+//<<<<<<< Updated upstream
+//                List<Integer> inventoryIds = inventoryDAO.getAvailableInventoryIdsByVariantId(variantId, qty);
+//                for (Integer invId : inventoryIds) {
+//                    orderItemDAO.insertOrderItem(new OrderItem(orderId, invId, sellingPrice));
+//                        // COD/không VNPay: chỉ chuyển sang SOLD khi đơn được SHIPPED.
+//                        // Trước đó coi như "RESERVED" để đúng nghiệp vụ theo yêu cầu.
+//                        inventoryDAO.updateStatus(invId, "RESERVED");
+//=======
+
+                for (int i = 0; i < qty; i++) {
+                    OrderItem oi = new OrderItem();
+                    oi.setOrderId(orderId);
+                    oi.setVariantId(variantId);
+                    oi.setInventoryId(0); 
+                    oi.setSellingPrice(sellingPrice);
+                    orderItemDAO.insertOrderItem(oi);
+//>>>>>>> Stashed changes
                 }
             }
 

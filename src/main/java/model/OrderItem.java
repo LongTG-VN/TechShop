@@ -12,7 +12,9 @@ public class OrderItem {
     private int orderItemId;
     private int orderId;
     private int inventoryId;
+    private int variantId;
     private BigDecimal sellingPrice;
+    private String variantName;
 
     public OrderItem() {
     }
@@ -63,6 +65,23 @@ public class OrderItem {
     public void setSellingPrice(BigDecimal sellingPrice) {
         this.sellingPrice = sellingPrice;
     }
+
+    public int getVariantId() {
+        return variantId;
+    }
+
+    public void setVariantId(int variantId) {
+        this.variantId = variantId;
+    }
+
+    public String getVariantName() {
+        return variantName;
+    }
+
+    public void setVariantName(String variantName) {
+        this.variantName = variantName;
+    }
+    
 
     @Override
     public String toString() {

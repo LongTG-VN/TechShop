@@ -115,10 +115,14 @@ public class VNPayServlet extends HttpServlet {
                         int variantId = item.getVariantId();
                         int qty = item.getQuantity();
                         BigDecimal sellingPrice = BigDecimal.valueOf(item.getSellingPrice());
-                        List<Integer> inventoryIds = inventoryDAO.getAvailableInventoryIdsByVariantId(variantId, qty);
-                        for (Integer invId : inventoryIds) {
-                            orderItemDAO.insertOrderItem(new OrderItem(orderId, invId, sellingPrice));
-                            inventoryDAO.updateStatus(invId, "SOLD");
+
+                        for (int i = 0; i < qty; i++) {
+                            OrderItem oi = new OrderItem();
+                            oi.setOrderId(orderId);
+                            oi.setVariantId(variantId);
+                            oi.setInventoryId(0); 
+                            oi.setSellingPrice(sellingPrice);
+                            orderItemDAO.insertOrderItem(oi);
                         }
                     }
 

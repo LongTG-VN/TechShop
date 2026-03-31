@@ -70,7 +70,7 @@
                     <tr class="border-b-2 border-gray-100">
                         <th class="py-3 font-bold text-gray-700">Product Image</th>  
                         <th class="py-3 font-bold text-gray-700">Product Name</th>
-                        <th class="py-3 font-bold text-gray-700">IMEI / Serial</th>
+                        <th class="py-3 font-bold text-gray-700">Serial ID</th>
                         <th class="py-3 text-right font-bold text-gray-700">Price</th>
                     </tr>
                 </thead>
