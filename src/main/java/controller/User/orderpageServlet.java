@@ -283,8 +283,8 @@ public class orderpageServlet extends HttpServlet {
                 for (Integer invId : inventoryIds) {
                     orderItemDAO.insertOrderItem(new OrderItem(orderId, invId, sellingPrice));
                         // COD/không VNPay: chỉ chuyển sang SOLD khi đơn được SHIPPED.
-                        // Trước đó coi như "reversed"/reserved để đúng nghiệp vụ theo yêu cầu.
-                        inventoryDAO.updateStatus(invId, "REVERSED");
+                        // Trước đó coi như "RESERVED" để đúng nghiệp vụ theo yêu cầu.
+                        inventoryDAO.updateStatus(invId, "RESERVED");
                 }
             }
 

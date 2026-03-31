@@ -97,9 +97,9 @@
                     ${totalSold != null ? totalSold : 0}
                 </p>
             </div>
-            <!-- Reversed -->
+            <!-- Reserved -->
             <div class="bg-orange-50 border border-orange-200 rounded-xl px-4 py-3">
-                <p class="text-xs uppercase text-orange-700 font-semibold">Reversed</p>
+                <p class="text-xs uppercase text-orange-700 font-semibold">Reserved</p>
                 <p class="mt-1 text-xl font-bold text-orange-700">
                     ${totalReversed != null ? totalReversed : 0}
                 </p>
@@ -125,7 +125,7 @@
                         <th class="px-4 py-3">SKU / Variant</th>
                         <th class="px-4 py-3 text-right">Imported</th>
                         <th class="px-4 py-3 text-right">Sold</th>
-                        <th class="px-4 py-3 text-right">Reversed</th>
+                        <th class="px-4 py-3 text-right">Reserved</th>
                         <th class="px-4 py-3 text-right">In stock</th>
                         <th class="px-4 py-3 text-center">Actions</th>
                     </tr>
@@ -262,6 +262,11 @@
                                 <c:when test="${it.status == 'SOLD'}">
                                     <span class="px-2 py-1 text-xs font-semibold rounded-full text-blue-700 bg-blue-100">
                                         SOLD
+                                    </span>
+                                </c:when>
+                                <c:when test="${it.status == 'RESERVED' || it.status == 'REVERSED'}">
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full text-amber-700 bg-amber-100">
+                                        RESERVED
                                     </span>
                                 </c:when>
                                 <c:otherwise>
@@ -448,6 +453,9 @@
                 if (s === 'SOLD') {
                     return '<span class="px-2 py-1 text-xs font-semibold rounded-full text-blue-700 bg-blue-100">SOLD</span>';
                 }
+                if (s === 'RESERVED' || s === 'REVERSED') {
+                    return '<span class="px-2 py-1 text-xs font-semibold rounded-full text-amber-700 bg-amber-100">RESERVED</span>';
+                }
                 return '<span class="px-2 py-1 text-xs font-semibold rounded-full text-gray-700 bg-gray-100">' + s + '</span>';
             }
 
@@ -502,6 +510,9 @@
             }
             if (s === 'SOLD') {
                 return '<span class="px-2 py-1 text-xs font-semibold rounded-full text-blue-700 bg-blue-100">SOLD</span>';
+            }
+            if (s === 'RESERVED' || s === 'REVERSED') {
+                return '<span class="px-2 py-1 text-xs font-semibold rounded-full text-amber-700 bg-amber-100">RESERVED</span>';
             }
             return '<span class="px-2 py-1 text-xs font-semibold rounded-full text-gray-700 bg-gray-100">' + escapeHtml(s) + '</span>';
         }
