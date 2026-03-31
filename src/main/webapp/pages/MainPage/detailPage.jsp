@@ -321,6 +321,9 @@
 
                                     updateQtyButtonStates();
 
+                                    clampQtyToStock();
+                                    updateQtyButtonStates();
+
                                     var dynamicContainer = document.getElementById('dynamic-variant-specs');
                                     var noSpecsMsg = document.getElementById('no-specs-msg');
                                     dynamicContainer.innerHTML = '';
@@ -560,6 +563,9 @@
                                 }
 
                                 function updateQuantity(c) {
+                                    var maxQ = getMaxQtyForSelected();
+                                    if (maxQ < 1)
+                                        return;
                                     var i = document.getElementById('qtyInput');
                                     var cur = parseInt(i.value, 10) || 1;
                                     var v = cur + c;

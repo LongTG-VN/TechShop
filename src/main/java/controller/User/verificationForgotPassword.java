@@ -81,37 +81,33 @@ public class verificationForgotPassword extends HttpServlet {
     throws ServletException, IOException {
         String otpInput = request.getParameter("otp_input");
 
-        // 2. Lấy dữ liệu đã lưu trong Session
+       
         HttpSession session = request.getSession(false);
 
         if (session != null) {
             String otpServer = (String) session.getAttribute("code");
-//            int idC = (int) session.getAttribute("id");
-            // Giả sử Object của bạn tên là Customer hoặc User
-         
-            // 3. Kiểm tra logic
+
             if (otpServer != null && otpServer.equals(otpInput)) {
-                // THÀNH CÔNG: Mã khớp
-                // Xóa dữ liệu tạm trong session sau khi đã dùng xong
+              
                 session.removeAttribute("code");
-//                session.removeAttribute("id");
+              
 
                 
-                // Chuyển hướng đến trang thành công hoặc đăng nhập
+               
                 response.sendRedirect("changepasswordforgot");
             } else {
-                // THẤT BẠI: Mã sai
-                request.setAttribute("mess", "Mã xác thực không chính xác. Vui lòng thử lại!");
+                
+                request.setAttribute("mess", "The verification code is incorrect. Please try again!");
 
-                // Giữ lại các thành phần giao diện để forward ngược về trang OTP
+              
                 request.setAttribute("HeaderComponent", "/components/navbar.jsp");
                 request.setAttribute("FooterComponent", "/components/footer.jsp");
                 request.setAttribute("ContentPage", "/pages/MainPage/verificationForgotPassword.jsp");
                 request.getRequestDispatcher("/template/userTemplate.jsp").forward(request, response);
             }
         } else {
-            // Session đã hết hạn (timeout)
-            response.sendRedirect("register.jsp?mess=SessionExpired");
+       
+            response.sendRedirect("userservlet?action=homePage");
         }
     }
 

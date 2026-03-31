@@ -24,6 +24,8 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import dao.ProductImageDAO;
 import model.ProductImage;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 
 /**
  *
@@ -59,6 +61,65 @@ public class productServlet extends HttpServlet {
             out.println("<h1>Servlet productServlet at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
+        }
+    }
+
+    private static final String[] ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "gif"};
+    private static final String[] ALLOWED_CONTENT_TYPES = {
+        "image/jpeg", "image/png", "image/webp", "image/gif"
+    };
+
+    private boolean isAllowedExtension(String fileName) {
+        if (fileName == null || !fileName.contains(".")) {
+            return false;
+        }
+
+        String ext = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+        for (String allowed : ALLOWED_EXTENSIONS) {
+            if (allowed.equals(ext)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isAllowedContentType(String contentType) {
+        if (contentType == null) {
+            return false;
+        }
+
+        for (String allowed : ALLOWED_CONTENT_TYPES) {
+            if (allowed.equalsIgnoreCase(contentType)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isValidImageFile(Part filePart) {
+        try {
+            if (filePart == null || filePart.getSize() == 0) {
+                return false;
+            }
+
+            String fileName = Paths.get(filePart.getSubmittedFileName())
+                    .getFileName().toString();
+
+            String contentType = filePart.getContentType();
+
+            if (!isAllowedExtension(fileName)) {
+                return false;
+            }
+
+            if (!isAllowedContentType(contentType)) {
+                return false;
+            }
+
+            BufferedImage image = ImageIO.read(filePart.getInputStream());
+            return image != null;
+
+        } catch (Exception e) {
+            return false;
         }
     }
 
@@ -158,6 +219,18 @@ public class productServlet extends HttpServlet {
                 return;
             }
 
+            // Validate image files before inserting product
+            for (Part part : request.getParts()) {
+                if ("productImage".equals(part.getName()) && part.getSize() > 0) {
+                    if (!isValidImageFile(part)) {
+                        session.setAttribute("msg", "Error: Only JPG, JPEG, PNG, WEBP, and GIF image files are allowed.");
+                        session.setAttribute("msgType", "danger");
+                        response.sendRedirect("productServlet?action=add");
+                        return;
+                    }
+                }
+            }
+
             Product p = new Product();
             p.setName(name);
             p.setCategoryId(categoryId);
@@ -201,6 +274,13 @@ public class productServlet extends HttpServlet {
 
                 for (Part filePart : request.getParts()) {
                     if ("productImage".equals(filePart.getName()) && filePart.getSize() > 0) {
+                        if (!isValidImageFile(filePart)) {
+                            session.setAttribute("msg", "Error: Only JPG, JPEG, PNG, WEBP, and GIF image files are allowed.");
+                            session.setAttribute("msgType", "danger");
+                            response.sendRedirect("productServlet?action=add");
+                            return;
+                        }
+
                         String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
                         long timestamp = System.currentTimeMillis();
                         fileName = timestamp + "_" + fileName;
@@ -236,6 +316,18 @@ public class productServlet extends HttpServlet {
                 session.setAttribute("msgType", "danger");
                 response.sendRedirect("productServlet?action=edit&id=" + id);
                 return;
+            }
+
+            // Validate image files before updating product
+            for (Part part : request.getParts()) {
+                if ("productImage".equals(part.getName()) && part.getSize() > 0) {
+                    if (!isValidImageFile(part)) {
+                        session.setAttribute("msg", "Error: Only JPG, JPEG, PNG, WEBP, and GIF image files are allowed.");
+                        session.setAttribute("msgType", "danger");
+                        response.sendRedirect("productServlet?action=edit&id=" + id);
+                        return;
+                    }
+                }
             }
 
             // KIỂM TRA THAY ĐỔI
@@ -299,6 +391,13 @@ public class productServlet extends HttpServlet {
                 boolean isFirstImage = true;
                 for (Part filePart : request.getParts()) {
                     if ("productImage".equals(filePart.getName()) && filePart.getSize() > 0) {
+                        if (!isValidImageFile(filePart)) {
+                            session.setAttribute("msg", "Error: Only JPG, JPEG, PNG, WEBP, and GIF image files are allowed.");
+                            session.setAttribute("msgType", "danger");
+                            response.sendRedirect("productServlet?action=edit&id=" + id);
+                            return;
+                        }
+
                         String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
                         long timestamp = System.currentTimeMillis();
                         fileName = timestamp + "_" + fileName;
