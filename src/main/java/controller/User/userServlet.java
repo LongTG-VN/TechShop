@@ -88,7 +88,6 @@ public class userServlet extends HttpServlet {
                     page = "/pages/MainPage/homePage.jsp";
                     ProductDAO pdao = new ProductDAO();
                     CategoryDAO cdao = new CategoryDAO();
-                    InventoryItemDAO aO = new InventoryItemDAO();
                     List<Category> allCategories = cdao.getAllCategory();
                     List<Category> activeCategories = new java.util.ArrayList<>();
                     Map<Integer, List<Product>> newProductTabs = new java.util.LinkedHashMap<>();
@@ -104,9 +103,9 @@ public class userServlet extends HttpServlet {
                     request.setAttribute("activeCategories", activeCategories);
                     request.setAttribute("newProductTabs", newProductTabs);
 
-                    request.setAttribute("appleList", pdao.getProductsByBrandId(1, 10));
-                    request.setAttribute("samsungList", pdao.getProductsByBrandId(2, 10));
-                    request.setAttribute("inventory", aO.getAllInventory());
+                    request.setAttribute("appleList", pdao.getProductsByBrandName("Apple", 10));
+                    request.setAttribute("oppoList", pdao.getProductsByBrandName("OPPO", 10));
+
                     break;
                 case "loginPage":
                     page = "/pages/MainPage/loginPage.jsp"; // Bạn cần tạo file này

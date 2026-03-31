@@ -176,5 +176,5 @@ public class BrandDAO extends DBContext {
             System.out.println(brand.toString());
         }
     }
-
+    
 }

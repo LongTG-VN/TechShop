@@ -54,6 +54,25 @@ public class brandServlet extends HttpServlet {
     }
     private static final String UPLOAD_DIR = "assets/img/brands";
 
+    private boolean isAllowedImageExtension(String fileName) {
+        if (fileName == null || fileName.trim().isEmpty()) {
+            return false;
+        }
+        String lowerFileName = fileName.toLowerCase();
+        return lowerFileName.endsWith(".jpg")
+                || lowerFileName.endsWith(".jpeg")
+                || lowerFileName.endsWith(".png")
+                || lowerFileName.endsWith(".webp")
+                || lowerFileName.endsWith(".gif");
+    }
+
+    private String getSafeFileName(String fileName) {
+        if (fileName == null) {
+            return "";
+        }
+        return fileName.replaceAll("[^a-zA-Z0-9._-]", "_");
+    }
+
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**
      * Handles the HTTP <code>GET</code> method.
@@ -134,31 +153,43 @@ public class brandServlet extends HttpServlet {
             Part filePart = request.getPart("brandLogo");
             String imagePath = null;
 
-            // Chỉ xử lý nếu người dùng thực sự chọn file
             if (filePart != null && filePart.getSize() > 0) {
-                // Lấy tên file gốc (Ví dụ: apple-logo.png)
-                String originalFileName = java.nio.file.Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                String originalFileName = java.nio.file.Paths.get(filePart.getSubmittedFileName())
+                        .getFileName().toString();
 
-                // Tạo tên file duy nhất: Timestamp + Tên file gốc để giữ chữ "-logo"
-                String finalFileName = System.currentTimeMillis() + "_" + originalFileName;
+                if (!isAllowedImageExtension(originalFileName)) {
+                    session.setAttribute("msg", "Error: Only image files .jpg, .jpeg, .png, .webp, .gif are allowed!");
+                    session.setAttribute("msgType", "danger");
 
-                // Thiết lập đường dẫn lưu trữ trong server (thư mục assets/img/brands)
-                String deployPath = request.getServletContext().getRealPath("") + java.io.File.separator + "assets/img/brands";
-                java.io.File uploadDir = new java.io.File(deployPath);
+                    if ("add".equals(action)) {
+                        response.sendRedirect("brandServlet?action=add");
+                    } else {
+                        int id = Integer.parseInt(request.getParameter("brandId"));
+                        response.sendRedirect("brandServlet?action=edit&id=" + id);
+                    }
+                    return;
+                }
+
+                String safeFileName = getSafeFileName(originalFileName);
+                String finalFileName = System.currentTimeMillis() + "_" + safeFileName;
+
+                String uploadPath = request.getServletContext().getRealPath("/assets/img/brands");
+
+                if (uploadPath == null) {
+                    throw new ServletException("Upload path is null!");
+                }
+
+                File uploadDir = new File(uploadPath);
                 if (!uploadDir.exists()) {
                     uploadDir.mkdirs();
                 }
 
-                // Ghi file vật lý vào thư mục
-                filePart.write(deployPath + java.io.File.separator + finalFileName);
+                filePart.write(uploadPath + File.separator + finalFileName);
 
-                // Lưu đường dẫn tương đối vào database
                 imagePath = "assets/img/brands/" + finalFileName;
             }
-
             // 2. XỬ LÝ LƯU VÀO DATABASE
             if ("add".equals(action)) {
-                // Kiểm tra trùng tên trước khi thêm mới
                 if (bdao.isBrandNameExists(name)) {
                     session.setAttribute("msg", "Error: Brand name '" + name + "' already exists!");
                     session.setAttribute("msgType", "danger");
@@ -179,7 +210,6 @@ public class brandServlet extends HttpServlet {
                     return;
                 }
 
-                // Nếu không upload ảnh mới, giữ lại đường dẫn ảnh cũ từ DB
                 if (imagePath == null) {
                     model.Brand current = bdao.getBrandById(id);
                     imagePath = (current != null) ? current.getImageUrl() : null;

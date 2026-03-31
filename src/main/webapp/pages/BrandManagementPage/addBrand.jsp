@@ -84,9 +84,9 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                             </svg>
                             <p class="mb-2 text-sm text-gray-500 font-semibold" id="fileNameDisp">Click to upload brand logo</p>
-                            <p class="text-xs text-gray-400 uppercase">PNG, JPG or SVG</p>
+                            <p class="text-xs text-gray-400 uppercase">PNG, JPG, or SVG</p>
                         </div>
-                        <input id="brandLogo" name="brandLogo" type="file" accept=".jpg,.jpeg,.png" class="hidden" required onchange="displayFileName(this)" />
+                        <input id="brandLogo" name="brandLogo" type="file" accept=".jpg,.jpeg,.png,.webp,.gif" class="hidden" required onchange="displayFileName(this)" />
                     </label>
                 </div>
             </div>

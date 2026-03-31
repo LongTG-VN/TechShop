@@ -171,7 +171,6 @@
                     There are no products yet</div>
                 </c:if>
         </div>
-,
         <button onclick="scrollProduct(1)"
                 class="absolute -right-5 top-[55%] -translate-y-1/2 z-10 bg-white shadow-xl border border-gray-100 w-12 h-12 rounded-full text-gray-600 hover:text-red-600 hover:border-red-600 transition-all flex items-center justify-center text-2xl focus:outline-none">
             ›
@@ -190,7 +189,7 @@
 
         <div id="productSlider2"
              class="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4 px-2 no-scrollbar">
-            <c:forEach var="p" items="${samsungList}">
+            <c:forEach var="p" items="${oppoList}">
                 <div class="snap-start min-w-[240px] lg:min-w-[260px] flex-shrink-0">
                     <a href="detailservlet?productId=${p.productId}"
                        class="relative bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 p-4 group cursor-pointer h-full block">
@@ -221,7 +220,7 @@
                     </a>
                 </div>
             </c:forEach>
-            <c:if test="${empty samsungList}">
+            <c:if test="${empty oppoList}">
                 <div
                     class="w-full bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300 text-center text-gray-400 font-medium">
                     There are no products yet</div>

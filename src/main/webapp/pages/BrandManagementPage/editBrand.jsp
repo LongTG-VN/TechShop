@@ -95,7 +95,7 @@
                         </c:choose>
                     </div>
                     <div class="flex-1 space-y-2 [cite: 107]">
-                        <input type="file" name="brandLogo" accept="image/*" onchange="previewImage(this)"
+                        <input type="file" name="brandLogo" accept=".jpg,.jpeg,.png,.webp,.gif" onchange="previewImage(this)"
                                class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer [cite: 107]">
                         <p class="text-[10px] text-blue-300 italic">* Select a new image if you want to update the logo. [cite: 108]</p>
                     </div>

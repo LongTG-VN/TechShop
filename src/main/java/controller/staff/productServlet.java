@@ -66,7 +66,7 @@ public class productServlet extends HttpServlet {
 
     private static final String[] ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "gif"};
     private static final String[] ALLOWED_CONTENT_TYPES = {
-        "image/jpeg", "image/png", "image/webp", "image/gif"
+        "image/jpeg", "image/png", "image/webp", "image/gif" 
     };
 
     private boolean isAllowedExtension(String fileName) {
