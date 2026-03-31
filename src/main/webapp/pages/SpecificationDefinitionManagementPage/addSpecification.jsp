@@ -1,6 +1,27 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
+<%-- 1. THÔNG BÁO TOAST --%>
+<c:if test="${not empty sessionScope.msg}">
+    <div id="toast-notification" class="fixed top-10 left-1/2 -translate-x-1/2 z-[9999] min-w-[320px] transition-all duration-500">
+        <div class="flex items-center justify-center p-4 rounded-xl shadow-2xl border-2 animate-bounce
+            ${sessionScope.msgType == 'danger' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-green-50 text-green-800 border-green-200'}">
+            <span class="font-bold uppercase tracking-wider text-sm">${sessionScope.msg}</span>
+        </div>
+    </div>
+    <c:remove var="msg" scope="session" />
+    <c:remove var="msgType" scope="session" />
+    <script>
+        setTimeout(() => {
+            const toast = document.getElementById('toast-notification');
+            if (toast) {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, -20px)';
+                setTimeout(() => toast.remove(), 500);
+            }
+        }, 3000);
+    </script>
+</c:if>
 <div class="max-w-3xl mx-auto bg-white p-8 rounded-2xl shadow-xl border border-gray-100 mt-10">
     <div class="flex justify-between items-center border-b pb-6 mb-8">
         <h2 class="text-2xl font-bold text-gray-900 uppercase">Add New Specification</h2>

@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import model.ProductSpecificationValues;
+import model.SpecificationDefinition;
 import utils.DBContext;
 
 public class ProductSpecificationValueDAO extends DBContext {
@@ -138,13 +139,27 @@ public class ProductSpecificationValueDAO extends DBContext {
         v.setProductId(rs.getInt("product_id"));
         v.setSpecId(rs.getInt("spec_id"));
         v.setSpecValue(rs.getString("spec_value"));
-
-        // Cố gắng map Unit từ câu query nếu có
         try {
             v.setUnit(rs.getString("unit"));
         } catch (Exception e) {
         }
 
         return v;
+    }
+
+    public boolean isProductSpecExists(int productId, int specId) {
+        String sql = "SELECT COUNT(*) FROM product_spec_values WHERE product_id = ? AND spec_id = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, productId);
+            ps.setInt(2, specId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

@@ -1,6 +1,7 @@
 package controller.admin;
 
 import dao.CategoryDAO;
+import dao.ProductDAO;
 import dao.SpecificationDefinitionDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -117,9 +118,20 @@ public class specificationServlet extends HttpServlet {
         HttpSession session = request.getSession();
 
         if ("add".equals(action)) {
+            String specName = request.getParameter("specName").trim();
+            int categoryId = Integer.parseInt(request.getParameter("categoryId"));
+
+            // KIỂM TRA TRÙNG LẶP
+            if (sdao.isSpecDuplicate(specName, categoryId, 0)) {
+                session.setAttribute("msg", "Error: This parameter name is already used in the category!");
+                session.setAttribute("msgType", "danger");
+                response.sendRedirect("specificationServlet?action=add");
+                return;
+            }
+
             SpecificationDefinition s = new SpecificationDefinition();
-            s.setCategoryId(Integer.parseInt(request.getParameter("categoryId")));
-            s.setSpecName(request.getParameter("specName").trim());
+            s.setCategoryId(categoryId);
+            s.setSpecName(specName);
             s.setUnit(request.getParameter("unit"));
             s.setIsActive(true);
             s.setIsVariant("1".equals(request.getParameter("isVariant")));
@@ -129,10 +141,22 @@ public class specificationServlet extends HttpServlet {
             session.setAttribute("msgType", "success");
 
         } else if ("update".equals(action)) {
+            int specId = Integer.parseInt(request.getParameter("specId"));
+            String specName = request.getParameter("specName").trim();
+            int categoryId = Integer.parseInt(request.getParameter("categoryId"));
+
+            // KIỂM TRA TRÙNG LẶP (Trừ ID hiện tại)
+            if (sdao.isSpecDuplicate(specName, categoryId, specId)) {
+                session.setAttribute("msg", "Error: This parameter name is already used in the category!");
+                session.setAttribute("msgType", "danger");
+                response.sendRedirect("specificationServlet?action=edit&id=" + specId);
+                return;
+            }
+
             SpecificationDefinition s = new SpecificationDefinition();
-            s.setSpecId(Integer.parseInt(request.getParameter("specId")));
-            s.setCategoryId(Integer.parseInt(request.getParameter("categoryId")));
-            s.setSpecName(request.getParameter("specName").trim());
+            s.setSpecId(specId);
+            s.setCategoryId(categoryId);
+            s.setSpecName(specName);
             s.setUnit(request.getParameter("unit"));
             s.setIsActive("1".equals(request.getParameter("isActive")));
             s.setIsVariant("1".equals(request.getParameter("isVariant")));

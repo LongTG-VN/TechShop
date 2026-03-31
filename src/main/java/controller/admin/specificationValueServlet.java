@@ -125,13 +125,26 @@ public class specificationValueServlet extends HttpServlet {
 
         try {
             if ("add".equals(action)) {
+                int productId = Integer.parseInt(request.getParameter("productId"));
+                int specId = Integer.parseInt(request.getParameter("specId"));
+                String specValue = request.getParameter("specValue").trim();
+
+                if (vdao.isProductSpecExists(productId, specId)) {
+                    session.setAttribute("msg", "Error: This product has already been assigned this specification!");
+                    session.setAttribute("msgType", "danger");
+                    response.sendRedirect("specificationValueServlet?action=add");
+                    return; //
+                }
+
                 ProductSpecificationValues v = new ProductSpecificationValues();
-                v.setProductId(Integer.parseInt(request.getParameter("productId")));
-                v.setSpecId(Integer.parseInt(request.getParameter("specId")));
-                v.setSpecValue(request.getParameter("specValue").trim());
+                v.setProductId(productId);
+                v.setSpecId(specId);
+                v.setSpecValue(specValue);
 
                 vdao.insertProductSpec(v);
                 session.setAttribute("msg", "Value assigned successfully!");
+                session.setAttribute("msgType", "success");
+
             } else if ("update".equals(action)) {
                 ProductSpecificationValues v = new ProductSpecificationValues();
                 v.setProductId(Integer.parseInt(request.getParameter("productId")));
@@ -140,15 +153,16 @@ public class specificationValueServlet extends HttpServlet {
 
                 vdao.updateProductSpec(v);
                 session.setAttribute("msg", "Specification value updated!");
+                session.setAttribute("msgType", "success");
+
             } else if ("delete".equals(action)) {
                 int pId = Integer.parseInt(request.getParameter("productId"));
                 int sId = Integer.parseInt(request.getParameter("specId"));
                 vdao.deleteProductSpec(pId, sId);
                 session.setAttribute("msg", "Removed specification from product!");
             }
-            session.setAttribute("msgType", "success");
         } catch (Exception e) {
-            session.setAttribute("msg", "Error: Duplicate or invalid data!");
+            session.setAttribute("msg", "Error: Invalid data format!");
             session.setAttribute("msgType", "danger");
         }
         response.sendRedirect("specificationValueServlet?action=all");

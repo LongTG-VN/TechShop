@@ -189,4 +189,64 @@ public class SpecificationDefinitionDAO extends DBContext {
         }
         return list;
     }
+
+    public List<SpecificationDefinition> getGeneralSpecsByCategoryId(int categoryId) {
+        List<SpecificationDefinition> list = new ArrayList<>();
+        String sql = "SELECT s.*, c.category_name FROM specification_definitions s "
+                + "JOIN categories c ON s.category_id = c.category_id "
+                + "WHERE s.category_id = ? AND s.is_variant = 0 AND s.is_active = 1 "
+                + "ORDER BY s.spec_id ASC";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, categoryId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                SpecificationDefinition s = new SpecificationDefinition();
+                s.setSpecId(rs.getInt("spec_id"));
+                s.setSpecName(rs.getString("spec_name"));
+                s.setUnit(rs.getString("unit"));
+                list.add(s);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public boolean isSpecDuplicate(String specName, int categoryId, int excludeId) {
+        String sql = "SELECT COUNT(*) FROM specification_definitions "
+                + "WHERE LOWER(spec_name) = LOWER(?) AND category_id = ? AND spec_id != ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, specName.trim());
+            ps.setInt(2, categoryId);
+            ps.setInt(3, excludeId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public List<String> getUniqueSpecNames() {
+        List<String> list = new ArrayList<>();
+        String sql = "SELECT DISTINCT sd.spec_name "
+                + "FROM specification_definitions sd "
+                + "JOIN product_spec_values psv ON sd.spec_id = psv.spec_id "
+                + "WHERE sd.is_active = 1 "
+                + "ORDER BY sd.spec_name ASC";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(rs.getString("spec_name"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }
