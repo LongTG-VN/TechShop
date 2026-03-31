@@ -178,7 +178,7 @@
 
                         group.querySelectorAll('input').forEach(input => {
                             input.disabled = false;
-//                            input.setAttribute('required', 'required'); // Bắt buộc điền spec values
+                            input.setAttribute('required', 'required'); // Bắt buộc điền spec values
                         });
                         countSpecs++;
                     }

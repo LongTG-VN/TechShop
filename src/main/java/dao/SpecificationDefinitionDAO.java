@@ -249,4 +249,22 @@ public class SpecificationDefinitionDAO extends DBContext {
         }
         return list;
     }
+    public List<String> getVariantSpecNamesByCategoryId(int categoryId) {
+        List<String> list = new ArrayList<>();
+        String sql = "SELECT spec_name "
+                + "FROM specification_definitions "
+                + "WHERE category_id = ? AND is_variant = 1 AND is_active = 1 "
+                + "ORDER BY spec_id ASC";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, categoryId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(rs.getString("spec_name"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }

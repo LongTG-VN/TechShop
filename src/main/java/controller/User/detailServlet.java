@@ -25,6 +25,7 @@ import model.ProductSpecificationValues;
 import model.VariantSpecValue;
 import model.Review;
 import dao.ReviewDAO;
+import dao.SpecificationDefinitionDAO;
 import java.util.List;
 import jakarta.servlet.http.Cookie;
 import java.util.HashMap;
@@ -87,7 +88,8 @@ public class detailServlet extends HttpServlet {
 
                 ProductDAO pDao = new ProductDAO();
                 Product p = pDao.getProductById(productId);
-
+                SpecificationDefinitionDAO specDefDao = new SpecificationDefinitionDAO();
+                List<String> variantAxisNames = specDefDao.getVariantSpecNamesByCategoryId(p.getCategoryId());
                 ProductImageDAO imgDao = new ProductImageDAO();
                 List<ProductImage> images = imgDao.getImagesByProductId(productId);
 
@@ -163,6 +165,7 @@ public class detailServlet extends HttpServlet {
                 request.setAttribute("variantStockMap", variantStockMap);
                 request.setAttribute("specs", specs);
                 request.setAttribute("variantSpecs", variantSpecs);
+                request.setAttribute("variantAxisNames", variantAxisNames);
 
                 request.setAttribute("productReviews", productReviews);
                 request.setAttribute("totalReviews", totalReviews);

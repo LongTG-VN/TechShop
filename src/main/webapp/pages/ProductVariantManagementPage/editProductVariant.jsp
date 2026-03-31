@@ -137,7 +137,7 @@
                 </div>
             </div>
 
-            <%--=====VARIANT SPECIFICATIONS (Dung lượng, Màu sắc)=====--%>
+            <%--=====VARIANT SPECIFICATIONS =====--%>
             <c:if test="${not empty variantSpecDefs}">
                 <div class="border-t-2 border-gray-100 pt-8">
                     <h3
@@ -155,7 +155,7 @@
                                         <c:set var="currentVal" value="${cvs.specValue}" />
                                     </c:if>
                                 </c:forEach>
-                                <input type="text" name="specValue_${specDef.specId}"
+                                <input type="text" name="specValue_${specDef.specId}" required=" "
                                        value="${currentVal}"
                                        placeholder="Enter ${specDef.specName}..."
                                        oninput="this.value = this.value.replace(/[^a-zA-Z0-9\s-]/g, '')"
