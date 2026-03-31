@@ -45,6 +45,61 @@ import model.ProductVariant;
 @WebServlet(name = "staffServlet", urlPatterns = {"/staffservlet"})
 public class staffServlet extends HttpServlet {
 
+    @SuppressWarnings("unchecked")
+    private java.util.Map<Integer, java.util.Map<String, String>> getSerialDraftsByReceipt(jakarta.servlet.http.HttpSession session) {
+        Object obj = session.getAttribute("serialDraftsByReceipt");
+        if (obj instanceof java.util.Map) {
+            return (java.util.Map<Integer, java.util.Map<String, String>>) obj;
+        }
+        java.util.Map<Integer, java.util.Map<String, String>> created = new java.util.HashMap<>();
+        session.setAttribute("serialDraftsByReceipt", created);
+        return created;
+    }
+
+    private void saveSerialDraftsFromRequest(HttpServletRequest request, int receiptId) {
+        if (receiptId <= 0) {
+            return;
+        }
+        String[] drafts = request.getParameterValues("serialDraft");
+        if (drafts == null || drafts.length == 0) {
+            return;
+        }
+        java.util.Map<Integer, java.util.Map<String, String>> all = getSerialDraftsByReceipt(request.getSession());
+        java.util.Map<String, String> map = all.computeIfAbsent(receiptId, k -> new java.util.HashMap<>());
+        for (String entry : drafts) {
+            if (entry == null || entry.isEmpty()) {
+                continue;
+            }
+            String[] parts = entry.split("\\|", 3);
+            if (parts.length < 3) {
+                continue;
+            }
+            String key = parts[0] + "_" + parts[1];
+            String val = parts[2] == null ? "" : parts[2].trim().toUpperCase();
+            map.put(key, val);
+        }
+    }
+
+    private void removeSerialDraftsForItem(HttpServletRequest request, int receiptId, int receiptItemId) {
+        if (receiptId <= 0 || receiptItemId <= 0) {
+            return;
+        }
+        java.util.Map<Integer, java.util.Map<String, String>> all = getSerialDraftsByReceipt(request.getSession());
+        java.util.Map<String, String> map = all.get(receiptId);
+        if (map == null || map.isEmpty()) {
+            return;
+        }
+        String prefix = receiptItemId + "_";
+        java.util.Iterator<java.util.Map.Entry<String, String>> it = map.entrySet().iterator();
+        while (it.hasNext()) {
+            java.util.Map.Entry<String, String> e = it.next();
+            String k = e.getKey();
+            if (k != null && k.startsWith(prefix)) {
+                it.remove();
+            }
+        }
+    }
+
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -508,16 +563,9 @@ public class staffServlet extends HttpServlet {
                     page = "/pages/InventoryReceiptManagementPage/inventoryReceiptManagement.jsp";
                     ImportReceiptsDAO rdao = new ImportReceiptsDAO();
                     List<ImportReceipts> allReceipts = rdao.getAllReceipts();
-                    ImportReceiptItemDAO receiptItemDaoForList = new ImportReceiptItemDAO();
-                    java.util.Set<Integer> receiptIdsHavingItems = new java.util.HashSet<>();
-                    for (ImportReceiptItem it : receiptItemDaoForList.getAllItems()) {
-                        if (it != null) {
-                            receiptIdsHavingItems.add(it.getReceipt_id());
-                        }
-                    }
 
                     java.util.Map<Integer, ImportReceipts> latestBySupplier = new java.util.HashMap<>();
-                    java.util.Map<Integer, ImportReceipts> latestDraftWithItemsBySupplier = new java.util.HashMap<>();
+                    java.util.Map<Integer, ImportReceipts> latestDraftBySupplier = new java.util.HashMap<>();
                     java.util.Map<Integer, ImportReceipts> latestConfirmedBySupplier = new java.util.HashMap<>();
                     for (ImportReceipts r : allReceipts) {
                         if (r == null) {
@@ -525,12 +573,10 @@ public class staffServlet extends HttpServlet {
                         }
                         int supplierId = r.getSupplier_id();
                         String st = r.getStatus() == null ? "" : r.getStatus().trim();
-                        boolean hasItems = receiptIdsHavingItems.contains(r.getReceipt_id());
-
-                        if ("DRAFT".equalsIgnoreCase(st) && hasItems) {
-                            ImportReceipts oldDraft = latestDraftWithItemsBySupplier.get(supplierId);
+                        if ("DRAFT".equalsIgnoreCase(st)) {
+                            ImportReceipts oldDraft = latestDraftBySupplier.get(supplierId);
                             if (oldDraft == null || r.getReceipt_id() > oldDraft.getReceipt_id()) {
-                                latestDraftWithItemsBySupplier.put(supplierId, r);
+                                latestDraftBySupplier.put(supplierId, r);
                             }
                         }
                         if ("CONFIRMED".equalsIgnoreCase(st)) {
@@ -549,7 +595,8 @@ public class staffServlet extends HttpServlet {
                     List<ImportReceipts> dedupedReceipts = new ArrayList<>();
                     for (java.util.Map.Entry<Integer, ImportReceipts> entry : latestBySupplier.entrySet()) {
                         int supplierId = entry.getKey();
-                        ImportReceipts display = latestDraftWithItemsBySupplier.get(supplierId);
+                        // If supplier has any DRAFT receipt, outside list must show DRAFT first.
+                        ImportReceipts display = latestDraftBySupplier.get(supplierId);
                         if (display == null) {
                             display = latestConfirmedBySupplier.get(supplierId);
                         }
@@ -648,6 +695,9 @@ public class staffServlet extends HttpServlet {
                     request.setAttribute("receiptItems", new ImportReceiptItemDAO().getItemsByReceiptId(ridDetail));
                     request.setAttribute("inventoryByReceiptItemId",
                             new InventoryItemDAO().getInventoryGroupedByReceiptItemId(ridDetail));
+                    java.util.Map<Integer, java.util.Map<String, String>> serialDraftsAll
+                            = getSerialDraftsByReceipt(request.getSession());
+                    request.setAttribute("serialDraftMap", serialDraftsAll.get(ridDetail));
                     request.setAttribute("listVariants", new dao.ProductVariantDAO().getAllVariant());
                     request.setAttribute("listSuppliers", new SupplierDAO().getAllSuppliers());
                     request.setAttribute("listEmployees", new EmployeesDAO().getAllEmployeeses());
@@ -668,10 +718,9 @@ public class staffServlet extends HttpServlet {
                         if (r == null || r.getSupplier_id() != supplierIdHistory) {
                             continue;
                         }
-                        String st = r.getStatus() == null ? "" : r.getStatus().trim();
-                        if ("CONFIRMED".equalsIgnoreCase(st)) {
-                            supplierHistoryReceipts.add(r);
-                        }
+                        // Show all receipts of this supplier (DRAFT/CONFIRMED/CANCELLED...)
+                        // so draft receipts appear here immediately without confirmation.
+                        supplierHistoryReceipts.add(r);
                     }
                     supplierHistoryReceipts.sort((a, b) -> {
                         if (a.getCreated_at() == null && b.getCreated_at() == null) {
@@ -881,18 +930,8 @@ public class staffServlet extends HttpServlet {
                 empId = 1;
             }
             new ImportReceiptsDAO().recalculateTotalCost(receiptId);
-
-            if (supplierId > 0) {
-                ImportReceipts newDraft = new ImportReceipts(0, supplierId, empId, 0, null);
-                newDraft.setStatus("DRAFT");
-                newDraft.setNote("");
-                newDraft.setCreated_by(empId);
-                newDraft.setCreated_at(new java.sql.Timestamp(System.currentTimeMillis()));
-                new ImportReceiptsDAO().insertReceiptReturnId(newDraft);
-            }
-
             request.getSession().setAttribute("msg",
-                    "Receipt confirmed: " + generated + " item(s) moved to inventory; a new draft receipt was created for the supplier.");
+                    "Receipt confirmed: " + generated + " item(s) moved to inventory.");
             request.getSession().setAttribute("msgType", "success");
             response.sendRedirect(request.getContextPath()
                     + "/staffservlet?action=inventoryReceiptManagement");
@@ -1024,6 +1063,7 @@ public class staffServlet extends HttpServlet {
         if ("receiptItemEdit".equals(action)) {
             String rp = request.getParameter("receipt_id");
             int receiptId = (rp != null && !rp.isEmpty()) ? Integer.parseInt(rp) : 0;
+            saveSerialDraftsFromRequest(request, receiptId);
             ImportReceipts receiptCheck = new ImportReceiptsDAO().getReceiptById(receiptId);
             if (receiptCheck != null && receiptCheck.getStatus() != null
                     && "CONFIRMED".equalsIgnoreCase(receiptCheck.getStatus().trim())) {
@@ -1069,10 +1109,27 @@ public class staffServlet extends HttpServlet {
                     request.getSession().setAttribute("msg", "Selected variant was not found.");
                     request.getSession().setAttribute("msgType", "danger");
                 } else {
-                    ImportReceiptItem updated = new ImportReceiptItem(itemId, oldItem.getReceipt_id(), variantId, importPrice, qty);
-                    new ImportReceiptItemDAO().updateItem(updated);
+                    ImportReceiptItemDAO itemDao = new ImportReceiptItemDAO();
+                    boolean skuChanged = (variantId != oldItem.getVariant_id());
+                    ImportReceiptItem sameVariantLine = itemDao.getFirstItemByReceiptAndVariant(oldItem.getReceipt_id(), variantId);
+
+                    // If editing causes duplicate SKU line in the same receipt, merge into one line.
+                    if (sameVariantLine != null && sameVariantLine.getReceipt_item_id() != itemId) {
+                        sameVariantLine.setQuantity(sameVariantLine.getQuantity() + qty);
+                        sameVariantLine.setImport_price(importPrice);
+                        itemDao.updateItem(sameVariantLine);
+                        itemDao.deleteItem(itemId);
+                        removeSerialDraftsForItem(request, receiptId, itemId);
+                        request.getSession().setAttribute("msg", "Receipt lines merged into one SKU line.");
+                    } else {
+                        ImportReceiptItem updated = new ImportReceiptItem(itemId, oldItem.getReceipt_id(), variantId, importPrice, qty);
+                        itemDao.updateItem(updated);
+                        if (skuChanged) {
+                            removeSerialDraftsForItem(request, receiptId, itemId);
+                        }
+                        request.getSession().setAttribute("msg", "Receipt line updated.");
+                    }
                     new ImportReceiptsDAO().recalculateTotalCost(receiptId);
-                    request.getSession().setAttribute("msg", "Receipt line updated.");
                     request.getSession().setAttribute("msgType", "success");
                 }
             }

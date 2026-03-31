@@ -23,9 +23,9 @@ public class DBContext {
         try {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
             String dbURL = "jdbc:sqlserver://localhost:1433;"
-                    + "databaseName=TechShopFinal_DB_Test2;"
+                    + "databaseName=TechShopFinal_DB_Test;"
                     + "user=sa;"
-                    + "password=123;"
+                    + "password=123456;"
                     + "encrypt=true;trustServerCertificate=true;";
             conn = DriverManager.getConnection(dbURL);
             if (conn != null) {

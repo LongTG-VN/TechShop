@@ -201,6 +201,7 @@
                         </p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                             <c:forEach begin="1" end="${it.quantity}" var="serialIdx">
+                                <c:set var="serialDraftKey" value="${it.receipt_item_id}_${serialIdx}"/>
                                 <input id="serial-input-${it.receipt_item_id}-${serialIdx}"
                                        type="text"
                                        name="serials_${it.receipt_item_id}_${serialIdx}"
@@ -208,6 +209,7 @@
                                        data-serial-input="true"
                                        data-item-id="${it.receipt_item_id}"
                                        data-item-label="${variantSkuMs}"
+                                       value="${serialDraftMap[serialDraftKey]}"
                                        placeholder="Serial #${serialIdx} (SN-123456789)"
                                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"/>
                             </c:forEach>
@@ -337,10 +339,12 @@
     <c:if test="${param.mode == 'add' && !isConfirmedReceipt}">
         <div id="edit-item-panel" class="hidden mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
             <h3 id="edit-item-title" class="text-lg font-bold text-blue-900 mb-3">Edit Item</h3>
-            <form action="${pageContext.request.contextPath}/staffservlet" method="post" class="space-y-4">
+            <form action="${pageContext.request.contextPath}/staffservlet" method="post" class="space-y-4"
+                  onsubmit="return validateEditReceiptItemForm();">
                 <input type="hidden" name="action" value="receiptItemEdit"/>
                 <input type="hidden" name="receipt_id" value="${receipt.receipt_id}"/>
                 <input type="hidden" id="edit-receipt-item-id" name="receipt_item_id" value=""/>
+                <div id="edit-serial-drafts-holder"></div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1">Category</label>
@@ -532,6 +536,73 @@
             if (input) {
                 input.focus();
             }
+        }
+
+        function validateEditReceiptItemForm() {
+            var categorySelect = document.getElementById('edit-category-select');
+            var productSelect = document.getElementById('edit-product-select');
+            var variantSelect = document.getElementById('edit-variant-select');
+            var priceInput = document.getElementById('edit-import-price');
+            var qtyInput = document.getElementById('edit-quantity');
+
+            if (!categorySelect || !productSelect || !variantSelect || !priceInput || !qtyInput) {
+                return true;
+            }
+
+            var categoryVal = (categorySelect.value || '').trim();
+            var productVal = (productSelect.value || '').trim();
+            var variantVal = (variantSelect.value || '').trim();
+            var priceVal = Number(priceInput.value || 0);
+            var qtyVal = Number(qtyInput.value || 0);
+
+            if (!categoryVal) {
+                alert('Please select a category before updating.');
+                categorySelect.focus();
+                return false;
+            }
+            if (!productVal) {
+                alert('Please select a product before updating.');
+                productSelect.focus();
+                return false;
+            }
+            if (!variantVal) {
+                alert('Please select a SKU/variant before updating.');
+                variantSelect.focus();
+                return false;
+            }
+            if (!isFinite(priceVal) || priceVal < 0) {
+                alert('Import price must be a valid non-negative number.');
+                priceInput.focus();
+                return false;
+            }
+            if (!Number.isInteger(qtyVal) || qtyVal <= 0) {
+                alert('Quantity must be a valid integer greater than 0.');
+                qtyInput.focus();
+                return false;
+            }
+
+            // Preserve current serial drafts on page while editing line item.
+            var holder = document.getElementById('edit-serial-drafts-holder');
+            if (holder) {
+                holder.innerHTML = '';
+                var serialInputs = Array.from(document.querySelectorAll('input[data-serial-input="true"]'));
+                for (var i = 0; i < serialInputs.length; i++) {
+                    var input = serialInputs[i];
+                    var itemId = input.getAttribute('data-item-id') || '';
+                    var inputId = input.id || '';
+                    var m = inputId.match(/-(\d+)$/);
+                    var idx = m ? m[1] : '';
+                    if (!itemId || !idx) {
+                        continue;
+                    }
+                    var hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'serialDraft';
+                    hidden.value = itemId + '|' + idx + '|' + (input.value || '');
+                    holder.appendChild(hidden);
+                }
+            }
+            return true;
         }
 
         function toggleReceiptHeaderEdit(show) {

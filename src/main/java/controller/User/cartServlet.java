@@ -2,6 +2,7 @@ package controller.User;
 
 import dao.CartItemDAO;
 import dao.CustomerDAO;
+import dao.InventoryItemDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -11,7 +12,9 @@ import model.CartItem;
 import model.CartItemDisplay;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @WebServlet(name = "cartServlet", urlPatterns = {"/cartservlet"})
 public class cartServlet extends HttpServlet {
@@ -117,9 +120,14 @@ public class cartServlet extends HttpServlet {
 
         int customerId = getValidCustomerId(request);
         List<CartItemDisplay> listCart = new java.util.ArrayList<>();
+        Map<Integer, Integer> variantStockMap = new HashMap<>();
         if (customerId > 0) {
             CartItemDAO cartDao = new CartItemDAO();
             listCart = cartDao.getCartDisplayByCustomerId(customerId);
+            InventoryItemDAO invDao = new InventoryItemDAO();
+            for (CartItemDisplay item : listCart) {
+                variantStockMap.put(item.getVariantId(), invDao.countAvailableByVariantId(item.getVariantId()));
+            }
         }
         int cartCount = listCart.size();
 
@@ -139,6 +147,7 @@ public class cartServlet extends HttpServlet {
         request.getSession().setAttribute("cartCount", cartCount);
 
         request.setAttribute("listCart", listCart);
+        request.setAttribute("variantStockMap", variantStockMap);
         request.setAttribute("HeaderComponent", headerComponent);
         request.setAttribute("FooterComponent", footerComponent);
         request.setAttribute("ContentPage", page);
@@ -185,9 +194,23 @@ public class cartServlet extends HttpServlet {
 
                 CartItemDAO cartDao = new CartItemDAO();
                 CartItem existing = cartDao.getByCustomerAndVariant(customerId, variantId);
+                int available = new InventoryItemDAO().countAvailableByVariantId(variantId);
+                if (available <= 0) {
+                    String msg = "This product is out of stock. Please choose another.";
+                    if (ajax) {
+                        sendJson(response, false, 0, 0, msg);
+                    } else {
+                        setMsg(request, msg, "danger");
+                        redirectToCart(request, response);
+                    }
+                    return;
+                }
 
                 int currentQty = (existing != null) ? existing.getQuantity() : 0;
                 int targetQty = currentQty + quantity;
+                if (targetQty > available) {
+                    targetQty = available;
+                }
 
                 boolean saved;
                 if (existing != null) {
@@ -219,12 +242,15 @@ public class cartServlet extends HttpServlet {
                 }
                 request.getSession().setAttribute("cartCount", cartCount);
 
-                String addMsg = "Added to cart.";
+                boolean clippedToStock = (currentQty + quantity) > available;
+                String addMsg = clippedToStock
+                        ? "Added to cart with maximum available quantity (" + targetQty + " item(s))."
+                        : "Added to cart.";
 
                 if (ajax) {
                     sendJson(response, true, totalAmount, cartCount, addMsg);
                 } else {
-                    setMsg(request, addMsg, "success");
+                    setMsg(request, addMsg, clippedToStock ? "danger" : "success");
                     redirectToCart(request, response);
                 }
                 return;
@@ -247,16 +273,29 @@ public class cartServlet extends HttpServlet {
                 if (cartItemId > 0 && quantity >= 1) {
                     CartItem item = cartDao.getCartItemById(cartItemId);
                     if (item != null && item.getCustomer_id() == customerId) {
+                        int available = new InventoryItemDAO().countAvailableByVariantId(item.getVariant_id());
                         if (ajax) {
+                            if (available <= 0 || quantity > available) {
+                                sendJson(response, false, 0, 0, "Not enough stock for this product.");
+                                return;
+                            }
                             item.setQuantity(quantity);
                             if (!cartDao.updateCartItem(item)) {
                                 sendJson(response, false, 0, 0, "Could not update cart. Please try again.");
                                 return;
                             }
                         } else {
-                            item.setQuantity(quantity);
-                            if (!cartDao.updateCartItem(item)) {
-                                setMsg(request, "Could not update cart. Please try again.", "danger");
+                            if (available <= 0) {
+                                cartDao.deleteCartItem(cartItemId);
+                                setMsg(request, "Item is out of stock and has been removed from your cart.", "danger");
+                            } else {
+                                item.setQuantity(Math.min(quantity, available));
+                                if (quantity > available) {
+                                    setMsg(request, "Quantity adjusted to available stock (" + available + ").", "danger");
+                                }
+                                if (!cartDao.updateCartItem(item)) {
+                                    setMsg(request, "Could not update cart. Please try again.", "danger");
+                                }
                             }
                         }
                     }

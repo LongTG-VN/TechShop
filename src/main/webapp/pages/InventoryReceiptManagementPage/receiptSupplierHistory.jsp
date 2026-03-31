@@ -30,6 +30,7 @@
                     <th class="px-4 py-3">Receipt Code</th>
                     <th class="px-4 py-3">Employee</th>
                     <th class="px-4 py-3">Import Date</th>
+                    <th class="px-4 py-3 text-center">Status</th>
                     <th class="px-4 py-3 text-right">Total Cost</th>
                     <th class="px-4 py-3 text-center">Action</th>
                 </tr>
@@ -54,6 +55,13 @@
                                 <c:otherwise>—</c:otherwise>
                             </c:choose>
                         </td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-semibold
+                                  ${r.status == 'CONFIRMED' ? 'bg-emerald-100 text-emerald-700'
+                                    : (r.status == 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700')}">
+                                ${empty r.status ? 'DRAFT' : r.status}
+                            </span>
+                        </td>
                         <td class="px-4 py-3 text-right font-semibold text-blue-600"><fmt:formatNumber value="${r.total_cost}" groupingUsed="true"/>₫</td>
                         <td class="px-4 py-3 text-center">
                             <div class="inline-flex items-center justify-center gap-3">
@@ -65,22 +73,34 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                     </svg>
                                 </a>
-                                <a href="${pageContext.request.contextPath}/staffservlet?action=inventoryReceiptStartBySupplier&supplier_id=${supplierIdHistory}"
-                                   class="inline-flex items-center justify-center text-orange-500 hover:text-orange-700 transition-transform hover:scale-110"
-                                   title="Add Product">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a1.875 1.875 0 112.652 2.652L10.5 15.153l-3.75 1.098 1.098-3.75 9.014-9.014z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5V19.125A1.875 1.875 0 0117.625 21H4.875A1.875 1.875 0 013 19.125V6.375A1.875 1.875 0 014.875 4.5H13.5"/>
-                                    </svg>
-                                </a>
+                                <c:choose>
+                                    <c:when test="${r.status == 'CONFIRMED'}">
+                                        <span class="inline-flex items-center justify-center text-gray-300 cursor-not-allowed"
+                                              title="This receipt is confirmed and locked">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-7a2 2 0 00-2-2h-1V8a5 5 0 10-10 0v2H6a2 2 0 00-2 2v7a2 2 0 002 2z"/>
+                                            </svg>
+                                        </span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <a href="${pageContext.request.contextPath}/staffservlet?action=inventoryReceiptDetail&id=${r.receipt_id}&mode=add#add-item-form"
+                                           class="inline-flex items-center justify-center text-orange-500 hover:text-orange-700 transition-transform hover:scale-110"
+                                           title="Edit draft receipt">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a1.875 1.875 0 112.652 2.652L10.5 15.153l-3.75 1.098 1.098-3.75 9.014-9.014z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5V19.125A1.875 1.875 0 0117.625 21H4.875A1.875 1.875 0 013 19.125V6.375A1.875 1.875 0 014.875 4.5H13.5"/>
+                                            </svg>
+                                        </a>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
                         </td>
                     </tr>
                 </c:forEach>
                 <c:if test="${empty supplierHistoryReceipts}">
                     <tr>
-                        <td colspan="6" class="px-4 py-10 text-center text-gray-500">
-                            No confirmed receipts for this supplier yet.
+                        <td colspan="7" class="px-4 py-10 text-center text-gray-500">
+                            No receipts for this supplier yet.
                         </td>
                     </tr>
                 </c:if>

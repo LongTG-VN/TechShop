@@ -112,7 +112,7 @@
                                             <span class="text-sm text-gray-500 mt-0.5">Subtotal: <span class="item-subtotal font-bold text-red-600"><fmt:formatNumber value="${item.subtotal}" groupingUsed="true"/>đ</span></span>
                                         </div>
 
-                                        <form action="${pageContext.request.contextPath}/cartservlet" method="post" class="cart-qty-form flex items-center border border-gray-200 rounded-xl h-10 bg-gray-50 p-1 w-fit" data-unit-price="${item.sellingPrice}">
+                                        <form action="${pageContext.request.contextPath}/cartservlet" method="post" class="cart-qty-form flex items-center border border-gray-200 rounded-xl h-10 bg-gray-50 p-1 w-fit" data-unit-price="${item.sellingPrice}" data-max-stock="${variantStockMap[item.variantId] != null ? variantStockMap[item.variantId] : 0}">
                                             <input type="hidden" name="action" value="update"/>
                                             <input type="hidden" name="cart_item_id" value="${item.cartItemId}"/>
                                             <input type="hidden" name="quantity" value="<c:out value='${item.quantity}' default='1'/>"/>
@@ -303,9 +303,27 @@
 
             var cur = parseInt(qtyInput.value, 10) || 1;
             var delta = btn.classList.contains('cart-qty-minus') ? -1 : 1;
+            var maxStock = parseInt(form.getAttribute('data-max-stock'), 10);
+            if (isNaN(maxStock)) {
+                maxStock = 0;
+            }
             var newQty = cur + delta;
             if (newQty < 1)
                 newQty = 1;
+            if (maxStock > 0 && newQty > maxStock)
+                newQty = maxStock;
+            if (maxStock <= 0) {
+                newQty = 1;
+            }
+
+            if (newQty === cur) {
+                if (maxStock > 0 && delta > 0) {
+                    showCartErrorBanner('Quantity cannot exceed current stock (' + maxStock + ').');
+                } else if (maxStock <= 0) {
+                    showCartErrorBanner('This product is out of stock.');
+                }
+                return;
+            }
 
             // Update UI ngay lập tức
             qtyInput.value = newQty;

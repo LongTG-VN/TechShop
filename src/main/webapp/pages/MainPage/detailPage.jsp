@@ -314,12 +314,12 @@
 
                                     var btn = document.getElementById('addToCartBtn');
                                     var stockCount = (variant.stock || 0);
-                                    btn.disabled = false;
-                                    btn.className = "flex-1 text-white font-black text-lg rounded-2xl h-14 shadow-lg transition-all flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 shadow-red-100";
+                                    var inStock = stockCount > 0;
+                                    btn.disabled = !inStock;
+                                    btn.className = "flex-1 text-white font-black text-lg rounded-2xl h-14 shadow-lg transition-all flex items-center justify-center gap-3 "
+                                            + (inStock ? "bg-red-600 hover:bg-red-700 shadow-red-100" : "bg-gray-300");
                                     document.getElementById('stockStatus').innerHTML = '<span class="w-2 h-2 rounded-full ' + (stockCount > 0 ? 'bg-green-500 animate-pulse' : 'bg-red-500') + '"></span>' + (stockCount > 0 ? 'In Stock' : 'Out of Stock');
                                     document.getElementById('stockStatus').className = "flex items-center gap-1.5 font-bold text-sm " + (stockCount > 0 ? "text-green-600" : "text-red-500");
-
-                                    updateQtyButtonStates();
 
                                     clampQtyToStock();
                                     updateQtyButtonStates();
@@ -477,6 +477,24 @@
                                         addToCartOverlay.style.display = 'none';
                                 }
 
+                                function refreshNavbarCartCount() {
+                                    fetch('${pageContext.request.contextPath}/cartservlet?action=count', {credentials: 'same-origin'})
+                                            .then(r => r.json())
+                                            .then(data => {
+                                                if (!data)
+                                                    return;
+                                                var badge = document.getElementById('navbarCartCount');
+                                                if (!badge)
+                                                    return;
+                                                var count = Number(data.cartCount || 0);
+                                                badge.textContent = count;
+                                                if (count > 0)
+                                                    badge.classList.remove('hidden');
+                                                else
+                                                    badge.classList.add('hidden');
+                                            }).catch(() => {});
+                                }
+
                                 function showAddToCartToast(message, isError) {
                                     var old = document.getElementById('toast-add-cart');
                                     if (old)
@@ -529,8 +547,9 @@
                                                 throw new Error('HTTP ' + r.status);
                                             var ct = (r.headers.get('content-type') || '').toLowerCase();
                                             if (ct.indexOf('application/json') === -1) {
-                                                showAddToCartToast('Added to cart. Reloading...', false);
-                                                setTimeout(() => window.location.reload(), 1200);
+                                                hideAddToCartLoading();
+                                                showAddToCartToast('Added to cart.', false);
+                                                refreshNavbarCartCount();
                                                 return null;
                                             }
                                             return r.json();
@@ -542,8 +561,9 @@
                                                 showAddToCartToast(data.message || 'Error adding to cart.', true);
                                                 return;
                                             }
+                                            hideAddToCartLoading();
                                             showAddToCartToast(data.message || 'Added to cart!', false);
-                                            setTimeout(() => window.location.reload(), 1200);
+                                            refreshNavbarCartCount();
                                         }).catch(() => {
                                             hideAddToCartLoading();
                                             showAddToCartToast('System error, please try again.', true);
@@ -551,7 +571,31 @@
                                     });
                                 });
 
+                                function getMaxQtyForSelected() {
+                                    if (!selectedVariantId || !VARIANTS[selectedVariantId])
+                                        return 0;
+                                    var s = VARIANTS[selectedVariantId].stock;
+                                    return (typeof s === 'number' && s >= 0) ? s : 0;
+                                }
+
+                                function clampQtyToStock() {
+                                    var inp = document.getElementById('qtyInput');
+                                    if (!inp)
+                                        return;
+                                    var maxQ = getMaxQtyForSelected();
+                                    var cur = parseInt(inp.value, 10) || 1;
+                                    if (maxQ < 1) {
+                                        inp.value = 1;
+                                        return;
+                                    }
+                                    if (cur > maxQ)
+                                        inp.value = maxQ;
+                                    if (cur < 1)
+                                        inp.value = 1;
+                                }
+
                                 function updateQtyButtonStates() {
+                                    var maxQ = getMaxQtyForSelected();
                                     var inp = document.getElementById('qtyInput');
                                     var cur = inp ? (parseInt(inp.value, 10) || 1) : 1;
                                     var minusBtn = document.getElementById('qtyMinusBtn');
@@ -559,7 +603,7 @@
                                     if (minusBtn)
                                         minusBtn.disabled = (cur <= 1);
                                     if (plusBtn)
-                                        plusBtn.disabled = false;
+                                        plusBtn.disabled = (maxQ < 1 || cur >= maxQ);
                                 }
 
                                 function updateQuantity(c) {
@@ -571,6 +615,8 @@
                                     var v = cur + c;
                                     if (v < 1)
                                         v = 1;
+                                    if (v > maxQ)
+                                        v = maxQ;
                                     i.value = v;
                                     updateQtyButtonStates();
                                 }
