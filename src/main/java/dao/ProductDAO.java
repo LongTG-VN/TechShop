@@ -211,13 +211,13 @@ public class ProductDAO extends DBContext {
             psProd.setInt(1, id);
             int result = psProd.executeUpdate();
 
-            conn.commit(); 
+            conn.commit();
             return result > 0;
         } catch (Exception e) {
             try {
                 conn.rollback();
             } catch (Exception ex) {
-            } 
+            }
             e.printStackTrace();
             return false;
         } finally {
@@ -420,167 +420,167 @@ public class ProductDAO extends DBContext {
         return p;
     }
 
-        public List<Product> getFilteredProductsWithPaging(String keyword, Integer categoryId, Integer brandId,
-                Double minPrice, Double maxPrice, String sortOrder, int pageIndex, int pageSize) {
-            List<Product> list = new ArrayList<>();
-            StringBuilder sql = new StringBuilder(
-                    "SELECT p.*, c.category_name, b.brand_name, "
-                    + "MIN(pv.selling_price) as min_price, "
-                    + "MAX(CAST(CASE WHEN pi.is_thumbnail = 1 THEN pi.image_url ELSE NULL END AS VARCHAR(255))) as thumbnail_url, "
-                    + "(SELECT AVG(CAST(r.rating AS FLOAT)) FROM reviews r "
-                    + "  JOIN order_items oi ON r.order_item_id = oi.order_item_id "
-                    + "  JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
-                    + "  JOIN product_variants pv2 ON ii.variant_id = pv2.variant_id "
-                    + "  WHERE pv2.product_id = p.product_id AND r.status = 'VISIBLE') as avg_rating, "
-                    + "(SELECT COUNT(*) FROM reviews r "
-                    + "  JOIN order_items oi ON r.order_item_id = oi.order_item_id "
-                    + "  JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
-                    + "  JOIN product_variants pv2 ON ii.variant_id = pv2.variant_id "
-                    + "  WHERE pv2.product_id = p.product_id AND r.status = 'VISIBLE') as review_count "
-                    + "FROM products p "
-                    + "LEFT JOIN categories c ON p.category_id = c.category_id "
-                    + "LEFT JOIN brands b ON p.brand_id = b.brand_id "
-                    + "LEFT JOIN product_variants pv ON p.product_id = pv.product_id AND pv.is_active = 1 "
-                    + "LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_thumbnail = 1 "
-                    + "WHERE p.status = 'ACTIVE' ");
+    public List<Product> getFilteredProductsWithPaging(String keyword, Integer categoryId, Integer brandId,
+            Double minPrice, Double maxPrice, String sortOrder, int pageIndex, int pageSize) {
+        List<Product> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT p.*, c.category_name, b.brand_name, "
+                + "MIN(pv.selling_price) as min_price, "
+                + "MAX(CAST(CASE WHEN pi.is_thumbnail = 1 THEN pi.image_url ELSE NULL END AS VARCHAR(255))) as thumbnail_url, "
+                + "(SELECT AVG(CAST(r.rating AS FLOAT)) FROM reviews r "
+                + "  JOIN order_items oi ON r.order_item_id = oi.order_item_id "
+                + "  JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
+                + "  JOIN product_variants pv2 ON ii.variant_id = pv2.variant_id "
+                + "  WHERE pv2.product_id = p.product_id AND r.status = 'VISIBLE') as avg_rating, "
+                + "(SELECT COUNT(*) FROM reviews r "
+                + "  JOIN order_items oi ON r.order_item_id = oi.order_item_id "
+                + "  JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
+                + "  JOIN product_variants pv2 ON ii.variant_id = pv2.variant_id "
+                + "  WHERE pv2.product_id = p.product_id AND r.status = 'VISIBLE') as review_count "
+                + "FROM products p "
+                + "LEFT JOIN categories c ON p.category_id = c.category_id "
+                + "LEFT JOIN brands b ON p.brand_id = b.brand_id "
+                + "LEFT JOIN product_variants pv ON p.product_id = pv.product_id AND pv.is_active = 1 "
+                + "LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_thumbnail = 1 "
+                + "WHERE p.status = 'ACTIVE' ");
 
-            // Thêm các điều kiện lọc
-            if (keyword != null && !keyword.trim().isEmpty()) {
-                sql.append(" AND p.name LIKE ? ");
-            }
-            if (categoryId != null && categoryId > 0) {
-                sql.append(" AND p.category_id = ? ");
-            }
-            if (brandId != null && brandId > 0) {
-                sql.append(" AND p.brand_id = ? ");
-            }
+        // Thêm các điều kiện lọc
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND p.name LIKE ? ");
+        }
+        if (categoryId != null && categoryId > 0) {
+            sql.append(" AND p.category_id = ? ");
+        }
+        if (brandId != null && brandId > 0) {
+            sql.append(" AND p.brand_id = ? ");
+        }
 
-            sql.append("GROUP BY p.product_id, p.name, p.category_id, p.brand_id, p.description, p.status, p.created_at, p.created_by, p.updated_by, p.updated_at, c.category_name, b.brand_name ");
+        sql.append("GROUP BY p.product_id, p.name, p.category_id, p.brand_id, p.description, p.status, p.created_at, p.created_by, p.updated_by, p.updated_at, c.category_name, b.brand_name ");
 
-            if (minPrice != null || maxPrice != null) {
-                sql.append(" HAVING 1=1 ");
-                if (minPrice != null) {
-                    sql.append(" AND MIN(pv.selling_price) >= ? ");
-                }
-                if (maxPrice != null) {
-                    sql.append(" AND MIN(pv.selling_price) <= ? ");
-                }
+        if (minPrice != null || maxPrice != null) {
+            sql.append(" HAVING 1=1 ");
+            if (minPrice != null) {
+                sql.append(" AND MIN(pv.selling_price) >= ? ");
             }
+            if (maxPrice != null) {
+                sql.append(" AND MIN(pv.selling_price) <= ? ");
+            }
+        }
 
-            // Sắp xếp
-            if (sortOrder != null) {
-                if (sortOrder.equals("priceAsc")) {
-                    sql.append(" ORDER BY MIN(pv.selling_price) ASC ");
-                } else if (sortOrder.equals("priceDesc")) {
-                    sql.append(" ORDER BY MIN(pv.selling_price) DESC ");
-                } else {
-                    sql.append(" ORDER BY p.product_id DESC ");
-                }
+        // Sắp xếp
+        if (sortOrder != null) {
+            if (sortOrder.equals("priceAsc")) {
+                sql.append(" ORDER BY MIN(pv.selling_price) ASC ");
+            } else if (sortOrder.equals("priceDesc")) {
+                sql.append(" ORDER BY MIN(pv.selling_price) DESC ");
             } else {
                 sql.append(" ORDER BY p.product_id DESC ");
             }
-
-            // PHÂN TRANG (SQL Server)
-            sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
-
-            try {
-                PreparedStatement ps = conn.prepareStatement(sql.toString());
-                int paramIndex = 1;
-
-                if (keyword != null && !keyword.trim().isEmpty()) {
-                    ps.setString(paramIndex++, "%" + keyword.trim() + "%");
-                }
-                if (categoryId != null && categoryId > 0) {
-                    ps.setInt(paramIndex++, categoryId);
-                }
-                if (brandId != null && brandId > 0) {
-                    ps.setInt(paramIndex++, brandId);
-                }
-                if (minPrice != null) {
-                    ps.setDouble(paramIndex++, minPrice);
-                }
-                if (maxPrice != null) {
-                    ps.setDouble(paramIndex++, maxPrice);
-                }
-
-                // Tham số cho OFFSET và FETCH
-                ps.setInt(paramIndex++, (pageIndex - 1) * pageSize);
-                ps.setInt(paramIndex++, pageSize);
-
-                ResultSet rs = ps.executeQuery();
-                while (rs.next()) {
-                    Product p = mapResultSetToProduct(rs);
-                    p.setCategoryName(rs.getString("category_name"));
-                    p.setBrandName(rs.getString("brand_name"));
-                    list.add(p);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return list;
+        } else {
+            sql.append(" ORDER BY p.product_id DESC ");
         }
 
-        /**
-         * Đếm tổng số sản phẩm thỏa mãn điều kiện lọc để tính tổng số trang.
-         */
-        public int getTotalFilteredProducts(String keyword, Integer categoryId, Integer brandId, Double minPrice, Double maxPrice) {
-            StringBuilder sql = new StringBuilder(
-                    "SELECT COUNT(*) FROM ( "
-                    + "SELECT p.product_id FROM products p "
-                    + "LEFT JOIN product_variants pv ON p.product_id = pv.product_id AND pv.is_active = 1 "
-                    + "WHERE p.status = 'ACTIVE' ");
+        // PHÂN TRANG (SQL Server)
+        sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql.toString());
+            int paramIndex = 1;
 
             if (keyword != null && !keyword.trim().isEmpty()) {
-                sql.append(" AND p.name LIKE ? ");
+                ps.setString(paramIndex++, "%" + keyword.trim() + "%");
             }
             if (categoryId != null && categoryId > 0) {
-                sql.append(" AND p.category_id = ? ");
+                ps.setInt(paramIndex++, categoryId);
             }
             if (brandId != null && brandId > 0) {
-                sql.append(" AND p.brand_id = ? ");
+                ps.setInt(paramIndex++, brandId);
+            }
+            if (minPrice != null) {
+                ps.setDouble(paramIndex++, minPrice);
+            }
+            if (maxPrice != null) {
+                ps.setDouble(paramIndex++, maxPrice);
             }
 
-            sql.append(" GROUP BY p.product_id ");
+            // Tham số cho OFFSET và FETCH
+            ps.setInt(paramIndex++, (pageIndex - 1) * pageSize);
+            ps.setInt(paramIndex++, pageSize);
 
-            if (minPrice != null || maxPrice != null) {
-                sql.append(" HAVING 1=1 ");
-                if (minPrice != null) {
-                    sql.append(" AND MIN(pv.selling_price) >= ? ");
-                }
-                if (maxPrice != null) {
-                    sql.append(" AND MIN(pv.selling_price) <= ? ");
-                }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Product p = mapResultSetToProduct(rs);
+                p.setCategoryName(rs.getString("category_name"));
+                p.setBrandName(rs.getString("brand_name"));
+                list.add(p);
             }
-            sql.append(") as t");
-
-            try {
-                PreparedStatement ps = conn.prepareStatement(sql.toString());
-                int paramIndex = 1;
-                if (keyword != null && !keyword.trim().isEmpty()) {
-                    ps.setString(paramIndex++, "%" + keyword.trim() + "%");
-                }
-                if (categoryId != null && categoryId > 0) {
-                    ps.setInt(paramIndex++, categoryId);
-                }
-                if (brandId != null && brandId > 0) {
-                    ps.setInt(paramIndex++, brandId);
-                }
-                if (minPrice != null) {
-                    ps.setDouble(paramIndex++, minPrice);
-                }
-                if (maxPrice != null) {
-                    ps.setDouble(paramIndex++, maxPrice);
-                }
-
-                ResultSet rs = ps.executeQuery();
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return 0;
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        return list;
+    }
+
+    /**
+     * Đếm tổng số sản phẩm thỏa mãn điều kiện lọc để tính tổng số trang.
+     */
+    public int getTotalFilteredProducts(String keyword, Integer categoryId, Integer brandId, Double minPrice, Double maxPrice) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM ( "
+                + "SELECT p.product_id FROM products p "
+                + "LEFT JOIN product_variants pv ON p.product_id = pv.product_id AND pv.is_active = 1 "
+                + "WHERE p.status = 'ACTIVE' ");
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND p.name LIKE ? ");
+        }
+        if (categoryId != null && categoryId > 0) {
+            sql.append(" AND p.category_id = ? ");
+        }
+        if (brandId != null && brandId > 0) {
+            sql.append(" AND p.brand_id = ? ");
+        }
+
+        sql.append(" GROUP BY p.product_id ");
+
+        if (minPrice != null || maxPrice != null) {
+            sql.append(" HAVING 1=1 ");
+            if (minPrice != null) {
+                sql.append(" AND MIN(pv.selling_price) >= ? ");
+            }
+            if (maxPrice != null) {
+                sql.append(" AND MIN(pv.selling_price) <= ? ");
+            }
+        }
+        sql.append(") as t");
+
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql.toString());
+            int paramIndex = 1;
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                ps.setString(paramIndex++, "%" + keyword.trim() + "%");
+            }
+            if (categoryId != null && categoryId > 0) {
+                ps.setInt(paramIndex++, categoryId);
+            }
+            if (brandId != null && brandId > 0) {
+                ps.setInt(paramIndex++, brandId);
+            }
+            if (minPrice != null) {
+                ps.setDouble(paramIndex++, minPrice);
+            }
+            if (maxPrice != null) {
+                ps.setDouble(paramIndex++, maxPrice);
+            }
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 
     public static void main(String[] args) {
         ProductDAO a = new ProductDAO();

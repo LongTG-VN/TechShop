@@ -81,9 +81,9 @@ public class voucherServlet extends HttpServlet {
         VoucherDAO vdao = new VoucherDAO();
         if (action != null) {
             switch (action) {
-                 case "search":
+                case "search":
                     String name = request.getParameter("name");
-                      page = "/pages/VoucherManagementPage/voucherManagement.jsp";
+                    page = "/pages/VoucherManagementPage/voucherManagement.jsp";
                     listData = vdao.searchByCode(name);
                     break;
                 case "add":
@@ -113,9 +113,8 @@ public class voucherServlet extends HttpServlet {
                         request.setAttribute("successMessage", "The discount code (voucher) has been successfully deleted!");
                     } else {
                         request.setAttribute("errorMessage", "Cancellation failed! This voucher has already been applied to the order and cannot be removed.");
-                    vdao.softDeleteVoucher(idToDelete);
+                        vdao.softDeleteVoucher(idToDelete);
                     }
-                    
 
                     page = "/pages/VoucherManagementPage/voucherManagement.jsp";
                     listData = new VoucherDAO().getAllVoucher();
@@ -161,18 +160,15 @@ public class voucherServlet extends HttpServlet {
                     String totalQuantityStr = request.getParameter("total_quantity");
                     String status = request.getParameter("status");
 
-                    // 1. CHẠY VALIDATE TRƯỚC TIÊN (Chỉ check String, không ép kiểu vội)
                     String errorCode = utils.IO.checkCodeDuplicate(code) ? "" : "This voucher code already exists!";
                     String errorValidTo = utils.IO.checkValidDates(validFromStr, validToStr) ? "" : "Invalid date range. End date must be after the start date!";
                     String errorMaxDiscountAmount = utils.IO.checkVoucherConditions(minOrderValueStr, maxDiscountStr) ? "" : "Invalid input. Values must be numbers and cannot be negative!";
 
-                    // Thêm check an toàn cho số lượng và phần trăm để tránh lỗi 500
                     if (discountPercentStr == null || discountPercentStr.isEmpty() || totalQuantityStr == null || totalQuantityStr.isEmpty()) {
-                        errorCode = "Please fill in all required fields!"; // Hoặc một biến error chung
+                        errorCode = "Please fill in all required fields!";
                     }
 
                     if (errorCode.isEmpty() && errorValidTo.isEmpty() && errorMaxDiscountAmount.isEmpty()) {
-                        // 2. KHI MỌI THỨ AN TOÀN -> BẮT ĐẦU PARSE VÀ INSERT
                         Voucher v = new Voucher();
                         v.setCode(code);
                         v.setDiscountPercent(Integer.parseInt(discountPercentStr));
@@ -182,12 +178,18 @@ public class voucherServlet extends HttpServlet {
                         v.setMaxDiscountAmount((maxDiscountStr != null && !maxDiscountStr.isEmpty()) ? Double.parseDouble(maxDiscountStr) : 0);
                         v.setTotalQuantity(Integer.parseInt(totalQuantityStr));
                         v.setUsedQuantity(0);
-                        v.setStatus(status);
+
+                        LocalDateTime Day = LocalDateTime.now();
+                        if (Day.isAfter(LocalDateTime.parse(validToStr))) {
+                            v.setStatus("EXPIRED");
+                        } else {
+                            v.setStatus(status);
+                        }
 
                         dao.insertVoucher(v);
                         response.sendRedirect("voucherservlet?action=all");
                     } else {
-                        // 3. CÓ LỖI -> TRẢ VỀ FORM (Code này của bạn đã chuẩn rồi)
+
                         request.setAttribute("errorCode", errorCode);
                         request.setAttribute("errorValidTo", errorValidTo);
                         request.setAttribute("errorMaxDiscountAmount", errorMaxDiscountAmount);
@@ -207,12 +209,11 @@ public class voucherServlet extends HttpServlet {
                     return;
 
                 case "edit":
-                    // 1. Lấy ID (Bắt buộc phải có để biết sửa dòng nào)
-                    String codeE = request.getParameter("code").toUpperCase(); // Code nên viết hoa
+                    String codeE = request.getParameter("code").toUpperCase();
                     int idE = Integer.parseInt(request.getParameter("voucher_id"));
-                    // 2. Lấy dữ liệu từ form (Y hệt phần Add)
+
                     int discountPercentE = Integer.parseInt(request.getParameter("discount_percent"));
-                    // Parse ngày tháng
+
                     DateTimeFormatter formatter
                             = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
 
@@ -226,18 +227,22 @@ public class voucherServlet extends HttpServlet {
                             ? Double.parseDouble(maxDiscountStrE) : 0;
                     int totalQuantityE = Integer.parseInt(request.getParameter("total_quantity"));
                     String statusE = request.getParameter("status");
-                    // 3. Đóng gói vào object Voucher
+
                     Voucher vEdit = new Voucher();
                     vEdit.setCode(codeE);
-                    vEdit.setVoucherId(idE); // Quan trọng nhất
+                    vEdit.setVoucherId(idE);
                     vEdit.setDiscountPercent(discountPercentE);
                     vEdit.setValidFrom(validFromE);
                     vEdit.setValidTo(validToE);
                     vEdit.setMinOrderValue(minOrderValueE);
                     vEdit.setMaxDiscountAmount(maxDiscountAmountE);
                     vEdit.setTotalQuantity(totalQuantityE);
-                    vEdit.setStatus(statusE);
-
+                    LocalDateTime Day = LocalDateTime.now();
+                    if (Day.isAfter(validFromE)) {
+                        vEdit.setStatus("EXPIRED");
+                    } else {
+                        vEdit.setStatus(statusE);
+                    }
                     String errorValidToE = utils.IO.checkValidDates(request.getParameter("valid_from"), request.getParameter("valid_to")) ? "" : "Invalid date range. End date must be after the start date!";
                     String errorMaxDiscountAmountE = utils.IO.checkVoucherConditions(request.getParameter("min_order_value"), maxDiscountStrE) ? "" : "Invalid input. Values must be numbers and cannot be negative!";
 

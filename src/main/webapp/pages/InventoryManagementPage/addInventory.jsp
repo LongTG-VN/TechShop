@@ -47,9 +47,10 @@
                 </c:otherwise>
             </c:choose>
         </h2>
-        <a href="staffservlet?action=inventoryManagement" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+        <a href="staffservlet?action=inventoryManagement"
+           class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 no-underline shrink-0">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
             Back
@@ -99,16 +100,6 @@
                 </div>
             </c:otherwise>
         </c:choose>
-
-        <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">
-                IMEI <span class="text-red-500">*</span>
-            </label>
-            <input type="text" name="imei" required maxlength="100"
-                   class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono"
-                   placeholder="e.g. 357888000001">
-            <p class="text-xs text-gray-500 mt-0.5">Must be unique.</p>
-        </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>

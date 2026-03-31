@@ -61,7 +61,7 @@
                     <input type="text"
                            name="keyword"
                            class="w-full pl-10 pr-10 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="Search by product name, IMEI, status or ID..."
+                           placeholder="Search by product name, code, status or ID..."
                            value="${param.keyword}">
                     <c:if test="${not empty param.keyword}">
                         <a href="staffservlet?action=inventoryManagement"
@@ -74,16 +74,15 @@
 
             <button type="button"
                     id="btn-back-to-summary"
-                    class="inline-flex items-center px-3 py-2 text-sm font-semibold rounded-lg bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 md:ml-auto hidden">
+                    class="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-1 transition-colors md:ml-auto hidden">
                 ← Back to summary
             </button>
         </div>
 
     </div>
 
-    <!-- Totals (only show when not searching) -->
-    <c:if test="${empty param.keyword}">
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-5">
+    <!-- Totals -->
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-5">
             <!-- Imported -->
             <div class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
                 <p class="text-xs uppercase text-gray-500 font-semibold">Imported</p>
@@ -112,12 +111,10 @@
                     ${totalInStock != null ? totalInStock : 0}
                 </p>
             </div>
-        </div>
-    </c:if>
+    </div>
 
     <!-- Summary table: per variant (imported / sold / in stock) -->
-    <c:if test="${empty param.keyword}">
-        <div id="inventory-summary-view" class="overflow-x-auto rounded-lg border border-gray-200">
+    <div id="inventory-summary-view" class="overflow-x-auto rounded-lg border border-gray-200">
 
             <table class="w-full text-sm text-left text-gray-600">
 
@@ -162,9 +159,17 @@
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <button type="button"
-                                        class="text-blue-600 hover:text-blue-800 font-medium hover:underline btn-summary-view-detail"
-                                        data-variant-id="${s.variantId}">
-                                    View detail
+                                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-blue-200 bg-blue-50 text-blue-600 shadow-sm hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-1 transition-colors btn-summary-view-detail"
+                                        data-variant-id="${s.variantId}"
+                                        title="View detail"
+                                        aria-label="View detail">
+                                    <span class="sr-only">View detail</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
                                 </button>
                             </td>
                         </tr>
@@ -180,12 +185,11 @@
 
                 </tbody>
             </table>
-        </div>
-    </c:if>
+    </div>
 
-    <!-- Table: per inventory item (IMEI-level) -->
+    <!-- Table: per inventory item -->
     <div id="inventory-detail-view"
-         class="overflow-x-auto rounded-lg border border-gray-200 ${empty param.keyword ? 'hidden' : ''}">
+         class="overflow-x-auto rounded-lg border border-gray-200 hidden">
 
         <div class="flex flex-wrap items-center justify-between gap-3 px-4 pt-4 pb-2">
             <div class="flex-1 text-center">
@@ -217,12 +221,14 @@
                 <c:forEach items="${listInventory}" var="it" varStatus="stt">
                     <tr class="hover:bg-gray-50 transition-colors"
                         data-inventory-id="${it.inventory_id}"
-                        data-imei="${it.imei}"
                         data-variant-id="${it.variant_id}"
                         data-receipt-item-id="${it.receipt_item_id}"
                         data-status="${it.status}"
                         data-product-name="${it.productName}"
-                        data-import-price="${it.import_price}">
+                        data-import-price="${it.import_price}"
+                        data-serial-id="${it.imei}"
+                        data-sku="${it.sku}"
+                        data-receipt-code="${it.receiptCode}">
 
                         <td class="px-4 py-3 font-mono text-gray-700">
                             #${stt.count}
@@ -274,8 +280,16 @@
 
                         <td class="px-4 py-3 text-center">
                             <a href="inventory?action=view&id=${it.inventory_id}"
-                               class="text-gray-600 hover:text-gray-800 font-medium hover:underline">
-                                Details
+                               class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-blue-200 bg-blue-50 text-blue-600 shadow-sm hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-1 transition-colors no-underline"
+                               title="View"
+                               aria-label="View detail">
+                                <span class="sr-only">View</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
                             </a>
                         </td>
 
@@ -298,18 +312,18 @@
     </div>
 </div>
 
-<!-- Modal: grouped inventory items -->
+<!-- Modal: grouped inventory items (compact table) -->
 <div id="group-items-modal"
-     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm"
+     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm p-4"
      aria-hidden="true">
-    <div class="w-full max-w-lg mx-4 bg-white rounded-2xl shadow-2xl border border-gray-200">
-        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+    <div class="w-full max-w-3xl max-h-[90vh] flex flex-col bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
             <h3 id="group-items-modal-title" class="text-base font-bold text-gray-900">Grouped inventory items</h3>
             <button id="group-items-modal-close" type="button" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
         </div>
-        <div class="p-5">
-            <p class="text-xs text-gray-500 mb-3">The following inventory items are included in this grouped row:</p>
-            <div id="group-items-modal-list" class="max-h-72 overflow-y-auto border border-gray-200 rounded-lg divide-y divide-gray-100"></div>
+        <div class="p-5 flex flex-col min-h-0 flex-1 overflow-hidden">
+            <div id="group-items-modal-meta" class="text-xs text-gray-600 mb-3 shrink-0"></div>
+            <div id="group-items-modal-list" class="min-h-0 flex-1 overflow-auto border border-gray-200 rounded-lg"></div>
         </div>
     </div>
 </div>
@@ -325,6 +339,7 @@
         const detailTitle = document.getElementById('detail-product-title');
         const groupItemsModal = document.getElementById('group-items-modal');
         const groupItemsModalTitle = document.getElementById('group-items-modal-title');
+        const groupItemsModalMeta = document.getElementById('group-items-modal-meta');
         const groupItemsModalList = document.getElementById('group-items-modal-list');
         const groupItemsModalClose = document.getElementById('group-items-modal-close');
         let currentGroupedMap = {};
@@ -340,14 +355,30 @@
                 const ds = row.dataset || {};
                 allItems.push({
                     inventoryId: ds.inventoryId,
-                    imei: ds.imei || '',
                     variantId: ds.variantId,
                     receiptItemId: ds.receiptItemId,
                     status: ds.status,
                     productName: ds.productName || '',
-                    importPrice: ds.importPrice
+                    importPrice: ds.importPrice,
+                    serialId: ds.serialId || '',
+                    sku: ds.sku || '',
+                    receiptCode: ds.receiptCode || ''
                 });
             });
+        }
+
+        var INV_ICON_EYE = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">'
+                + '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>'
+                + '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>'
+                + '</svg>';
+
+        function formatVND(value) {
+            var n = Number(value || 0);
+            try {
+                return n.toLocaleString('vi-VN');
+            } catch (e) {
+                return String(value || 0);
+            }
         }
 
         function renderGroupedRows(filterVariantId) {
@@ -372,6 +403,8 @@
                         importPrice: it.importPrice,
                         status: it.status,
                         receiptItemId: it.receiptItemId,
+                        sku: it.sku || '',
+                        receiptCode: it.receiptCode || '',
                         quantity: 0,
                         firstInventoryId: it.inventoryId,
                         items: []
@@ -381,7 +414,11 @@
                 g.quantity += 1;
                 g.items.push({
                     inventoryId: it.inventoryId != null ? String(it.inventoryId) : '',
-                    imei: it.imei != null ? String(it.imei) : ''
+                    serialId: it.serialId || '',
+                    importPrice: it.importPrice,
+                    status: it.status || '',
+                    sku: it.sku || '',
+                    receiptCode: it.receiptCode || ''
                 });
                 // keep smallest inventoryId for stable Details link
                 if (g.firstInventoryId == null || (it.inventoryId != null && Number(it.inventoryId) < Number(g.firstInventoryId))) {
@@ -414,15 +451,6 @@
                 return '<span class="px-2 py-1 text-xs font-semibold rounded-full text-gray-700 bg-gray-100">' + s + '</span>';
             }
 
-            function formatVND(value) {
-                const n = Number(value || 0);
-                try {
-                    return n.toLocaleString('vi-VN');
-                } catch (e) {
-                    return String(value || 0);
-                }
-            }
-
             // Rebuild tbody
             detailTbody.innerHTML = '';
             if (grouped.length === 0) {
@@ -432,13 +460,14 @@
 
             grouped.forEach(function (g, idx) {
                 const safeName = (g.productName && g.productName.trim()) ? g.productName : '—';
-                const detailsHref = g.firstInventoryId ? ('inventory?action=view&id=' + encodeURIComponent(g.firstInventoryId)) : '#';
                 const groupId = 'group-' + idx;
                 currentGroupedMap[groupId] = {
                     productName: safeName,
                     status: g.status,
                     importPrice: g.importPrice,
                     receiptItemId: g.receiptItemId,
+                    sku: g.sku || '',
+                    receiptCode: g.receiptCode || '',
                     items: g.items || []
                 };
                 const row = document.createElement('tr');
@@ -450,10 +479,31 @@
                         + '<td class="px-4 py-3 text-center">' + statusBadge(g.status) + '</td>'
                         + '<td class="px-4 py-3 text-center"><span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-gray-100 text-gray-700">' + g.quantity + '</span></td>'
                         + '<td class="px-4 py-3 text-center">'
-                        + (g.firstInventoryId ? ('<a href="' + detailsHref + '" class="text-gray-600 hover:text-gray-800 font-medium hover:underline">Details</a>') : '—')
+                        + '<div class="inline-flex flex-wrap items-center justify-center">'
+                        + ('<button type="button" class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-blue-200 bg-blue-50 text-blue-600 shadow-sm hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-1 transition-colors btn-view-group-items" data-group-id="' + groupId + '" title="Serial list" aria-label="Serial list"><span class="sr-only">Serial list</span>' + INV_ICON_EYE + '</button>')
+                        + '</div>'
                         + '</td>';
                 detailTbody.appendChild(row);
             });
+        }
+
+        function escapeHtml(s) {
+            return String(s == null ? '' : s)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+        }
+
+        function inventoryStatusBadgeHtml(status) {
+            var s = String(status || '');
+            if (s === 'IN_STOCK') {
+                return '<span class="px-2 py-1 text-xs font-semibold rounded-full text-green-700 bg-green-100">IN_STOCK</span>';
+            }
+            if (s === 'SOLD') {
+                return '<span class="px-2 py-1 text-xs font-semibold rounded-full text-blue-700 bg-blue-100">SOLD</span>';
+            }
+            return '<span class="px-2 py-1 text-xs font-semibold rounded-full text-gray-700 bg-gray-100">' + escapeHtml(s) + '</span>';
         }
 
         function openGroupItemsModal(groupId) {
@@ -464,32 +514,69 @@
             if (!data) {
                 return;
             }
+            const formatPrice = (typeof formatVND === 'function')
+                    ? formatVND
+                    : function (value) {
+                        const n = Number(value || 0);
+                        try {
+                            return n.toLocaleString('vi-VN');
+                        } catch (e) {
+                            return String(value || 0);
+                        }
+                    };
 
-            groupItemsModalTitle.textContent = 'Grouped items - ' + data.productName;
+            groupItemsModalTitle.textContent = data.productName || 'Grouped inventory';
             const items = data.items || [];
+            if (groupItemsModalMeta) {
+                groupItemsModalMeta.innerHTML = '';
+            }
             if (items.length === 0) {
-                groupItemsModalList.innerHTML = '<div class="px-4 py-3 text-sm text-gray-500 italic">No item data found for this group.</div>';
+                if (groupItemsModalMeta) {
+                    groupItemsModalMeta.textContent = '';
+                }
+                groupItemsModalList.innerHTML = '<div class="px-4 py-8 text-sm text-gray-500 text-center italic">No item data found for this group.</div>';
             } else {
-                const statusText = data.status && String(data.status).trim() ? String(data.status) : 'N/A';
-                const importPriceText = formatVND(data.importPrice) + ' ₫';
-                const batchText = data.receiptItemId && String(data.receiptItemId).trim() ? ('#' + data.receiptItemId) : 'N/A';
-                groupItemsModalList.innerHTML = items.map(function (item, index) {
-                    const invId = item.inventoryId && item.inventoryId.trim() ? ('#' + item.inventoryId) : 'N/A';
-                    const imei = item.imei && item.imei.trim() ? item.imei : 'N/A';
-                    return '<div class="px-4 py-2.5 text-sm">'
-                            + '<div class="flex items-center justify-between gap-4">'
-                            + '<span class="text-gray-500">Item ' + (index + 1) + '</span>'
-                            + '<span class="font-mono text-gray-700">' + invId + '</span>'
-                            + '</div>'
-                            + '<div class="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">'
-                            + '<div class="text-gray-500">Status</div><div class="text-gray-800 text-right">' + statusText + '</div>'
-                            + '<div class="text-gray-500">Import price</div><div class="text-gray-800 text-right">' + importPriceText + '</div>'
-                            + '<div class="text-gray-500">Receipt batch</div><div class="text-gray-800 text-right">' + batchText + '</div>'
-                            + '</div>'
-                            + '<div class="mt-2 text-xs text-gray-500">IMEI</div>'
-                            + '<div class="font-mono text-gray-900 break-all">' + imei + '</div>'
-                            + '</div>';
+                if (groupItemsModalMeta) {
+                    var rc = data.receiptCode && String(data.receiptCode).trim() ? String(data.receiptCode).trim() : '';
+                    var metaHtml = '<span class="font-medium text-gray-800">' + items.length + ' item(s)</span>';
+                    if (rc) {
+                        metaHtml += '<span class="mx-2 text-gray-300">|</span>'
+                                + '<span>Receipt: <span class="font-medium text-gray-800">' + escapeHtml(rc) + '</span></span>';
+                    }
+                    groupItemsModalMeta.innerHTML = metaHtml;
+                }
+                const thead = ''
+                        + '<thead class="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 sticky top-0 z-10 border-b border-gray-200">'
+                        + '<tr>'
+                        + '<th class="px-3 py-2 w-12 text-center">#</th>'
+                        + '<th class="px-3 py-2">Serial</th>'
+                        + '<th class="px-3 py-2">SKU</th>'
+                        + '<th class="px-3 py-2 text-right">Price (₫)</th>'
+                        + '<th class="px-3 py-2 text-center">Status</th>'
+                        + '</tr>'
+                        + '</thead>';
+                const rows = items.map(function (item, index) {
+                    const serialId = item.serialId && String(item.serialId).trim() ? String(item.serialId).trim() : '—';
+                    const skuRaw = item.sku != null && String(item.sku).trim() ? String(item.sku).trim() : (data.sku != null && String(data.sku).trim() ? String(data.sku).trim() : '');
+                    const skuCell = skuRaw ? escapeHtml(skuRaw) : '—';
+                    const priceVal = item.importPrice != null && item.importPrice !== '' ? item.importPrice : data.importPrice;
+                    const priceCell = formatPrice(priceVal) + ' ₫';
+                    const statusCell = inventoryStatusBadgeHtml(item.status != null && item.status !== '' ? item.status : data.status);
+                    return '<tr class="border-b border-gray-100 hover:bg-gray-50/80">'
+                            + '<td class="px-3 py-2 text-center text-gray-500 tabular-nums">' + (index + 1) + '</td>'
+                            + '<td class="px-3 py-2 font-mono text-sm text-gray-800 break-all">' + escapeHtml(serialId) + '</td>'
+                            + '<td class="px-3 py-2 font-mono text-sm text-gray-900">' + skuCell + '</td>'
+                            + '<td class="px-3 py-2 text-right font-semibold text-gray-900 tabular-nums">' + priceCell + '</td>'
+                            + '<td class="px-3 py-2 text-center">' + statusCell + '</td>'
+                            + '</tr>';
                 }).join('');
+                groupItemsModalList.innerHTML = ''
+                        + '<div class="overflow-x-auto">'
+                        + '<table class="min-w-full text-sm">'
+                        + thead
+                        + '<tbody>' + rows + '</tbody>'
+                        + '</table>'
+                        + '</div>';
             }
 
             groupItemsModal.classList.remove('hidden');

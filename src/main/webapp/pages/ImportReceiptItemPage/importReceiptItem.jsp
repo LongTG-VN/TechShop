@@ -5,7 +5,7 @@
 <div class="bg-white rounded-xl shadow-lg p-5">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <h2 class="text-xl font-bold text-gray-800 uppercase tracking-tight">Import Receipt - Items</h2>
-        <p class="text-sm text-gray-500">Danh sách tất cả biến thể (SKU) để chọn tạo phiếu nhập.</p>
+        <p class="text-sm text-gray-500">All variants (SKUs) available to add to an import receipt.</p>
     </div>
 
     <div class="flex flex-col md:flex-row gap-3 mb-6 items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
@@ -17,7 +17,7 @@
             </span>
             <input type="text" id="productSearch" 
                    class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white shadow-sm" 
-                   placeholder="Tìm theo tên sản phẩm hoặc SKU...">
+                   placeholder="Search by product name or SKU...">
         </div>
     </div>
 
@@ -60,7 +60,7 @@
                 </c:forEach>
                 <tr id="noImportProductRow" style="display: none;">
                     <td colspan="6" class="px-4 py-10 text-center text-gray-400 italic bg-gray-50">
-                        Không có sản phẩm nào phù hợp.
+                        No matching products.
                     </td>
                 </tr>
             </tbody>
@@ -68,9 +68,9 @@
     </div>
 
     <div class="flex flex-col md:flex-row justify-between items-center gap-3 mt-5 text-sm text-gray-500">
-        <p>Đang hiển thị <span id="importVisibleCount" class="font-bold text-gray-900">
+        <p>Showing <span id="importVisibleCount" class="font-bold text-gray-900">
                 <c:out value="${listdata != null ? listdata.size() : 0}"/>
-            </span> sản phẩm
+            </span> product(s)
         </p>
     </div>
 </div>

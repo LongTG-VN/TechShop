@@ -123,28 +123,40 @@
                             </span>
                         </div>
                         <div class="flex gap-3">
-                            <%-- Chỉ cho hủy khi là bước đầu (PENDING) và chưa PAID --%>
+                            <%-- 1. QUAN TRỌNG: Reset flag canCancel về false cho mỗi đơn hàng mới --%>
+                            <c:set var="canCancel" value="false"/>
+
+                            <%-- 2. Kiểm tra xem status hiện tại có phải là bước đầu tiên (stepOrder == 1) không --%>
                             <c:forEach var="s" items="${statusList}">
                                 <c:if test="${s.statusCode == order.status && s.stepOrder == 1}">
                                     <c:set var="canCancel" value="true"/>
                                 </c:if>
                             </c:forEach>
 
+                            <%-- 3. Hiển thị nút dựa trên flag đã reset và status thực tế --%>
                             <c:choose>
-                                <c:when test="${canCancel && order.paymentStatus != 'PAID'}">
+                                <%-- Điều kiện: được phép hủy (step 1) VÀ chưa thanh toán VÀ trạng thái hiện tại khác CANCELLED --%>
+                                <c:when test="${canCancel && order.paymentStatus != 'PAID' && order.status != 'CANCELLED'}">
                                     <button type="button"
                                             onclick="openCancelModal(${order.orderId})"
                                             class="px-5 py-2.5 rounded-xl border border-red-200 text-red-500 font-bold text-sm hover:bg-red-50 transition-colors">
                                         Cancel Order
                                     </button>
                                 </c:when>
+
                                 <c:otherwise>
+                                    <%-- Nút bị Disable --%>
                                     <button disabled
                                             class="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-400 font-bold text-sm cursor-not-allowed">
-                                        Cancel Order
+                                        <c:choose>
+                                            <c:when test="${order.status == 'CANCELLED'}">Already Cancelled</c:when>
+                                            <c:when test="${order.paymentStatus == 'PAID'}">Paid (No Cancel)</c:when>
+                                            <c:otherwise>Cancel Order</c:otherwise>
+                                        </c:choose>
                                     </button>
                                 </c:otherwise>
                             </c:choose>
+
                             <button class="px-5 py-2.5 rounded-xl bg-red-50 text-red-600 font-bold text-sm hover:bg-red-100 transition-colors">
                                 <a href="orderhistorypageservlet?action=orderDetail&id=${order.orderId}" class="block">View Details</a>
                             </button>

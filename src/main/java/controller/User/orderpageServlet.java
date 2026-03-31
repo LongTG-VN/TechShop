@@ -242,11 +242,14 @@ public class orderpageServlet extends HttpServlet {
         // BƯỚC VALIDATE: Kiểm tra tồn kho trước khi tạo order
         InventoryItemDAO inventoryDAO = new InventoryItemDAO();
         for (CartItemDisplay item : listCart) {
+            int availableCount = inventoryDAO.countAvailableByVariantId(item.getVariantId());
             List<Integer> available = inventoryDAO.getAvailableInventoryIdsByVariantId(
                     item.getVariantId(), item.getQuantity());
             if (available.size() < item.getQuantity()) {
                 response.sendRedirect("orderpageservlet?error=out_of_stock&product="
-                        + java.net.URLEncoder.encode(item.getProductName(), "UTF-8"));
+                        + java.net.URLEncoder.encode(item.getProductName(), "UTF-8")
+                        + "&requested=" + item.getQuantity()
+                        + "&available=" + Math.max(availableCount, 0));
                 return;
             }
         }

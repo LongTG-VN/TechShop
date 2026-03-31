@@ -285,7 +285,7 @@ public class OrderDAO extends DBContext {
     //Get order detail with IMEI
     public List<Map<String, Object>> getOrderDetailsWithIMEI(int orderId) {
         List<Map<String, Object>> details = new ArrayList<>();
-        String sql = "SELECT p.name, pv.sku, ii.imei, oi.selling_price, pi.image_url "
+        String sql = "SELECT p.name, pv.sku, ii.serial_id AS imei, oi.selling_price, pi.image_url "
                 + "FROM order_items oi "
                 + "JOIN inventory_items ii ON oi.inventory_id = ii.inventory_id "
                 + "JOIN product_variants pv ON ii.variant_id = pv.variant_id "
@@ -504,7 +504,7 @@ public class OrderDAO extends DBContext {
      */
     public List<Map<String, Object>> getCancelledOrderDetailsWithIMEI(int orderId) {
         List<Map<String, Object>> details = new ArrayList<>();
-        String sql = "SELECT p.name, pv.sku, ii.imei, coi.quantity, coi.unit_price, pi.image_url "
+        String sql = "SELECT p.name, pv.sku, ii.serial_id AS imei, coi.quantity, coi.unit_price, pi.image_url "
                 + "FROM cancelled_order_items coi "
                 + "JOIN inventory_items ii ON coi.inventory_id = ii.inventory_id "
                 + "JOIN product_variants pv ON ii.variant_id = pv.variant_id "

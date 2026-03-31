@@ -36,7 +36,7 @@
         }, 3000);
     </script>
 </c:if>
-    
+
 <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-xl border border-gray-100 mt-10">
     <%-- HEADER --%>
     <div class="flex justify-between items-start border-b-4 border-gray-100 pb-6 mb-8">
@@ -52,7 +52,7 @@
 
     <form action="variantServlet" method="POST" class="space-y-8">
         <input type="hidden" name="action" value="add">
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
             <%-- THÔNG TIN KHO --%>
             <div class="space-y-6">
@@ -68,8 +68,13 @@
                         </select>
                     </div>
                     <div>
-                        <label class="text-xs font-black text-gray-500 uppercase tracking-widest">SKU Identifier</label>
-                        <input type="text" name="sku" required class="w-full mt-2 p-4 bg-gray-50 border-2 border-gray-200 rounded-xl font-black text-gray-900 uppercase focus:ring-4 focus:ring-blue-100 outline-none transition-all" placeholder="e.g., IP15-BLK-128">
+                        <label class="text-xs font-black text-gray-500 uppercase tracking-widest"> SKU Identifier </label>
+                        <input type="text" name="sku" 
+                               required
+                               pattern="^[A-Z0-9]+(?:-[A-Z0-9]+)+$"                               
+                               title="Use uppercase letters, numbers, and hyphens only. Must contain at least one hyphen and cannot have leading, trailing, or consecutive hyphens (e.g., IP15-128-BLUE)."                               class="w-full mt-2 p-4 bg-gray-50 border-2 border-gray-200 rounded-xl font-black text-gray-900 uppercase focus:ring-4 focus:ring-blue-100 outline-none transition-all"
+                               placeholder="e.g., IP15-128-BLUE"
+                               oninput="this.value = this.value.toUpperCase()">
                     </div>
                 </div>
             </div>
@@ -105,7 +110,7 @@
                 <h3 class="text-lg font-black text-gray-800 border-l-8 border-purple-500 pl-3 uppercase">Variant Specifications</h3>
                 <span class="px-4 py-1.5 bg-purple-50 text-purple-700 text-xs font-black tracking-widest rounded-full border-2 border-purple-200" id="spec-category-label">Category Specs</span>
             </div>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="spec-container">
                 <c:forEach items="${allVariantSpecs}" var="specDef">
                     <div class="spec-group hidden transition-all duration-300 transform scale-95 opacity-0" data-category-id="${specDef.categoryId}">
@@ -113,12 +118,15 @@
                         <input type="text" 
                                name="specValue_${specDef.specId}" 
                                disabled
-                               placeholder="Enter ${specDef.specName}..."
+                               placeholder="Enter ${specDef.specName}..." 
+                               oninput="this.value = this.value.replace(/[^a-zA-Z0-9\s-]/g, '')"
+                               pattern="^[a-zA-Z0-9\s-]+$"
+                               title="Only letters, numbers, spaces, and hyphens are allowed."
                                class="w-full mt-2 p-3 bg-purple-50 border-2 border-purple-200 rounded-xl font-black text-purple-900 placeholder-purple-300 focus:border-purple-600 focus:ring-4 focus:ring-purple-100 transition-all outline-none">
                     </div>
                 </c:forEach>
             </div>
-            
+
             <div id="no-specs-message" class="hidden py-6 text-center bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl mt-4">
                 <p class="text-sm font-bold text-gray-400 italic">⚠️ This product listing does not require Variant specifications.</p>
             </div>
@@ -146,17 +154,17 @@
                 group.querySelectorAll('input').forEach(input => {
                     input.disabled = true;
                     // Mặc định required = false để không kẹt form, user nên tự điền nếu có input
-                    input.removeAttribute('required'); 
+                    input.removeAttribute('required');
                 });
             });
 
             const selectedOption = productSelect.options[productSelect.selectedIndex];
             if (selectedOption && selectedOption.value) {
                 const categoryId = selectedOption.getAttribute('data-category');
-                
+
                 // Hiển thị phần wrapper
                 specSection.style.display = 'block';
-                
+
                 let countSpecs = 0;
                 // Hiển thị các specs group khớp categoryId hiện tại
                 specContainers.forEach(group => {
@@ -167,10 +175,10 @@
                             group.classList.remove('scale-95', 'opacity-0');
                             group.classList.add('scale-100', 'opacity-100');
                         });
-                        
+
                         group.querySelectorAll('input').forEach(input => {
                             input.disabled = false;
-                            input.setAttribute('required', 'required'); // Bắt buộc điền spec values
+//                            input.setAttribute('required', 'required'); // Bắt buộc điền spec values
                         });
                         countSpecs++;
                     }
@@ -188,7 +196,7 @@
 
         // Gắn sự kiện change cho dropdown "Product Parent"
         productSelect.addEventListener('change', updateSpecs);
-        
+
         // Gọi update ngay khi load phòng trường hợp form re-render và giữ selected state
         updateSpecs();
     });

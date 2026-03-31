@@ -4,13 +4,15 @@
  */
 package dao;
 
-import java.security.SecureRandom;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;  
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import model.ImportReceiptItem;
+import java.util.Map;
+import java.util.Set;
 import model.InventoryItem;
 import model.InventorySummary;
 import utils.DBContext;
@@ -21,10 +23,9 @@ import utils.DBContext;
  */
 public class InventoryItemDAO extends DBContext {
 
-    private static final SecureRandom RANDOM = new SecureRandom();
-
     /**
-     * Lấy danh sách inventory (IMEI-level) kèm tên sản phẩm + người mua (nếu đã bán).
+     * Lấy danh sách inventory (IMEI-level) kèm tên sản phẩm + người mua (nếu đã
+     * bán).
      */
     public List<InventoryItem> getAllInventory() {
         List<InventoryItem> list = new ArrayList<>();
@@ -33,16 +34,19 @@ public class InventoryItemDAO extends DBContext {
         }
         String sql = "SELECT ii.*, "
                 + "p.name AS product_name, "
-                + "c.full_name AS buyer_name "
+                + "c.full_name AS buyer_name, "
+                + "pv.sku AS sku, "
+                + "ir.receipt_code AS receipt_code "
                 + "FROM inventory_items ii "
                 + "LEFT JOIN product_variants pv ON ii.variant_id = pv.variant_id "
                 + "LEFT JOIN products p ON pv.product_id = p.product_id "
+                + "LEFT JOIN import_receipt_items iri ON ii.receipt_item_id = iri.receipt_item_id "
+                + "LEFT JOIN import_receipts ir ON iri.receipt_id = ir.receipt_id "
                 + "LEFT JOIN order_items oi ON oi.inventory_id = ii.inventory_id "
                 + "LEFT JOIN orders o ON o.order_id = oi.order_id "
                 + "LEFT JOIN customers c ON c.customer_id = o.customer_id "
                 + "ORDER BY ii.inventory_id DESC";
-        try (PreparedStatement ps = conn.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
+        try (PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(mapRow(rs));
             }
@@ -53,8 +57,8 @@ public class InventoryItemDAO extends DBContext {
     }
 
     /**
-     * Tìm inventory theo keyword đơn giản (id/variant/imei/status/tên sp/tên khách/sku).
-     * Mục tiêu: dễ hiểu, đủ dùng cho trang quản lý.
+     * Tìm inventory theo keyword đơn giản (id/variant/imei/status/tên sp/tên
+     * khách/sku). Mục tiêu: dễ hiểu, đủ dùng cho trang quản lý.
      */
     public List<InventoryItem> searchInventory(String keyword) {
         List<InventoryItem> list = new ArrayList<>();
@@ -68,16 +72,20 @@ public class InventoryItemDAO extends DBContext {
 
         String sql = "SELECT ii.*, "
                 + "p.name AS product_name, "
-                + "c.full_name AS buyer_name "
+                + "c.full_name AS buyer_name, "
+                + "pv.sku AS sku, "
+                + "ir.receipt_code AS receipt_code "
                 + "FROM inventory_items ii "
                 + "LEFT JOIN product_variants pv ON ii.variant_id = pv.variant_id "
                 + "LEFT JOIN products p ON pv.product_id = p.product_id "
+                + "LEFT JOIN import_receipt_items iri ON ii.receipt_item_id = iri.receipt_item_id "
+                + "LEFT JOIN import_receipts ir ON iri.receipt_id = ir.receipt_id "
                 + "LEFT JOIN order_items oi ON oi.inventory_id = ii.inventory_id "
                 + "LEFT JOIN orders o ON o.order_id = oi.order_id "
                 + "LEFT JOIN customers c ON c.customer_id = o.customer_id "
                 + "WHERE CAST(ii.inventory_id AS NVARCHAR(50)) LIKE ? "
                 + "OR CAST(ii.variant_id AS NVARCHAR(50)) LIKE ? "
-                + "OR ii.imei LIKE ? "
+                + "OR ii.serial_id LIKE ? "
                 + "OR UPPER(ISNULL(ii.status,'')) LIKE ? "
                 + "OR LOWER(ISNULL(p.name,'')) LIKE ? "
                 + "OR LOWER(ISNULL(c.full_name,'')) LIKE ? "
@@ -110,13 +118,27 @@ public class InventoryItemDAO extends DBContext {
                 rs.getInt("inventory_id"),
                 rs.getInt("variant_id"),
                 rs.getInt("receipt_item_id"),
-                rs.getString("imei"),
+                rs.getString("serial_id"),
                 rs.getDouble("import_price"),
                 rs.getString("status")
         );
         // Một số query không join đủ cột -> đọc "best-effort"
-        try { item.setProductName(rs.getString("product_name")); } catch (Exception ignored) { }
-        try { item.setBuyerName(rs.getString("buyer_name")); } catch (Exception ignored) { }
+        try {
+            item.setProductName(rs.getString("product_name"));
+        } catch (Exception ignored) {
+        }
+        try {
+            item.setBuyerName(rs.getString("buyer_name"));
+        } catch (Exception ignored) {
+        }
+        try {
+            item.setSku(rs.getString("sku"));
+        } catch (Exception ignored) {
+        }
+        try {
+            item.setReceiptCode(rs.getString("receipt_code"));
+        } catch (Exception ignored) {
+        }
         return item;
     }
 
@@ -127,10 +149,12 @@ public class InventoryItemDAO extends DBContext {
         if (conn == null) {
             return null;
         }
-        String sql = "SELECT ii.*, p.name AS product_name "
+        String sql = "SELECT ii.*, p.name AS product_name, pv.sku AS sku, ir.receipt_code AS receipt_code "
                 + "FROM inventory_items ii "
                 + "LEFT JOIN product_variants pv ON ii.variant_id = pv.variant_id "
                 + "LEFT JOIN products p ON pv.product_id = p.product_id "
+                + "LEFT JOIN import_receipt_items iri ON ii.receipt_item_id = iri.receipt_item_id "
+                + "LEFT JOIN import_receipts ir ON iri.receipt_id = ir.receipt_id "
                 + "WHERE ii.inventory_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -146,13 +170,56 @@ public class InventoryItemDAO extends DBContext {
     }
 
     /**
+     * Tất cả dòng tồn kho thuộc một phiếu nhập (theo receipt_id), dùng cho
+     * trang chi tiết: serial + status theo từng receipt_item.
+     */
+    public List<InventoryItem> getInventoryByReceiptId(int receiptId) {
+        List<InventoryItem> list = new ArrayList<>();
+        if (conn == null) {
+            return list;
+        }
+        String sql = "SELECT ii.*, p.name AS product_name, pv.sku AS sku, ir.receipt_code AS receipt_code "
+                + "FROM inventory_items ii "
+                + "INNER JOIN import_receipt_items iri ON ii.receipt_item_id = iri.receipt_item_id "
+                + "LEFT JOIN product_variants pv ON ii.variant_id = pv.variant_id "
+                + "LEFT JOIN products p ON pv.product_id = p.product_id "
+                + "LEFT JOIN import_receipts ir ON iri.receipt_id = ir.receipt_id "
+                + "WHERE iri.receipt_id = ? "
+                + "ORDER BY iri.receipt_item_id ASC, ii.inventory_id ASC";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, receiptId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    /**
+     * Map receipt_item_id → các bản ghi inventory (serial/status) cho một phiếu
+     * nhập.
+     */
+    public Map<Integer, List<InventoryItem>> getInventoryGroupedByReceiptItemId(int receiptId) {
+        Map<Integer, List<InventoryItem>> map = new HashMap<>();
+        for (InventoryItem inv : getInventoryByReceiptId(receiptId)) {
+            int rid = inv.getReceiptItemId();
+            map.computeIfAbsent(rid, k -> new ArrayList<>()).add(inv);
+        }
+        return map;
+    }
+
+    /**
      * Thêm 1 dòng inventory. IMEI không được trùng.
      */
     public boolean insertInventory(InventoryItem item) {
         if (conn == null || item == null) {
             return false;
         }
-        String sql = "INSERT INTO inventory_items (variant_id, receipt_item_id, imei, import_price, status) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO inventory_items (variant_id, receipt_item_id, serial_id, import_price, status) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, item.getVariant_id());
             ps.setInt(2, item.getReceipt_item_id());
@@ -174,7 +241,7 @@ public class InventoryItemDAO extends DBContext {
         if (conn == null || item == null) {
             return false;
         }
-        String sql = "UPDATE inventory_items SET variant_id=?, receipt_item_id=?, imei=?, import_price=?, status=? WHERE inventory_id=?";
+        String sql = "UPDATE inventory_items SET variant_id=?, receipt_item_id=?, serial_id=?, import_price=?, status=? WHERE inventory_id=?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, item.getVariant_id());
             ps.setInt(2, item.getReceipt_item_id());
@@ -190,8 +257,8 @@ public class InventoryItemDAO extends DBContext {
     }
 
     /**
-     * Xóa inventory theo id (hard delete).
-     * Lưu ý: có thể fail nếu đang bị FK reference.
+     * Xóa inventory theo id (hard delete). Lưu ý: có thể fail nếu đang bị FK
+     * reference.
      */
     public boolean deleteInventory(int id) {
         if (conn == null) {
@@ -322,7 +389,7 @@ public class InventoryItemDAO extends DBContext {
         if (conn == null) {
             return true;
         }
-        String sql = "SELECT TOP 1 1 FROM inventory_items WHERE imei = ?";
+        String sql = "SELECT TOP 1 1 FROM inventory_items WHERE serial_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, imei);
             try (ResultSet rs = ps.executeQuery()) {
@@ -352,54 +419,85 @@ public class InventoryItemDAO extends DBContext {
         }
     }
 
-    /**
-     * Sinh bản ghi inventory_items từ tất cả dòng của một phiếu nhập. Mỗi
-     * quantity sẽ tạo ra quantity record IN_STOCK gắn với receipt_item_id tương
-     * ứng. IMEI được auto-generate đơn giản, đảm bảo không trùng trong bảng
-     * inventory_items.
-     */
-    public int generateInventoryFromReceipt(int receiptId) {
-        ImportReceiptItemDAO itemDao = new ImportReceiptItemDAO();
+    private boolean isValidStandardSerial(String serial) {
+        return serial != null && serial.matches("^SN-\\d{9}$");
+    }
 
-        List<ImportReceiptItem> items = itemDao.getItemsByReceiptId(receiptId);
-        int created = 0;
-
-        for (ImportReceiptItem it : items) {
-            // Chỉ sinh thêm số record còn thiếu so với quantity trong phiếu
-            int qtyToCreate = it.getQuantity() - countByReceiptItemId(it.getReceipt_item_id());
-            for (int i = 0; i < qtyToCreate; i++) {
-                String imei = generateUniqueImei();
-                InventoryItem inv = new InventoryItem(
-                        0,
-                        it.getVariant_id(),
-                        it.getReceipt_item_id(),
-                        imei,
-                        it.getImport_price(),
-                        "IN_STOCK"
-                );
-                if (insertInventory(inv)) {
-                    created++;
-                }
+    private String generateStandardSerial(Set<String> usedInBatch) {
+        while (true) {
+            int number = (int) (Math.random() * 1_000_000_000);
+            String serial = String.format("SN-%09d", number);
+            if (usedInBatch.contains(serial)) {
+                continue;
+            }
+            if (!existsByImei(serial)) {
+                usedInBatch.add(serial);
+                return serial;
             }
         }
-        return created;
-    }
-
-    private String generateUniqueImei() {
-        String imei;
-        do {
-            StringBuilder sb = new StringBuilder("86");
-            for (int i = 0; i < 13; i++) {
-                sb.append(RANDOM.nextInt(10));
-            }
-            imei = sb.toString();
-        } while (existsByImei(imei));
-        return imei;
     }
 
     /**
-     * Thống kê số lượng tồn kho theo trạng thái để hiển thị donut chart trên dashboard staff.
-     * Kết quả: [inStock, sold, other].
+     * Tạo inventory_items từ receipt items khi confirm phiếu nhập. Hỗ trợ
+     * truyền serial thủ công theo từng receipt_item_id, phần còn lại sẽ tự sinh
+     * theo chuẩn SN-123456789.
+     */
+    public int generateInventoryFromReceiptWithManualSerials(int receiptId, Map<Integer, List<String>> manualSerialsByReceiptItem) {
+        if (conn == null || receiptId <= 0) {
+            return 0;
+        }
+        int inserted = 0;
+        Set<String> usedInBatch = new HashSet<>();
+        String sql = "SELECT receipt_item_id, variant_id, import_price, quantity "
+                + "FROM import_receipt_items WHERE receipt_id = ? ORDER BY receipt_item_id";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, receiptId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int receiptItemId = rs.getInt("receipt_item_id");
+                    int variantId = rs.getInt("variant_id");
+                    double importPrice = rs.getDouble("import_price");
+                    int qty = rs.getInt("quantity");
+
+                    List<String> manualList = manualSerialsByReceiptItem == null
+                            ? null
+                            : manualSerialsByReceiptItem.get(receiptItemId);
+                    int manualCount = (manualList == null) ? 0 : manualList.size();
+
+                    for (int i = 0; i < qty; i++) {
+                        String serial;
+                        if (i < manualCount) {
+                            serial = manualList.get(i);
+                            if (!isValidStandardSerial(serial) || usedInBatch.contains(serial) || existsByImei(serial)) {
+                                continue;
+                            }
+                            usedInBatch.add(serial);
+                        } else {
+                            serial = generateStandardSerial(usedInBatch);
+                        }
+                        InventoryItem item = new InventoryItem(0, variantId, receiptItemId, serial, importPrice, "IN_STOCK");
+                        if (insertInventory(item)) {
+                            inserted++;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return inserted;
+    }
+
+    /**
+     * Tạo inventory_items từ receipt items khi confirm phiếu nhập.
+     */
+    public int generateInventoryFromReceipt(int receiptId) {
+        return generateInventoryFromReceiptWithManualSerials(receiptId, null);
+    }
+
+    /**
+     * Thống kê số lượng tồn kho theo trạng thái để hiển thị donut chart trên
+     * dashboard staff. Kết quả: [inStock, sold, other].
      */
     public int[] getInventoryStatusCounts() {
         if (conn == null) {
@@ -413,8 +511,7 @@ public class InventoryItemDAO extends DBContext {
         int inStock = 0;
         int sold = 0;
         int other = 0;
-        try (PreparedStatement ps = conn.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
+        try (PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
                 inStock = rs.getInt("in_stock");
                 sold = rs.getInt("sold");
@@ -458,6 +555,56 @@ public class InventoryItemDAO extends DBContext {
                         rs.getInt("reversed"),
                         rs.getInt("in_stock")
                 ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public List<InventorySummary> getInventorySummaryByKeyword(String keyword) {
+        List<InventorySummary> list = new ArrayList<>();
+        if (conn == null) {
+            return list;
+        }
+        String k = keyword == null ? "" : keyword.trim();
+        if (k.isEmpty()) {
+            return getInventorySummary();
+        }
+        String sql = "SELECT "
+                + "pv.variant_id, "
+                + "p.name AS product_name, "
+                + "pv.sku, "
+                + "COUNT(*) AS imported, "
+                + "SUM(CASE WHEN ii.status = 'SOLD' THEN 1 ELSE 0 END) AS sold, "
+                + "SUM(CASE WHEN ii.status = 'REVERSED' THEN 1 ELSE 0 END) AS reversed, "
+                + "SUM(CASE WHEN ii.status = 'IN_STOCK' THEN 1 ELSE 0 END) AS in_stock "
+                + "FROM inventory_items ii "
+                + "JOIN product_variants pv ON ii.variant_id = pv.variant_id "
+                + "JOIN products p ON pv.product_id = p.product_id "
+                + "WHERE LOWER(ISNULL(p.name,'')) LIKE ? "
+                + "   OR LOWER(ISNULL(pv.sku,'')) LIKE ? "
+                + "   OR CAST(pv.variant_id AS NVARCHAR(50)) LIKE ? "
+                + "GROUP BY pv.variant_id, p.name, pv.sku "
+                + "ORDER BY p.name, pv.sku";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            String likeLower = "%" + k.toLowerCase() + "%";
+            String like = "%" + k + "%";
+            ps.setString(1, likeLower);
+            ps.setString(2, likeLower);
+            ps.setString(3, like);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new InventorySummary(
+                            rs.getInt("variant_id"),
+                            rs.getString("product_name"),
+                            rs.getString("sku"),
+                            rs.getInt("imported"),
+                            rs.getInt("sold"),
+                            rs.getInt("reversed"),
+                            rs.getInt("in_stock")
+                    ));
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

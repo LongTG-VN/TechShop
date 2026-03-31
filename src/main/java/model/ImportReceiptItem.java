@@ -31,11 +31,23 @@ public class ImportReceiptItem {
         return receipt_item_id;
     }
 
+    public int getReceiptItemId() {
+        return receipt_item_id;
+    }
+
     public void setReceipt_item_id(int receipt_item_id) {
         this.receipt_item_id = receipt_item_id;
     }
 
+    public void setReceiptItemId(int receiptItemId) {
+        this.receipt_item_id = receiptItemId;
+    }
+
     public int getReceipt_id() {
+        return receipt_id;
+    }
+
+    public int getReceiptId() {
         return receipt_id;
     }
 
@@ -43,7 +55,15 @@ public class ImportReceiptItem {
         this.receipt_id = receipt_id;
     }
 
+    public void setReceiptId(int receiptId) {
+        this.receipt_id = receiptId;
+    }
+
     public int getVariant_id() {
+        return variant_id;
+    }
+
+    public int getVariantId() {
         return variant_id;
     }
 
@@ -51,12 +71,24 @@ public class ImportReceiptItem {
         this.variant_id = variant_id;
     }
 
+    public void setVariantId(int variantId) {
+        this.variant_id = variantId;
+    }
+
     public double getImport_price() {
+        return import_price;
+    }
+
+    public double getImportPrice() {
         return import_price;
     }
 
     public void setImport_price(double import_price) {
         this.import_price = import_price;
+    }
+
+    public void setImportPrice(double importPrice) {
+        this.import_price = importPrice;
     }
 
     public int getQuantity() {

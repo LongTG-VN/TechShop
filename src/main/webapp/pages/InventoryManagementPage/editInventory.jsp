@@ -45,7 +45,8 @@
         Inventory item not found.
     </div>
     <div class="text-center">
-        <a href="staffservlet?action=inventoryManagement" class="text-blue-600 underline">
+        <a href="staffservlet?action=inventoryManagement"
+           class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-lg border border-blue-200 bg-blue-50 text-blue-700 shadow-sm hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300 no-underline">
             Back to list
         </a>
     </div>
@@ -69,7 +70,7 @@
             </div>
 
             <a href="staffservlet?action=inventoryManagement"
-               class="text-gray-500 hover:text-gray-700 flex items-center gap-2 text-sm font-medium">
+               class="inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 no-underline shrink-0">
                 Back to List
             </a>
         </div>
@@ -114,18 +115,6 @@
                     </c:if>
 
                 </select>
-            </div>
-
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">
-                    IMEI <span class="text-red-500">*</span>
-                </label>
-                <input type="text"
-                       name="imei"
-                       required
-                       maxlength="100"
-                       value="${inventoryItem.imei}"
-                       class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono">
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -54,14 +54,20 @@
         <div>
             <label class="block text-sm font-semibold text-gray-700 mb-1">Status Code</label>
             <input type="text" name="status_code" placeholder="e.g., PENDING, SHIPPING, SHIPPED, CANCELLED" 
-                   required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                   required 
+                   pattern="^[a-zA-Z\s]+$" 
+                   title="Please enter only alphabet characters and spaces."
+                   class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
             <p class="text-xs text-gray-500 mt-1">Unique identifier for logic processing (uppercase recommended).</p>
         </div>
 
         <div>
             <label class="block text-sm font-semibold text-gray-700 mb-1">Display Name</label>
             <input type="text" name="status_name" placeholder="e.g., PENDING, SHIPPING, SHIPPED, CANCELLED" 
-                   required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                   required 
+                   pattern="^[a-zA-Z\s]+$" 
+                   title="Please enter only alphabet characters and spaces."
+                   class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
         </div>
 
         <div class="grid grid-cols-2 gap-4">

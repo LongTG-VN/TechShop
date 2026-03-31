@@ -68,7 +68,6 @@
     </div>
 
     <form action="productServlet" method="POST" enctype="multipart/form-data" class="space-y-8">
-        <%-- Hidden fields để gửi dữ liệu về Servlet --%>
         <input type="hidden" name="action" value="update">
         <input type="hidden" name="productId" value="${product.productId}">
 
@@ -84,8 +83,11 @@
                         <label
                             class="text-xs font-bold text-gray-400 uppercase tracking-widest">Product
                             Name</label>
-                        <input type="text" name="name" value="${product.name}" required
-                               class="w-full mt-1 p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all font-semibold">
+                        <input type="text" name="name" value="${product.name}"
+                               placeholder="Enter product name..."
+                               required
+                               pattern="^[a-zA-Z0-9](?:[a-zA-Z0-9\s\-]*[a-zA-Z0-9])?$"                               
+                               title="Letters, numbers, spaces, and hyphens (-) only. Cannot start or end with a hyphen." />
                     </div>
 
                     <%-- Category & Brand --%>
@@ -184,7 +186,7 @@
 
                                 <div class="mt-2">
                                     <input type="file" name="productImage"
-                                           accept="image/*" multiple
+                                           accept=".jpg,.jpeg,.png" multiple
                                            class="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
                                     <p
                                         class="text-[10px] text-gray-400 mt-1 italic">

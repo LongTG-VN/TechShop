@@ -5,7 +5,19 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <script src="https://cdn.tailwindcss.com"></script>
-        <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />      
+        <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
+        <style>
+            /* Ẩn mũi tên tăng/giảm mặc định của trình duyệt trên input số */
+            input[type="number"]::-webkit-outer-spin-button,
+            input[type="number"]::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+            input[type="number"] {
+                -moz-appearance: textfield;
+                appearance: textfield;
+            }
+        </style>
         <title>Staff Dashboard</title>
     </head>
     <body class="bg-gray-50">
@@ -145,7 +157,7 @@
         </aside>
 
         <div class="p-4 sm:ml-64">
-            <div class="p-4 border-2 border-gray-200 border-dashed rounded-lg mt-3 bg-white shadow-sm min-h-[85vh]">
+            <div class="p-4 border-2 border-gray-200 border-dashed rounded-lg mt-3 bg-white shadow-sm">
                 <%-- Nơi nội dung thay đổi --%>
                 <jsp:include page="${contentPage}" />
             </div>

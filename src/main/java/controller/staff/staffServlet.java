@@ -35,6 +35,8 @@ import model.Supplier;
 import java.util.Map;
 import model.Employees;
 import dao.InventoryItemDAO;
+import dao.ProductVariantDAO;
+import model.ProductVariant;
 
 /**
  *
@@ -44,7 +46,8 @@ import dao.InventoryItemDAO;
 public class staffServlet extends HttpServlet {
 
     /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
+     * methods.
      *
      * @param request servlet request
      * @param response servlet response
@@ -89,6 +92,18 @@ public class staffServlet extends HttpServlet {
         String page = "/pages/staffDashboard.jsp"; // Trang mặc định khi mới vào
         if (action == null || action.trim().isEmpty()) {
             action = "dashboard";
+        }
+        if ("inventoryReceiptEdit".equals(action)) {
+            String rid = request.getParameter("id");
+            request.getSession().setAttribute("msg",
+                    "Receipt edit page is disabled. Add lines using the \"Add Item\" form (same SKU + price merges on one receipt).");
+            request.getSession().setAttribute("msgType", "danger");
+            if (rid != null && !rid.isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryReceiptDetail&id=" + rid);
+            } else {
+                response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryReceiptManagement");
+            }
+            return;
         }
         List<?> listData = null; // Dấu <?> cho phép gán bất kỳ List nào (Customer, Employee...)
         // 3. Logic điều hướng (Switch-case sẽ sạch sẽ hơn if-else)
@@ -432,37 +447,36 @@ public class staffServlet extends HttpServlet {
                         InventoryItemDAO idao = new InventoryItemDAO();
                         String keyword = request.getParameter("keyword");
 
-                        // Danh sách chi tiết từng sản phẩm trong kho (IMEI-level)
+                        // IMEI-level inventory list
                         List<InventoryItem> listInventory = (keyword != null && !keyword.trim().isEmpty())
                                 ? idao.searchInventory(keyword)
                                 : idao.getAllInventory();
                         listData = listInventory != null ? listInventory : new java.util.ArrayList<>();
                         request.setAttribute("listInventory", listData);
 
-                        // Chỉ load phần tổng hợp khi không search (đúng với điều kiện ở JSP)
-                        if (keyword == null || keyword.trim().isEmpty()) {
-                            List<model.InventorySummary> inventorySummary = idao.getInventorySummary();
-                            request.setAttribute("inventorySummary", inventorySummary != null ? inventorySummary : new java.util.ArrayList<>());
+                        List<model.InventorySummary> inventorySummary = (keyword != null && !keyword.trim().isEmpty())
+                                ? idao.getInventorySummaryByKeyword(keyword)
+                                : idao.getInventorySummary();
+                        request.setAttribute("inventorySummary", inventorySummary != null ? inventorySummary : new java.util.ArrayList<>());
 
-                            int totalImported = 0;
-                            int totalSold = 0;
-                            int totalReversed = 0;
-                            int totalInStock = 0;
-                            if (inventorySummary != null) {
-                                for (model.InventorySummary s : inventorySummary) {
-                                    if (s != null) {
-                                        totalImported += s.getImported();
-                                        totalSold += s.getSold();
-                                        totalReversed += s.getReversed();
-                                        totalInStock += s.getInStock();
-                                    }
+                        int totalImported = 0;
+                        int totalSold = 0;
+                        int totalReversed = 0;
+                        int totalInStock = 0;
+                        if (inventorySummary != null) {
+                            for (model.InventorySummary s : inventorySummary) {
+                                if (s != null) {
+                                    totalImported += s.getImported();
+                                    totalSold += s.getSold();
+                                    totalReversed += s.getReversed();
+                                    totalInStock += s.getInStock();
                                 }
                             }
-                            request.setAttribute("totalImported", totalImported);
-                            request.setAttribute("totalSold", totalSold);
-                            request.setAttribute("totalReversed", totalReversed);
-                            request.setAttribute("totalInStock", totalInStock);
                         }
+                        request.setAttribute("totalImported", totalImported);
+                        request.setAttribute("totalSold", totalSold);
+                        request.setAttribute("totalReversed", totalReversed);
+                        request.setAttribute("totalInStock", totalInStock);
                     } catch (Exception e) {
                         e.printStackTrace();
                         listData = new java.util.ArrayList<>();
@@ -493,7 +507,59 @@ public class staffServlet extends HttpServlet {
                 case "inventoryReceiptManagement":
                     page = "/pages/InventoryReceiptManagementPage/inventoryReceiptManagement.jsp";
                     ImportReceiptsDAO rdao = new ImportReceiptsDAO();
-                    listData = rdao.getAllReceipts();
+                    List<ImportReceipts> allReceipts = rdao.getAllReceipts();
+                    ImportReceiptItemDAO receiptItemDaoForList = new ImportReceiptItemDAO();
+                    java.util.Set<Integer> receiptIdsHavingItems = new java.util.HashSet<>();
+                    for (ImportReceiptItem it : receiptItemDaoForList.getAllItems()) {
+                        if (it != null) {
+                            receiptIdsHavingItems.add(it.getReceipt_id());
+                        }
+                    }
+
+                    java.util.Map<Integer, ImportReceipts> latestBySupplier = new java.util.HashMap<>();
+                    java.util.Map<Integer, ImportReceipts> latestDraftWithItemsBySupplier = new java.util.HashMap<>();
+                    java.util.Map<Integer, ImportReceipts> latestConfirmedBySupplier = new java.util.HashMap<>();
+                    for (ImportReceipts r : allReceipts) {
+                        if (r == null) {
+                            continue;
+                        }
+                        int supplierId = r.getSupplier_id();
+                        String st = r.getStatus() == null ? "" : r.getStatus().trim();
+                        boolean hasItems = receiptIdsHavingItems.contains(r.getReceipt_id());
+
+                        if ("DRAFT".equalsIgnoreCase(st) && hasItems) {
+                            ImportReceipts oldDraft = latestDraftWithItemsBySupplier.get(supplierId);
+                            if (oldDraft == null || r.getReceipt_id() > oldDraft.getReceipt_id()) {
+                                latestDraftWithItemsBySupplier.put(supplierId, r);
+                            }
+                        }
+                        if ("CONFIRMED".equalsIgnoreCase(st)) {
+                            ImportReceipts oldConfirmed = latestConfirmedBySupplier.get(supplierId);
+                            if (oldConfirmed == null || r.getReceipt_id() > oldConfirmed.getReceipt_id()) {
+                                latestConfirmedBySupplier.put(supplierId, r);
+                            }
+                        }
+
+                        ImportReceipts oldAny = latestBySupplier.get(supplierId);
+                        if (oldAny == null || r.getReceipt_id() > oldAny.getReceipt_id()) {
+                            latestBySupplier.put(supplierId, r);
+                        }
+                    }
+
+                    List<ImportReceipts> dedupedReceipts = new ArrayList<>();
+                    for (java.util.Map.Entry<Integer, ImportReceipts> entry : latestBySupplier.entrySet()) {
+                        int supplierId = entry.getKey();
+                        ImportReceipts display = latestDraftWithItemsBySupplier.get(supplierId);
+                        if (display == null) {
+                            display = latestConfirmedBySupplier.get(supplierId);
+                        }
+                        if (display == null) {
+                            display = entry.getValue();
+                        }
+                        dedupedReceipts.add(display);
+                    }
+                    dedupedReceipts.sort((a, b) -> Integer.compare(b.getReceipt_id(), a.getReceipt_id()));
+                    listData = dedupedReceipts;
                     request.setAttribute("listSuppliers", new SupplierDAO().getAllSuppliers());
                     request.setAttribute("listEmployees", new EmployeesDAO().getAllEmployeeses());
                     break;
@@ -502,26 +568,127 @@ public class staffServlet extends HttpServlet {
                     request.setAttribute("listSuppliers", new SupplierDAO().getAllSuppliers());
                     request.setAttribute("listEmployees", new EmployeesDAO().getAllEmployeeses());
                     break;
-                case "inventoryReceiptEdit":
-                    int ridEdit = Integer.parseInt(request.getParameter("id"));
-                    ImportReceiptsDAO editReceiptDao = new ImportReceiptsDAO();
-                    editReceiptDao.recalculateTotalCost(ridEdit);
-                    request.setAttribute("receipt", editReceiptDao.getReceiptById(ridEdit));
-                    request.setAttribute("listSuppliers", new SupplierDAO().getAllSuppliers());
-                    request.setAttribute("listEmployees", new EmployeesDAO().getAllEmployeeses());
-                    page = "/pages/InventoryReceiptManagementPage/editInventoryReceipt.jsp";
-                    break;
+                case "inventoryReceiptStartBySupplier":
+                    int supplierIdStart = 0;
+                    try {
+                        supplierIdStart = Integer.parseInt(request.getParameter("supplier_id"));
+                    } catch (Exception e) {
+                        supplierIdStart = 0;
+                    }
+                    if (supplierIdStart <= 0) {
+                        response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryReceiptAdd");
+                        return;
+                    }
+
+                    ImportReceiptsDAO startDao = new ImportReceiptsDAO();
+                    List<ImportReceipts> allStartReceipts = startDao.getAllReceipts();
+                    ImportReceipts latestDraft = null;
+                    for (ImportReceipts r : allStartReceipts) {
+                        if (r == null || r.getSupplier_id() != supplierIdStart) {
+                            continue;
+                        }
+                        String st = r.getStatus() == null ? "" : r.getStatus().trim();
+                        if (!"DRAFT".equalsIgnoreCase(st)) {
+                            continue;
+                        }
+                        if (latestDraft == null || r.getReceipt_id() > latestDraft.getReceipt_id()) {
+                            latestDraft = r;
+                        }
+                    }
+
+                    if (latestDraft != null) {
+                        response.sendRedirect(request.getContextPath()
+                                + "/staffservlet?action=inventoryReceiptDetail&id=" + latestDraft.getReceipt_id() + "&mode=add#add-item-form");
+                        return;
+                    }
+
+                    int empIdStart = getStaffEmployeeId(request);
+                    if (empIdStart <= 0) {
+                        empIdStart = 1;
+                    }
+                    ImportReceipts newDraftBySupplier = new ImportReceipts(0, supplierIdStart, empIdStart, 0, null);
+                    newDraftBySupplier.setStatus("DRAFT");
+                    newDraftBySupplier.setNote("");
+                    newDraftBySupplier.setCreated_by(empIdStart);
+                    newDraftBySupplier.setCreated_at(new java.sql.Timestamp(System.currentTimeMillis()));
+                    int newDraftBySupplierId = startDao.insertReceiptReturnId(newDraftBySupplier);
+                    if (newDraftBySupplierId > 0) {
+                        response.sendRedirect(request.getContextPath()
+                                + "/staffservlet?action=inventoryReceiptDetail&id=" + newDraftBySupplierId + "&mode=add#add-item-form");
+                    } else {
+                        request.getSession().setAttribute("msg", "Could not create a new receipt for this supplier.");
+                        request.getSession().setAttribute("msgType", "danger");
+                        response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryReceiptManagement");
+                    }
+                    return;
                 case "inventoryReceiptDetail":
                     int ridDetail = Integer.parseInt(request.getParameter("id"));
+                    String modeDetail = request.getParameter("mode");
+                    if (modeDetail == null || modeDetail.trim().isEmpty()) {
+                        response.sendRedirect(request.getContextPath()
+                                + "/staffservlet?action=inventoryReceiptDetail&id=" + ridDetail + "&mode=view");
+                        return;
+                    }
                     ImportReceiptsDAO detailReceiptDao = new ImportReceiptsDAO();
                     detailReceiptDao.recalculateTotalCost(ridDetail);
                     ImportReceipts receipt = detailReceiptDao.getReceiptById(ridDetail);
+                    if (receipt == null) {
+                        request.getSession().setAttribute("msg", "Receipt not found.");
+                        request.getSession().setAttribute("msgType", "danger");
+                        response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryReceiptManagement");
+                        return;
+                    }
+                    if ("add".equals(modeDetail) && receipt.getStatus() != null
+                            && "CONFIRMED".equalsIgnoreCase(receipt.getStatus().trim())) {
+                        response.sendRedirect(request.getContextPath()
+                                + "/staffservlet?action=inventoryReceiptSupplierHistory&supplier_id=" + receipt.getSupplier_id());
+                        return;
+                    }
                     request.setAttribute("receipt", receipt);
                     request.setAttribute("receiptItems", new ImportReceiptItemDAO().getItemsByReceiptId(ridDetail));
+                    request.setAttribute("inventoryByReceiptItemId",
+                            new InventoryItemDAO().getInventoryGroupedByReceiptItemId(ridDetail));
                     request.setAttribute("listVariants", new dao.ProductVariantDAO().getAllVariant());
                     request.setAttribute("listSuppliers", new SupplierDAO().getAllSuppliers());
                     request.setAttribute("listEmployees", new EmployeesDAO().getAllEmployeeses());
                     page = "/pages/InventoryReceiptManagementPage/detailInventoryReceipt.jsp";
+                    break;
+                case "inventoryReceiptSupplierHistory":
+                    page = "/pages/InventoryReceiptManagementPage/receiptSupplierHistory.jsp";
+                    int supplierIdHistory = 0;
+                    try {
+                        supplierIdHistory = Integer.parseInt(request.getParameter("supplier_id"));
+                    } catch (Exception e) {
+                        supplierIdHistory = 0;
+                    }
+                    ImportReceiptsDAO historyDao = new ImportReceiptsDAO();
+                    List<ImportReceipts> allHistoryReceipts = historyDao.getAllReceipts();
+                    List<ImportReceipts> supplierHistoryReceipts = new ArrayList<>();
+                    for (ImportReceipts r : allHistoryReceipts) {
+                        if (r == null || r.getSupplier_id() != supplierIdHistory) {
+                            continue;
+                        }
+                        String st = r.getStatus() == null ? "" : r.getStatus().trim();
+                        if ("CONFIRMED".equalsIgnoreCase(st)) {
+                            supplierHistoryReceipts.add(r);
+                        }
+                    }
+                    supplierHistoryReceipts.sort((a, b) -> {
+                        if (a.getCreated_at() == null && b.getCreated_at() == null) {
+                            return Integer.compare(b.getReceipt_id(), a.getReceipt_id());
+                        }
+                        if (a.getCreated_at() == null) {
+                            return 1;
+                        }
+                        if (b.getCreated_at() == null) {
+                            return -1;
+                        }
+                        return b.getCreated_at().compareTo(a.getCreated_at());
+                    });
+                    request.setAttribute("supplierHistoryReceipts", supplierHistoryReceipts);
+                    request.setAttribute("listSuppliers", new SupplierDAO().getAllSuppliers());
+                    request.setAttribute("listEmployees", new EmployeesDAO().getAllEmployeeses());
+                    request.setAttribute("supplierIdHistory", supplierIdHistory);
                     break;
                 case "inventoryReceiptDelete":
                     int ridDel = Integer.parseInt(request.getParameter("id"));
@@ -531,7 +698,7 @@ public class staffServlet extends HttpServlet {
                     for (ImportReceiptItem it : itemDao.getItemsByReceiptId(ridDel)) {
                         // delete all inventory rows for each receipt item
                         totalInvDeleted += invDaoForReceipt.deleteByReceiptItemId(it.getReceipt_item_id());
-                        // nếu xóa item fail (dính khóa ngoại) thì dừng
+                        // stop if delete fails (FK constraint)
                         if (!itemDao.deleteItem(it.getReceipt_item_id())) {
                             request.getSession().setAttribute("msg", "Cannot delete this receipt because one of its items is still referenced by other data.");
                             request.getSession().setAttribute("msgType", "danger");
@@ -650,15 +817,93 @@ public class staffServlet extends HttpServlet {
         if ("inventoryReceiptConfirm".equals(action)) {
             String rp = request.getParameter("receipt_id");
             int receiptId = (rp != null && !rp.isEmpty()) ? Integer.parseInt(rp) : 0;
-            int created = new dao.InventoryItemDAO().generateInventoryFromReceipt(receiptId);
-            request.getSession().setAttribute("msg", "Receipt confirmed. " + created + " inventory record(s) created.");
+            InventoryItemDAO invDao = new InventoryItemDAO();
+            ImportReceiptItemDAO receiptItemDao = new ImportReceiptItemDAO();
+            List<ImportReceiptItem> receiptItems = receiptItemDao.getItemsByReceiptId(receiptId);
+            if (receiptItems == null || receiptItems.isEmpty()) {
+                request.getSession().setAttribute("msg",
+                        "This receipt has no items. Add at least one line before confirming.");
+                request.getSession().setAttribute("msgType", "danger");
+                response.sendRedirect(request.getContextPath()
+                        + "/staffservlet?action=inventoryReceiptDetail&id=" + receiptId + "&mode=add#add-item-form");
+                return;
+            }
+            java.util.Map<Integer, java.util.List<String>> manualSerialsByItem = new java.util.HashMap<>();
+            java.util.Set<String> allManualSerials = new java.util.HashSet<>();
+
+            for (ImportReceiptItem it : receiptItems) {
+                java.util.List<String> cleaned = new java.util.ArrayList<>();
+                for (int idx = 1; idx <= it.getQuantity(); idx++) {
+                    String s = request.getParameter("serials_" + it.getReceipt_item_id() + "_" + idx);
+                    s = s == null ? "" : s.trim().toUpperCase();
+                    if (s.isEmpty()) {
+                        request.getSession().setAttribute("msg",
+                                "Please enter all serials for this SKU (quantity " + it.getQuantity() + ").");
+                        request.getSession().setAttribute("msgType", "danger");
+                        response.sendRedirect(request.getContextPath()
+                                + "/staffservlet?action=inventoryReceiptDetail&id=" + receiptId + "&mode=add&serialItem=" + it.getReceipt_item_id() + "#manual-serial-panel");
+                        return;
+                    }
+                    if (!s.matches("^SN-\\d{9}$")) {
+                        request.getSession().setAttribute("msg", "Serial must match SN-123456789: " + s);
+                        request.getSession().setAttribute("msgType", "danger");
+                        response.sendRedirect(request.getContextPath()
+                                + "/staffservlet?action=inventoryReceiptDetail&id=" + receiptId + "&mode=add#manual-serial-panel");
+                        return;
+                    }
+                    if (allManualSerials.contains(s) || invDao.existsByImei(s)) {
+                        request.getSession().setAttribute("msg", "Duplicate serial: " + s);
+                        request.getSession().setAttribute("msgType", "danger");
+                        response.sendRedirect(request.getContextPath()
+                                + "/staffservlet?action=inventoryReceiptDetail&id=" + receiptId + "&mode=add#manual-serial-panel");
+                        return;
+                    }
+                    cleaned.add(s);
+                    allManualSerials.add(s);
+                }
+                manualSerialsByItem.put(it.getReceipt_item_id(), cleaned);
+            }
+
+            int generated = invDao.generateInventoryFromReceiptWithManualSerials(receiptId, manualSerialsByItem);
+            ImportReceipts currentReceipt = new ImportReceiptsDAO().getReceiptById(receiptId);
+            int supplierId = 0;
+            int empId = getStaffEmployeeId(request);
+            if (currentReceipt != null) {
+                supplierId = currentReceipt.getSupplier_id();
+                currentReceipt.setStatus("CONFIRMED");
+                currentReceipt.setNote("Confirmed and moved to inventory.");
+                new ImportReceiptsDAO().updateReceipt(currentReceipt);
+                if (empId <= 0) {
+                    empId = currentReceipt.getEmployee_id();
+                }
+            }
+            if (empId <= 0) {
+                empId = 1;
+            }
+            new ImportReceiptsDAO().recalculateTotalCost(receiptId);
+
+            if (supplierId > 0) {
+                ImportReceipts newDraft = new ImportReceipts(0, supplierId, empId, 0, null);
+                newDraft.setStatus("DRAFT");
+                newDraft.setNote("");
+                newDraft.setCreated_by(empId);
+                newDraft.setCreated_at(new java.sql.Timestamp(System.currentTimeMillis()));
+                new ImportReceiptsDAO().insertReceiptReturnId(newDraft);
+            }
+
+            request.getSession().setAttribute("msg",
+                    "Receipt confirmed: " + generated + " item(s) moved to inventory; a new draft receipt was created for the supplier.");
             request.getSession().setAttribute("msgType", "success");
-            response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryReceiptDetail&id=" + receiptId);
+            response.sendRedirect(request.getContextPath()
+                    + "/staffservlet?action=inventoryReceiptManagement");
             return;
         }
         if ("inventoryReceiptAdd".equals(action)) {
             String sp = request.getParameter("supplier_id");
             int supplierId = (sp != null && !sp.isEmpty()) ? Integer.parseInt(sp) : 0;
+            String receiptCode = request.getParameter("receipt_code");
+            String status = request.getParameter("status");
+            String note = request.getParameter("note");
             int empId = getStaffEmployeeId(request);
             if (empId <= 0) {
                 // Fallback: use first employee in system to avoid FK error
@@ -675,11 +920,16 @@ public class staffServlet extends HttpServlet {
                 }
             }
             ImportReceipts r = new ImportReceipts(0, supplierId, empId, 0, null);
+            r.setReceipt_code(receiptCode);
+            r.setStatus(status);
+            r.setNote(note);
+            r.setCreated_by(empId);
+            r.setCreated_at(new java.sql.Timestamp(System.currentTimeMillis()));
             int newId = new ImportReceiptsDAO().insertReceiptReturnId(r);
             if (newId > 0) {
                 request.getSession().setAttribute("msg", "Inventory receipt created successfully.");
                 request.getSession().setAttribute("msgType", "success");
-                response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryReceiptDetail&id=" + newId);
+                response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryReceiptDetail&id=" + newId + "&mode=add#add-item-form");
             } else {
                 request.getSession().setAttribute("msg", "Failed to create inventory receipt. Please check the supplier and employee.");
                 request.getSession().setAttribute("msgType", "danger");
@@ -690,22 +940,42 @@ public class staffServlet extends HttpServlet {
         if ("inventoryReceiptEdit".equals(action)) {
             String rp = request.getParameter("receipt_id");
             int receiptId = (rp != null && !rp.isEmpty()) ? Integer.parseInt(rp) : 0;
+            String mode = request.getParameter("mode");
             String sp = request.getParameter("supplier_id");
             int supplierId = (sp != null && !sp.isEmpty()) ? Integer.parseInt(sp) : 0;
-            String ep = request.getParameter("employee_id");
-            int empId = (ep != null && !ep.isEmpty()) ? Integer.parseInt(ep) : 0;
-            ImportReceiptsDAO receiptDao = new ImportReceiptsDAO();
-            ImportReceipts existingReceipt = receiptDao.getReceiptById(receiptId);
-            double totalCost = existingReceipt != null ? existingReceipt.getTotal_cost() : 0;
-            receiptDao.updateReceipt(new ImportReceipts(receiptId, supplierId, empId, totalCost, null));
-            request.getSession().setAttribute("msg", "Inventory receipt updated successfully.");
-            request.getSession().setAttribute("msgType", "success");
-            response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryReceiptDetail&id=" + receiptId);
+            String status = request.getParameter("status");
+            String note = request.getParameter("note");
+
+            ImportReceiptsDAO dao = new ImportReceiptsDAO();
+            ImportReceipts old = dao.getReceiptById(receiptId);
+            if (old == null) {
+                request.getSession().setAttribute("msg", "Receipt not found.");
+                request.getSession().setAttribute("msgType", "danger");
+            } else {
+                old.setSupplier_id(supplierId > 0 ? supplierId : old.getSupplier_id());
+                old.setStatus(status);
+                old.setNote(note);
+                dao.updateReceipt(old);
+                request.getSession().setAttribute("msg", "Receipt information updated successfully.");
+                request.getSession().setAttribute("msgType", "success");
+            }
+
+            String redirectMode = (mode != null && !mode.isEmpty()) ? "&mode=" + mode : "";
+            response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryReceiptDetail&id=" + receiptId + redirectMode);
             return;
         }
         if ("receiptItemAdd".equals(action)) {
             String rp = request.getParameter("receipt_id");
             int receiptId = (rp != null && !rp.isEmpty()) ? Integer.parseInt(rp) : 0;
+            ImportReceipts receiptCheck = new ImportReceiptsDAO().getReceiptById(receiptId);
+            if (receiptCheck != null && receiptCheck.getStatus() != null
+                    && "CONFIRMED".equalsIgnoreCase(receiptCheck.getStatus().trim())) {
+                request.getSession().setAttribute("msg", "This receipt is CONFIRMED; you cannot add items.");
+                request.getSession().setAttribute("msgType", "danger");
+                response.sendRedirect(request.getContextPath()
+                        + "/staffservlet?action=inventoryReceiptSupplierHistory&supplier_id=" + receiptCheck.getSupplier_id());
+                return;
+            }
             String vp = request.getParameter("variant_id");
             int variantId = (vp != null && !vp.isEmpty()) ? Integer.parseInt(vp) : 0;
             double importPrice = 0;
@@ -728,47 +998,85 @@ public class staffServlet extends HttpServlet {
                 request.getSession().setAttribute("msg", "Import price cannot be less than 0.");
                 request.getSession().setAttribute("msgType", "danger");
             } else {
-                new ImportReceiptItemDAO().insertItem(new ImportReceiptItem(0, receiptId, variantId, importPrice, qty));
-                new ImportReceiptsDAO().recalculateTotalCost(receiptId);
-                request.getSession().setAttribute("msg", "Item added to the receipt.");
-                request.getSession().setAttribute("msgType", "success");
+                ProductVariant pvAdd = new ProductVariantDAO().getVariantById(variantId);
+                if (pvAdd == null) {
+                    request.getSession().setAttribute("msg", "Selected variant was not found.");
+                    request.getSession().setAttribute("msgType", "danger");
+                } else {
+                    ImportReceiptItemDAO itemDao = new ImportReceiptItemDAO();
+                    ImportReceiptItem existingLine = itemDao.getFirstItemByReceiptAndVariant(receiptId, variantId);
+                    if (existingLine != null && Double.compare(existingLine.getImport_price(), importPrice) != 0) {
+                        request.getSession().setAttribute("msg",
+                                "On one receipt, one product has one import price. Use the existing price or edit the existing line.");
+                        request.getSession().setAttribute("msgType", "danger");
+                    } else {
+                        itemDao.mergeOrInsertLine(receiptId, variantId, importPrice, qty);
+                        new ImportReceiptsDAO().recalculateTotalCost(receiptId);
+                        request.getSession().setAttribute("msg",
+                                "Line added or merged (one line per SKU; quantities are summed).");
+                        request.getSession().setAttribute("msgType", "success");
+                    }
+                }
             }
-            response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryReceiptDetail&id=" + receiptId);
+            response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryReceiptDetail&id=" + receiptId + "&mode=add#add-item-form");
             return;
         }
         if ("receiptItemEdit".equals(action)) {
-            String ip = request.getParameter("receipt_item_id");
-            int itemId = (ip != null && !ip.isEmpty()) ? Integer.parseInt(ip) : 0;
             String rp = request.getParameter("receipt_id");
             int receiptId = (rp != null && !rp.isEmpty()) ? Integer.parseInt(rp) : 0;
+            ImportReceipts receiptCheck = new ImportReceiptsDAO().getReceiptById(receiptId);
+            if (receiptCheck != null && receiptCheck.getStatus() != null
+                    && "CONFIRMED".equalsIgnoreCase(receiptCheck.getStatus().trim())) {
+                request.getSession().setAttribute("msg", "This receipt is CONFIRMED; you cannot edit items.");
+                request.getSession().setAttribute("msgType", "danger");
+                response.sendRedirect(request.getContextPath()
+                        + "/staffservlet?action=inventoryReceiptSupplierHistory&supplier_id=" + receiptCheck.getSupplier_id());
+                return;
+            }
+            String ip = request.getParameter("receipt_item_id");
+            int itemId = (ip != null && !ip.isEmpty()) ? Integer.parseInt(ip) : 0;
             String vp = request.getParameter("variant_id");
             int variantId = (vp != null && !vp.isEmpty()) ? Integer.parseInt(vp) : 0;
             double importPrice = 0;
             try {
-                String px = request.getParameter("import_price");
-                if (px != null && !px.isEmpty()) {
-                    importPrice = Double.parseDouble(px);
+                String p = request.getParameter("import_price");
+                if (p != null && !p.isEmpty()) {
+                    importPrice = Double.parseDouble(p);
                 }
             } catch (NumberFormatException e) {
             }
-            String qp = request.getParameter("quantity");
-            int qty = (qp != null && !qp.isEmpty()) ? Integer.parseInt(qp) : 0;
-            if (variantId <= 0) {
-                request.getSession().setAttribute("msg", "Please select a product and variant before updating the item.");
+            int qty = 0;
+            try {
+                String q = request.getParameter("quantity");
+                if (q != null && !q.isEmpty()) {
+                    qty = Integer.parseInt(q);
+                }
+            } catch (NumberFormatException e) {
+            }
+            ImportReceiptItem oldItem = new ImportReceiptItemDAO().getItemById(itemId);
+            if (oldItem == null) {
+                request.getSession().setAttribute("msg", "Receipt line not found.");
                 request.getSession().setAttribute("msgType", "danger");
-            } else if (qty <= 0) {
-                request.getSession().setAttribute("msg", "Quantity must be greater than 0.");
-                request.getSession().setAttribute("msgType", "danger");
-            } else if (importPrice < 0) {
-                request.getSession().setAttribute("msg", "Import price cannot be less than 0.");
+            } else if (qty <= 0 || importPrice < 0) {
+                request.getSession().setAttribute("msg", "Invalid import price or quantity.");
                 request.getSession().setAttribute("msgType", "danger");
             } else {
-                new ImportReceiptItemDAO().updateItem(new ImportReceiptItem(itemId, receiptId, variantId, importPrice, qty));
-                new ImportReceiptsDAO().recalculateTotalCost(receiptId);
-                request.getSession().setAttribute("msg", "Receipt item updated successfully.");
-                request.getSession().setAttribute("msgType", "success");
+                if (variantId <= 0) {
+                    variantId = oldItem.getVariant_id();
+                }
+                ProductVariant pv = new ProductVariantDAO().getVariantById(variantId);
+                if (pv == null) {
+                    request.getSession().setAttribute("msg", "Selected variant was not found.");
+                    request.getSession().setAttribute("msgType", "danger");
+                } else {
+                    ImportReceiptItem updated = new ImportReceiptItem(itemId, oldItem.getReceipt_id(), variantId, importPrice, qty);
+                    new ImportReceiptItemDAO().updateItem(updated);
+                    new ImportReceiptsDAO().recalculateTotalCost(receiptId);
+                    request.getSession().setAttribute("msg", "Receipt line updated.");
+                    request.getSession().setAttribute("msgType", "success");
+                }
             }
-            response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryReceiptDetail&id=" + receiptId);
+            response.sendRedirect(request.getContextPath() + "/staffservlet?action=inventoryReceiptDetail&id=" + receiptId + "&mode=add#add-item-form");
             return;
         }
         if ("receiptItemDelete".equals(action)) {
@@ -776,8 +1084,17 @@ public class staffServlet extends HttpServlet {
             int itemId = (ip != null && !ip.isEmpty()) ? Integer.parseInt(ip) : 0;
             String rp = request.getParameter("receipt_id");
             int receiptId = (rp != null && !rp.isEmpty()) ? Integer.parseInt(rp) : 0;
+            ImportReceipts receiptCheck = new ImportReceiptsDAO().getReceiptById(receiptId);
+            if (receiptCheck != null && receiptCheck.getStatus() != null
+                    && "CONFIRMED".equalsIgnoreCase(receiptCheck.getStatus().trim())) {
+                request.getSession().setAttribute("msg", "This receipt is CONFIRMED; you cannot delete items.");
+                request.getSession().setAttribute("msgType", "danger");
+                response.sendRedirect(request.getContextPath()
+                        + "/staffservlet?action=inventoryReceiptSupplierHistory&supplier_id=" + receiptCheck.getSupplier_id());
+                return;
+            }
             InventoryItemDAO invDao = new InventoryItemDAO();
-            // Luôn xóa toàn bộ inventory_items liên quan rồi xóa dòng phiếu
+            // Delete related inventory_items first, then receipt line
             int deletedInv = invDao.deleteByReceiptItemId(itemId);
             boolean deleted = new ImportReceiptItemDAO().deleteItem(itemId);
             if (deleted) {

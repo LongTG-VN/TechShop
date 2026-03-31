@@ -20,7 +20,10 @@
             <div class="space-y-2 md:col-span-2">
                 <label class="text-xs font-bold text-gray-400 uppercase tracking-widest text-blue-600">Specification Value</label>
                 <input type="text" name="specValue" value="${val.specValue}" required 
-                       class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 shadow-inner">
+                       placeholder="e.g. 16GB, OLED, Black"
+                       pattern="^[a-zA-Z0-9\s]+$"
+                       title="Please enter only letters, numbers, and spaces."
+                       class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-medium">
             </div>
         </div>
         <div class="flex justify-end gap-4 pt-6 border-t">

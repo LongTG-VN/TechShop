@@ -16,9 +16,9 @@ public class InventoryItem {
     private String imei;
     private double import_price;
     private String status;
-   
     private String productName;
-   
+    private String sku;
+    private String receiptCode;
     private String buyerName;
 
     public InventoryItem() {
@@ -37,11 +37,23 @@ public class InventoryItem {
         return inventory_id;
     }
 
+    public int getInventoryId() {
+        return inventory_id;
+    }
+
     public void setInventory_id(int inventory_id) {
         this.inventory_id = inventory_id;
     }
 
+    public void setInventoryId(int inventoryId) {
+        this.inventory_id = inventoryId;
+    }
+
     public int getVariant_id() {
+        return variant_id;
+    }
+
+    public int getVariantId() {
         return variant_id;
     }
 
@@ -49,12 +61,24 @@ public class InventoryItem {
         this.variant_id = variant_id;
     }
 
+    public void setVariantId(int variantId) {
+        this.variant_id = variantId;
+    }
+
     public int getReceipt_item_id() {
+        return receipt_item_id;
+    }
+
+    public int getReceiptItemId() {
         return receipt_item_id;
     }
 
     public void setReceipt_item_id(int receipt_item_id) {
         this.receipt_item_id = receipt_item_id;
+    }
+
+    public void setReceiptItemId(int receiptItemId) {
+        this.receipt_item_id = receiptItemId;
     }
 
     public String getImei() {
@@ -69,8 +93,16 @@ public class InventoryItem {
         return import_price;
     }
 
+    public double getImportPrice() {
+        return import_price;
+    }
+
     public void setImport_price(double import_price) {
         this.import_price = import_price;
+    }
+
+    public void setImportPrice(double importPrice) {
+        this.import_price = importPrice;
     }
 
     public String getStatus() {
@@ -87,6 +119,22 @@ public class InventoryItem {
 
     public void setProductName(String productName) {
         this.productName = productName;
+    }
+
+    public String getSku() {
+        return sku;
+    }
+
+    public void setSku(String sku) {
+        this.sku = sku;
+    }
+
+    public String getReceiptCode() {
+        return receiptCode;
+    }
+
+    public void setReceiptCode(String receiptCode) {
+        this.receiptCode = receiptCode;
     }
 
     public String getBuyerName() {

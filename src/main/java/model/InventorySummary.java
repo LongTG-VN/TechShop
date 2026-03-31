@@ -1,13 +1,10 @@
 package model;
 
 /**
- * Summary of inventory by variant.
- * (imported / sold / reversed / in stock)
  *
- * reversed: inventory đã được gắn vào order_items nhưng chưa đủ điều kiện để coi là sold
- * (ví dụ đơn COD chưa SHIPPED).
+ * @author LE HOANG NHAN
  */
-public class InventorySummary { 
+public class InventorySummary {
 
     private int variantId;
     private String productName;
@@ -18,7 +15,7 @@ public class InventorySummary {
     private int inStock;
 
     public InventorySummary(int variantId, String productName, String sku,
-                            int imported, int sold, int reversed, int inStock) {
+            int imported, int sold, int reversed, int inStock) {
         this.variantId = variantId;
         this.productName = productName;
         this.sku = sku;
@@ -56,4 +53,3 @@ public class InventorySummary {
         return inStock;
     }
 }
-

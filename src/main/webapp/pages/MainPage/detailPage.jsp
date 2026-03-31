@@ -80,9 +80,9 @@
                     <input type="hidden" name="variant_id" id="formVariantId" value="" />
 
                     <div class="flex items-center bg-gray-50 border border-gray-200 p-1 rounded-2xl h-14 w-32">
-                        <button type="button" onclick="updateQuantity(-1)" class="w-10 h-full flex items-center justify-center font-bold text-gray-400 hover:text-black hover:bg-white rounded-xl transition-all">−</button>
-                        <input type="text" id="qtyInput" name="quantity" value="1" class="w-12 bg-transparent text-center font-black text-lg outline-none" readonly>
-                        <button type="button" onclick="updateQuantity(1)" class="w-10 h-full flex items-center justify-center font-bold text-gray-400 hover:text-black hover:bg-white rounded-xl transition-all">+</button>
+                        <button type="button" id="qtyMinusBtn" onclick="updateQuantity(-1)" class="qty-step-btn w-10 h-full flex items-center justify-center font-bold text-gray-400 hover:text-black hover:bg-white rounded-xl transition-all disabled:opacity-40 disabled:pointer-events-none">−</button>
+                        <input type="text" id="qtyInput" name="quantity" value="1" class="w-12 bg-transparent text-center font-black text-lg border-0 outline-none focus:outline-none focus:ring-0 shadow-none appearance-none" readonly>
+                        <button type="button" id="qtyPlusBtn" onclick="updateQuantity(1)" class="qty-step-btn w-10 h-full flex items-center justify-center font-bold text-gray-400 hover:text-black hover:bg-white rounded-xl transition-all disabled:opacity-40 disabled:pointer-events-none">+</button>
                     </div>
 
                     <button type="submit" id="addToCartBtn" 
@@ -312,12 +312,14 @@
                                     document.getElementById('formVariantId').value = variant.id;
                                     document.getElementById('displayPrice').textContent = variant.price.toLocaleString('vi-VN') + 'đ';
 
-                                    var inStock = (variant.stock || 0) > 0;
                                     var btn = document.getElementById('addToCartBtn');
-                                    btn.disabled = !inStock;
-                                    btn.className = "flex-1 text-white font-black text-lg rounded-2xl h-14 shadow-lg transition-all flex items-center justify-center gap-3 " + (inStock ? "bg-red-600 hover:bg-red-700 shadow-red-100" : "bg-gray-300");
-                                    document.getElementById('stockStatus').innerHTML = '<span class="w-2 h-2 rounded-full ' + (inStock ? 'bg-green-500 animate-pulse' : 'bg-red-500') + '"></span>' + (inStock ? 'In Stock' : 'Out of Stock');
-                                    document.getElementById('stockStatus').className = "flex items-center gap-1.5 font-bold text-sm " + (inStock ? "text-green-600" : "text-red-500");
+                                    var stockCount = (variant.stock || 0);
+                                    btn.disabled = false;
+                                    btn.className = "flex-1 text-white font-black text-lg rounded-2xl h-14 shadow-lg transition-all flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 shadow-red-100";
+                                    document.getElementById('stockStatus').innerHTML = '<span class="w-2 h-2 rounded-full ' + (stockCount > 0 ? 'bg-green-500 animate-pulse' : 'bg-red-500') + '"></span>' + (stockCount > 0 ? 'In Stock' : 'Out of Stock');
+                                    document.getElementById('stockStatus').className = "flex items-center gap-1.5 font-bold text-sm " + (stockCount > 0 ? "text-green-600" : "text-red-500");
+
+                                    updateQtyButtonStates();
 
                                     var dynamicContainer = document.getElementById('dynamic-variant-specs');
                                     var noSpecsMsg = document.getElementById('no-specs-msg');
@@ -506,7 +508,7 @@
                                         return;
                                     form.addEventListener('submit', function (e) {
                                         var activeVariant = VARIANTS[selectedVariantId];
-                                        if (!activeVariant || (activeVariant.stock || 0) <= 0) {
+                                        if (!activeVariant) {
                                             e.preventDefault();
                                             return;
                                         }
@@ -546,11 +548,25 @@
                                     });
                                 });
 
+                                function updateQtyButtonStates() {
+                                    var inp = document.getElementById('qtyInput');
+                                    var cur = inp ? (parseInt(inp.value, 10) || 1) : 1;
+                                    var minusBtn = document.getElementById('qtyMinusBtn');
+                                    var plusBtn = document.getElementById('qtyPlusBtn');
+                                    if (minusBtn)
+                                        minusBtn.disabled = (cur <= 1);
+                                    if (plusBtn)
+                                        plusBtn.disabled = false;
+                                }
+
                                 function updateQuantity(c) {
                                     var i = document.getElementById('qtyInput');
-                                    var v = parseInt(i.value) + c;
-                                    if (v >= 1)
-                                        i.value = v;
+                                    var cur = parseInt(i.value, 10) || 1;
+                                    var v = cur + c;
+                                    if (v < 1)
+                                        v = 1;
+                                    i.value = v;
+                                    updateQtyButtonStates();
                                 }
                                 function changeImage(t, s) {
                                     document.getElementById('mainImage').src = s;

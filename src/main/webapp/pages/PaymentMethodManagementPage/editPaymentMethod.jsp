@@ -48,7 +48,11 @@
         <div class="mb-4">
             <label class="block mb-2">Method Name</label>
             <input type="text" name="method_name" value="${payment.method_name}" 
-                   class="w-full p-2 border rounded" required>
+                   class="w-full p-2 border rounded" 
+                   required
+                   pattern="^[a-zA-Z\s]+$" 
+                   title="Please enter only alphabet characters and spaces."
+                   >
         </div>
 
         <div class="mb-6">

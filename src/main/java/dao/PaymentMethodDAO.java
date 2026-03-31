@@ -140,7 +140,8 @@ public class PaymentMethodDAO extends DBContext {
     }
 
     /**
-     * Kiểm tra tên payment method đã tồn tại chưa (dùng cho Add) - không phân biệt chữ hoa/thường.
+     * Kiểm tra tên payment method đã tồn tại chưa (dùng cho Add) - không phân
+     * biệt chữ hoa/thường.
      */
     public boolean isMethodNameExists(String name) {
         String sql = "SELECT COUNT(*) FROM payment_methods WHERE LOWER(method_name) = LOWER(?)";
@@ -157,7 +158,8 @@ public class PaymentMethodDAO extends DBContext {
     }
 
     /**
-     * Kiểm tra tên payment method đã tồn tại cho các ID khác chưa (dùng cho Update) - không phân biệt chữ hoa/thường.
+     * Kiểm tra tên payment method đã tồn tại cho các ID khác chưa (dùng cho
+     * Update) - không phân biệt chữ hoa/thường.
      */
     public boolean isMethodNameExists(String name, int excludeId) {
         String sql = "SELECT COUNT(*) FROM payment_methods WHERE LOWER(method_name) = LOWER(?) AND method_id <> ?";

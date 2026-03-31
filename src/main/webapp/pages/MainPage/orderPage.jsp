@@ -17,7 +17,17 @@
                 <div>
                     <p class="font-bold text-sm">Order failed — Product out of stock</p>
                     <c:if test="${not empty param.product}">
-                        <p class="text-sm mt-0.5">Product <strong>"${param.product}"</strong> does not have enough stock. Please update your cart or contact the store.</p>
+                        <c:choose>
+                            <c:when test="${not empty param.available and not empty param.requested}">
+                                <p class="text-sm mt-0.5">
+                                    Product <strong>"${param.product}"</strong>: you requested <strong>${param.requested}</strong>,
+                                    but only <strong>${param.available}</strong> item(s) are left in stock.
+                                </p>
+                            </c:when>
+                            <c:otherwise>
+                                <p class="text-sm mt-0.5">Product <strong>"${param.product}"</strong> does not have enough stock. Please update your cart or contact the store.</p>
+                            </c:otherwise>
+                        </c:choose>
                     </c:if>
                     <c:if test="${empty param.product}">
                         <p class="text-sm mt-0.5">One or more products in your cart are out of stock. Please update your cart.</p>
@@ -53,7 +63,7 @@
                             <c:otherwise>
                                 <c:forEach items="${listaddress}" var="addr" varStatus="loop">
                                     <c:set var="isSelected" value="${addr.isDefault || loop.first}" />
-
+                                     
                                     <label class="address-card relative border-2 rounded-2xl p-5 cursor-pointer transition-all
                                            ${isSelected ? 'border-red-600 bg-red-50' : 'border-gray-100 bg-white hover:border-red-300'}">
 
@@ -80,7 +90,7 @@
 
                                 <%-- CHỈ HIỂN THỊ NÚT THÊM NẾU SỐ LƯỢNG ĐỊA CHỈ < 2 --%>
                                 <c:if test="${fn:length(listaddress) < 2}">
-                                    <a href="addresssuserservlet?action=addIncart&state=cart" class="relative border-2 border-dashed border-gray-300 bg-gray-50 rounded-2xl p-5 cursor-pointer hover:bg-gray-100 hover:border-red-400 transition-all flex flex-col items-center justify-center min-h-[140px] group">
+                                    <a href="addresssuserservlet?action=addIncart&state=addIncart" class="relative border-2 border-dashed border-gray-300 bg-gray-50 rounded-2xl p-5 cursor-pointer hover:bg-gray-100 hover:border-red-400 transition-all flex flex-col items-center justify-center min-h-[140px] group">
                                         <svg class="w-8 h-8 text-gray-400 group-hover:text-red-500 transition-colors mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                                         <span class="font-bold text-gray-600 group-hover:text-red-600 transition-colors">Add new address</span>
                                     </a>

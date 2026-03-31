@@ -2,8 +2,6 @@ package controller.User;
 
 import dao.CartItemDAO;
 import dao.CustomerDAO;
-import dao.InventoryItemDAO;
-import dao.ProductVariantDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -11,7 +9,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.CartItem;
 import model.CartItemDisplay;
-import model.ProductVariant;
 
 import java.io.IOException;
 import java.util.List;
@@ -189,24 +186,8 @@ public class cartServlet extends HttpServlet {
                 CartItemDAO cartDao = new CartItemDAO();
                 CartItem existing = cartDao.getByCustomerAndVariant(customerId, variantId);
 
-                // Không cho số lượng trong giỏ vượt quá tồn kho hiện tại.
-                int available = new InventoryItemDAO().countAvailableByVariantId(variantId);
-                if (available <= 0) {
-                    String msg = "This product is out of stock. Please choose another.";
-                    if (ajax) {
-                        sendJson(response, false, 0, 0, msg);
-                    } else {
-                        setMsg(request, msg, "danger");
-                        redirectToCart(request, response);
-                    }
-                    return;
-                }
-
                 int currentQty = (existing != null) ? existing.getQuantity() : 0;
                 int targetQty = currentQty + quantity;
-                if (targetQty > available) {
-                    targetQty = available;
-                }
 
                 boolean saved;
                 if (existing != null) {
@@ -238,15 +219,12 @@ public class cartServlet extends HttpServlet {
                 }
                 request.getSession().setAttribute("cartCount", cartCount);
 
-                boolean clippedToStock = (currentQty + quantity) > available;
-                String addMsg = clippedToStock
-                        ? "Added to cart with maximum available quantity (" + targetQty + " item(s))."
-                        : "Added to cart.";
+                String addMsg = "Added to cart.";
 
                 if (ajax) {
                     sendJson(response, true, totalAmount, cartCount, addMsg);
                 } else {
-                    setMsg(request, addMsg, clippedToStock ? "danger" : "success");
+                    setMsg(request, addMsg, "success");
                     redirectToCart(request, response);
                 }
                 return;
@@ -269,41 +247,16 @@ public class cartServlet extends HttpServlet {
                 if (cartItemId > 0 && quantity >= 1) {
                     CartItem item = cartDao.getCartItemById(cartItemId);
                     if (item != null && item.getCustomer_id() == customerId) {
-                        int available = new InventoryItemDAO().countAvailableByVariantId(item.getVariant_id());
-
                         if (ajax) {
-                            // AJAX: không đủ hàng thì trả lỗi để JS tự revert UI.
-                            if (available <= 0 || quantity > available) {
-                                ProductVariant v = new ProductVariantDAO().getVariantById(item.getVariant_id());
-                                String productName = (v != null && v.getProductName() != null) ? v.getProductName() : "product";
-                                String errorMsg = "Product \"" + productName + "\" does not have enough stock. Please update your cart or contact the store.";
-                                sendJson(response, false, 0, 0, errorMsg);
-                                return;
-                            }
-
                             item.setQuantity(quantity);
                             if (!cartDao.updateCartItem(item)) {
                                 sendJson(response, false, 0, 0, "Could not update cart. Please try again.");
                                 return;
                             }
                         } else {
-                            // Submit thường: tự clamp theo tồn kho và dùng toast.
-                            if (available <= 0) {
-                                cartDao.deleteCartItem(cartItemId);
-                                setMsg(request, "Item is out of stock and has been removed from your cart.", "danger");
-                            } else {
-                                int newQty = quantity;
-                                if (quantity > available) {
-                                    newQty = available;
-                                    ProductVariant v = new ProductVariantDAO().getVariantById(item.getVariant_id());
-                                    String productName = (v != null && v.getProductName() != null) ? v.getProductName() : "product";
-                                    String warnMsg = "Product \"" + productName + "\" only has " + available + " in stock. Cart quantity has been adjusted to " + available + ".";
-                                    setMsg(request, warnMsg, "danger");
-                                }
-                                item.setQuantity(newQty);
-                                if (!cartDao.updateCartItem(item)) {
-                                    setMsg(request, "Could not update cart. Please try again.", "danger");
-                                }
+                            item.setQuantity(quantity);
+                            if (!cartDao.updateCartItem(item)) {
+                                setMsg(request, "Could not update cart. Please try again.", "danger");
                             }
                         }
                     }

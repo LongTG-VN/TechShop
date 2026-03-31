@@ -7,8 +7,10 @@
         Inventory item not found.
     </div>
     <div class="text-center">
-        <a href="staffservlet?action=inventoryManagement" 
-           class="text-blue-600 underline">Back to list</a>
+        <a href="staffservlet?action=inventoryManagement"
+           class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-lg border border-blue-200 bg-blue-50 text-blue-700 shadow-sm hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300 no-underline">
+            Back to list
+        </a>
     </div>
 </c:if>
 
@@ -18,6 +20,7 @@
         <h2 class="text-2xl font-bold mb-6 text-gray-800 uppercase tracking-wide">
             Inventory Item Detail
         </h2>
+        <p class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-4">Basic Information</p>
 
         <div class="space-y-6">
 
@@ -25,10 +28,10 @@
 
                 <div>
                     <label class="block mb-2 text-sm font-medium text-gray-700">
-                        Inventory ID
+                        Serial ID
                     </label>
                     <input type="text"
-                           value="#${inventoryItem.inventory_id}"
+                           value="${empty inventoryItem.imei ? 'N/A' : inventoryItem.imei}"
                            class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed font-bold text-blue-600"
                            readonly>
                 </div>
@@ -53,16 +56,6 @@
                     </c:if>
                 </div>
 
-            </div>
-
-            <div>
-                <label class="block mb-2 text-sm font-medium text-gray-700">
-                    IMEI
-                </label>
-                <input type="text"
-                       value="${inventoryItem.imei}"
-                       class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed font-mono"
-                       readonly>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -105,7 +98,7 @@
             <div class="flex justify-end gap-3 pt-2">
 
                 <a href="javascript:history.back()"
-                   class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 font-medium border border-gray-200 text-sm no-underline">
+                   class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 no-underline">
                     Back
                 </a>
 

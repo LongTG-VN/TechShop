@@ -160,7 +160,7 @@
             // 3. KHỞI TẠO AI (Có try-catch chống sập do thiếu Key)
             let ai = null;
             try {
-                const API_KEY = "AIzaSyAxQ6xGjhBJx3BNQcz3hX4APPDF51L86FU"; // Hãy đổi lại Key thật của bạn ở đây
+                const API_KEY = "AIzaSyB2NcMG0-g2wJkzGXFPY_0k3Fx94uanHYg"; // Hãy đổi lại Key thật của bạn ở đây
                 ai = new GoogleGenAI({apiKey: API_KEY});
             } catch (error) {
                 console.error("Lỗi khởi tạo AI:", error);
