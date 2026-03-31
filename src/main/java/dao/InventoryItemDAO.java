@@ -57,8 +57,7 @@ public class InventoryItemDAO extends DBContext {
     }
 
     /**
-     * Tìm inventory theo keyword đơn giản (id/variant/imei/status/tên sp/tên
-     * khách/sku). Mục tiêu: dễ hiểu, đủ dùng cho trang quản lý.
+     * Tìm inventory theo tên sản phẩm.
      */
     public List<InventoryItem> searchInventory(String keyword) {
         List<InventoryItem> list = new ArrayList<>();
@@ -83,25 +82,11 @@ public class InventoryItemDAO extends DBContext {
                 + "LEFT JOIN order_items oi ON oi.inventory_id = ii.inventory_id "
                 + "LEFT JOIN orders o ON o.order_id = oi.order_id "
                 + "LEFT JOIN customers c ON c.customer_id = o.customer_id "
-                + "WHERE CAST(ii.inventory_id AS NVARCHAR(50)) LIKE ? "
-                + "OR CAST(ii.variant_id AS NVARCHAR(50)) LIKE ? "
-                + "OR ii.serial_id LIKE ? "
-                + "OR UPPER(ISNULL(ii.status,'')) LIKE ? "
-                + "OR LOWER(ISNULL(p.name,'')) LIKE ? "
-                + "OR LOWER(ISNULL(c.full_name,'')) LIKE ? "
-                + "OR LOWER(ISNULL(pv.sku,'')) LIKE ? "
+                + "WHERE LOWER(ISNULL(p.name,'')) LIKE ? "
                 + "ORDER BY ii.inventory_id DESC";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            String like = "%" + k + "%";
-            String likeUpper = "%" + k.toUpperCase() + "%";
             String likeLower = "%" + k.toLowerCase() + "%";
-            ps.setString(1, like);
-            ps.setString(2, like);
-            ps.setString(3, like);
-            ps.setString(4, likeUpper);
-            ps.setString(5, likeLower);
-            ps.setString(6, likeLower);
-            ps.setString(7, likeLower);
+            ps.setString(1, likeLower);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapRow(rs));

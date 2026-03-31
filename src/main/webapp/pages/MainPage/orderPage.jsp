@@ -20,12 +20,12 @@
                         <c:choose>
                             <c:when test="${not empty param.available and not empty param.requested}">
                                 <p class="text-sm mt-0.5">
-                                    Product <strong>"${param.product}"</strong>: you requested <strong>${param.requested}</strong>,
+                                    Product <strong>"${param.product}"</strong><c:if test="${not empty param.variant}"> - Variant <strong>${param.variant}</strong></c:if>: you requested <strong>${param.requested}</strong>,
                                     but only <strong>${param.available}</strong> item(s) are left in stock.
                                 </p>
                             </c:when>
                             <c:otherwise>
-                                <p class="text-sm mt-0.5">Product <strong>"${param.product}"</strong> does not have enough stock. Please update your cart or contact the store.</p>
+                                <p class="text-sm mt-0.5">Product <strong>"${param.product}"</strong><c:if test="${not empty param.variant}"> - Variant <strong>${param.variant}</strong></c:if> does not have enough stock. Please update your cart or contact the store.</p>
                             </c:otherwise>
                         </c:choose>
                     </c:if>

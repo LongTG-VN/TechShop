@@ -61,7 +61,7 @@
                     <input type="text"
                            name="keyword"
                            class="w-full pl-10 pr-10 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="Search by product name, code, status or ID..."
+                          placeholder="Search by product name..."
                            value="${param.keyword}">
                     <c:if test="${not empty param.keyword}">
                         <a href="staffservlet?action=inventoryManagement"
@@ -538,10 +538,25 @@
 
             groupItemsModalTitle.textContent = data.productName || 'Grouped inventory';
             const items = data.items || [];
+            // Safety: hide duplicated serial rows caused by legacy dirty data.
+            const seenSerial = new Set();
+            const uniqueItems = [];
+            items.forEach(function (it) {
+                const key = (it && it.serialId != null) ? String(it.serialId).trim().toUpperCase() : '';
+                if (!key) {
+                    uniqueItems.push(it);
+                    return;
+                }
+                if (seenSerial.has(key)) {
+                    return;
+                }
+                seenSerial.add(key);
+                uniqueItems.push(it);
+            });
             if (groupItemsModalMeta) {
                 groupItemsModalMeta.innerHTML = '';
             }
-            if (items.length === 0) {
+            if (uniqueItems.length === 0) {
                 if (groupItemsModalMeta) {
                     groupItemsModalMeta.textContent = '';
                 }
@@ -549,7 +564,7 @@
             } else {
                 if (groupItemsModalMeta) {
                     var rc = data.receiptCode && String(data.receiptCode).trim() ? String(data.receiptCode).trim() : '';
-                    var metaHtml = '<span class="font-medium text-gray-800">' + items.length + ' item(s)</span>';
+                    var metaHtml = '<span class="font-medium text-gray-800">' + uniqueItems.length + ' item(s)</span>';
                     if (rc) {
                         metaHtml += '<span class="mx-2 text-gray-300">|</span>'
                                 + '<span>Receipt: <span class="font-medium text-gray-800">' + escapeHtml(rc) + '</span></span>';
@@ -566,7 +581,7 @@
                         + '<th class="px-3 py-2 text-center">Status</th>'
                         + '</tr>'
                         + '</thead>';
-                const rows = items.map(function (item, index) {
+                const rows = uniqueItems.map(function (item, index) {
                     const serialId = item.serialId && String(item.serialId).trim() ? String(item.serialId).trim() : '—';
                     const skuRaw = item.sku != null && String(item.sku).trim() ? String(item.sku).trim() : (data.sku != null && String(data.sku).trim() ? String(data.sku).trim() : '');
                     const skuCell = skuRaw ? escapeHtml(skuRaw) : '—';

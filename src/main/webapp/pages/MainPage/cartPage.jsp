@@ -43,21 +43,6 @@
         }, 3500);</script>
     </c:if>
 
-<c:if test="${not empty requestScope.cartErrorMsg}">
-    <div class="max-w-[1200px] mx-auto px-4 mt-4">
-        <div class="mb-4 flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-2xl px-5 py-4">
-            <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-            </svg>
-            <div>
-                <p class="font-bold text-sm">Order failed — Product out of stock</p>
-                <p class="text-sm mt-0.5">${requestScope.cartErrorMsg}</p>
-            </div>
-        </div>
-    </div>
-</c:if>
-
 <div class="bg-gray-50 min-h-screen pb-12">
     <div class="max-w-[1200px] mx-auto px-4 py-8 md:py-12 font-sans text-gray-800">
 
@@ -204,7 +189,7 @@
                     + '    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>'
                     + '  </svg>'
                     + '  <div>'
-                    + '    <p class="font-bold text-sm">Order failed — Product out of stock</p>'
+                    + '    <p class="font-bold text-sm">Cart update failed — Product out of stock</p>'
                     + '    <p class="text-sm mt-0.5 cart-error-text"></p>'
                     + '  </div>'
                     + '</div>';
