@@ -386,6 +386,25 @@
             }
         }
 
+        /** Same rules as modal: duplicate serial_id counts once; empty serial keeps each row. */
+        function dedupeInventoryItemsBySerial(items) {
+            var seenSerial = new Set();
+            var out = [];
+            (items || []).forEach(function (it) {
+                var key = (it && it.serialId != null) ? String(it.serialId).trim().toUpperCase() : '';
+                if (!key) {
+                    out.push(it);
+                    return;
+                }
+                if (seenSerial.has(key)) {
+                    return;
+                }
+                seenSerial.add(key);
+                out.push(it);
+            });
+            return out;
+        }
+
         function renderGroupedRows(filterVariantId) {
             if (!detailTbody)
                 return;
@@ -416,7 +435,6 @@
                     });
                 }
                 const g = groups.get(key);
-                g.quantity += 1;
                 g.items.push({
                     inventoryId: it.inventoryId != null ? String(it.inventoryId) : '',
                     serialId: it.serialId || '',
@@ -425,10 +443,24 @@
                     sku: it.sku || '',
                     receiptCode: it.receiptCode || ''
                 });
-                // keep smallest inventoryId for stable Details link
-                if (g.firstInventoryId == null || (it.inventoryId != null && Number(it.inventoryId) < Number(g.firstInventoryId))) {
-                    g.firstInventoryId = it.inventoryId;
-                }
+            });
+
+            groups.forEach(function (g) {
+                g.items = dedupeInventoryItemsBySerial(g.items);
+                g.quantity = g.items.length;
+                g.firstInventoryId = null;
+                g.items.forEach(function (row) {
+                    if (row.inventoryId == null || row.inventoryId === '') {
+                        return;
+                    }
+                    var id = Number(row.inventoryId);
+                    if (isNaN(id)) {
+                        return;
+                    }
+                    if (g.firstInventoryId == null || id < Number(g.firstInventoryId)) {
+                        g.firstInventoryId = row.inventoryId;
+                    }
+                });
             });
 
             const grouped = Array.from(groups.values()).sort(function (a, b) {

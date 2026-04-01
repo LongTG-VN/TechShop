@@ -1033,8 +1033,8 @@ public class staffServlet extends HttpServlet {
             } else if (qty <= 0) {
                 request.getSession().setAttribute("msg", "Quantity must be greater than 0.");
                 request.getSession().setAttribute("msgType", "danger");
-            } else if (importPrice < 0) {
-                request.getSession().setAttribute("msg", "Import price cannot be less than 0.");
+            } else if (importPrice <= 0) {
+                request.getSession().setAttribute("msg", "Import price must be greater than 0.");
                 request.getSession().setAttribute("msgType", "danger");
             } else {
                 ProductVariant pvAdd = new ProductVariantDAO().getVariantById(variantId);
@@ -1097,8 +1097,8 @@ public class staffServlet extends HttpServlet {
             if (oldItem == null) {
                 request.getSession().setAttribute("msg", "Receipt line not found.");
                 request.getSession().setAttribute("msgType", "danger");
-            } else if (qty <= 0 || importPrice < 0) {
-                request.getSession().setAttribute("msg", "Invalid import price or quantity.");
+            } else if (qty <= 0 || importPrice <= 0) {
+                request.getSession().setAttribute("msg", "Import price must be greater than 0 and quantity must be valid.");
                 request.getSession().setAttribute("msgType", "danger");
             } else {
                 if (variantId <= 0) {

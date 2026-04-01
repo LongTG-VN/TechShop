@@ -369,7 +369,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1">Import Price (₫)</label>
-                        <input id="edit-import-price" type="number" name="import_price" min="0" step="1000" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"/>
+                        <input id="edit-import-price" type="number" name="import_price" min="1" step="any" required class="w-full px-4 py-2 border border-gray-200 rounded-lg"/>
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1">Quantity</label>
@@ -389,7 +389,7 @@
         <form id="add-item-receipt-form"
               action="${pageContext.request.contextPath}/staffservlet"
               method="post"
-              onsubmit="return preventAddSpamSubmit(this)"
+              onsubmit="return validateAddReceiptItemForm(this) && preventAddSpamSubmit(this)"
               class="p-4 bg-blue-50 rounded-xl border border-blue-200">
             <input type="hidden" name="action" value="receiptItemAdd"/>
             <input type="hidden" name="receipt_id" value="${receipt.receipt_id}"/>
@@ -418,7 +418,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1">Import Price (₫)</label>
-                        <input type="number" name="import_price" value="0" min="0" step="1000" required class="w-full px-4 py-2 border border-gray-200 rounded-lg import-price-input"/>
+                        <input type="number" name="import_price" min="1" step="any" required placeholder="e.g. 1000" class="w-full px-4 py-2 border border-gray-200 rounded-lg import-price-input"/>
                         <p class="text-xs text-gray-500 mt-1 import-price-hint" data-default-class="text-xs text-gray-500 mt-1 import-price-hint"></p>
                     </div>
                     <div>
@@ -460,6 +460,21 @@
     </select>
 
     <script>
+        function validateAddReceiptItemForm(formEl) {
+            var inp = formEl.querySelector('input.import-price-input[name="import_price"]')
+                    || formEl.querySelector('input[name="import_price"]');
+            if (!inp) {
+                return true;
+            }
+            var v = Number(inp.value);
+            if (!isFinite(v) || v <= 0) {
+                alert('Import price must be greater than 0.');
+                inp.focus();
+                return false;
+            }
+            return true;
+        }
+
         function preventAddSpamSubmit(formEl) {
             var btn = formEl.querySelector('button[data-add-submit-btn]');
             if (!btn) {
@@ -570,8 +585,8 @@
                 variantSelect.focus();
                 return false;
             }
-            if (!isFinite(priceVal) || priceVal < 0) {
-                alert('Import price must be a valid non-negative number.');
+            if (!isFinite(priceVal) || priceVal <= 0) {
+                alert('Import price must be greater than 0.');
                 priceInput.focus();
                 return false;
             }
