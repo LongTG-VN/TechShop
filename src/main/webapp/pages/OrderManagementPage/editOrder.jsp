@@ -87,11 +87,12 @@
                                         </c:choose>
                                     </div>
 
-                                    <div class="flex-1 ml-4">
+                                    <div class="ml-4" style="flex: 0 0 60%; min-width: 0;">
                                         <select name="assign_inv_${item.orderItemId}"
                                                 class="w-full text-xs p-1.5 border rounded bg-gray-50
                                                 ${availableCount == 0 ? 'border-red-300 bg-red-50' : ''}"
-                                                required="${availableCount == 0 ? 'false' : 'true'}">
+                                                required="${availableCount == 0 ? 'false' : 'true'}"
+                                                style="min-width: 0; width: 100%; max-width: 100%; text-overflow: ellipsis;">
                                             <option value="">-- Select SerialId --</option>
                                             <c:forEach var="inv" items="${availableList}">
                                                 <option value="${inv.inventory_id}" data-import="${inv.import_price}">
@@ -107,6 +108,10 @@
                         <div class="mt-3 p-2 bg-blue-100 rounded-lg text-xs text-blue-700">
                             <i class="fas fa-info-circle"></i> 
                             Please select a Serial for ALL products to proceed to SHIPPING status.
+                        </div>
+                        <div id="shippingValidationMsg" class="hidden mt-3 p-3 bg-yellow-50 border border-yellow-300 rounded-lg text-sm text-yellow-800 font-semibold">
+                            <i class="fas fa-exclamation-circle mr-1 text-yellow-500"></i>
+                            <span id="shippingValidationText"></span>
                         </div>
                     </c:otherwise>
                 </c:choose>
@@ -203,7 +208,7 @@
                      ${autoPayment == 'PAID' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-100 text-gray-500 border-gray-200'}">
                     ${autoPayment}
                 </div>
-                
+
                 <p id="paymentPreview" class="mt-1 text-xs font-semibold"></p>
             </div>
 
@@ -434,35 +439,110 @@
     function updateProfitEstimation() {
         const revenue = parseFloat('${order.totalAmount}');
         let totalCost = 0;
-
         const selects = document.querySelectorAll('select[name^="assign_inv_"]');
-
         selects.forEach(select => {
             const selectedOption = select.options[select.selectedIndex];
             if (selectedOption && selectedOption.dataset.import) {
                 totalCost += parseFloat(selectedOption.dataset.import);
             }
         });
-
         const profit = revenue - totalCost;
-
-
         document.getElementById('totalImportPrice').textContent = totalCost.toLocaleString('en-US') + 'd';
         document.getElementById('estimatedProfit').textContent = profit.toLocaleString('en-US') + 'd';
-
         const profitEl = document.getElementById('estimatedProfit');
-        if (profit < 0) {
-            profitEl.className = 'text-lg font-bold text-red-600';
-        } else {
-            profitEl.className = 'text-lg font-bold text-green-600';
-        }
+        profitEl.className = 'text-lg font-bold ' + (profit < 0 ? 'text-red-600' : 'text-green-600');
     }
 
+    // Gộp chung 1 listener change: profit + duplicate highlight
     document.addEventListener('change', function (e) {
-        if (e.target && e.target.name && e.target.name.startsWith('assign_inv_')) {
-            updateProfitEstimation();
-        }
+        if (!e.target || !e.target.name || !e.target.name.startsWith('assign_inv_'))
+            return;
+
+        updateProfitEstimation();
+
+        const selects = document.querySelectorAll('select[name^="assign_inv_"]');
+        const seen = {};
+        const duplicates = new Set();
+        selects.forEach(s => {
+            if (s.value === "") {
+                s.style.borderColor = '';
+                return;
+            }
+            if (seen[s.value])
+                duplicates.add(s.value);
+            else
+                seen[s.value] = s;
+        });
+        selects.forEach(s => {
+            if (s.value !== "")
+                s.style.borderColor = duplicates.has(s.value) ? 'orange' : '';
+        });
+
+        const msgBox = document.getElementById('shippingValidationMsg');
+        if (msgBox && duplicates.size === 0)
+            msgBox.classList.add('hidden');
     });
 
     document.addEventListener('DOMContentLoaded', updateProfitEstimation);
+
+    document.getElementById('editOrderForm').addEventListener('submit', function (e) {
+        const msgBox = document.getElementById('shippingValidationMsg');
+        if (!msgBox)
+            return;
+
+        const selectedStatus = document.getElementById('selectedStatus').value;
+        const selects = document.querySelectorAll('select[name^="assign_inv_"]');
+        if (selects.length === 0)
+            return;
+
+        const allSelected = Array.from(selects).every(s => s.value !== "");
+        const anySelected = Array.from(selects).some(s => s.value !== "");
+
+        // Check trùng Serial
+        const selectedValues = Array.from(selects).map(s => s.value).filter(v => v !== "");
+        const hasDuplicate = selectedValues.length !== new Set(selectedValues).size;
+        if (hasDuplicate) {
+            e.preventDefault();
+            const seen = {};
+            selects.forEach(s => {
+                if (s.value === "")
+                    return;
+                if (seen[s.value]) {
+                    s.style.borderColor = 'orange';
+                    seen[s.value].style.borderColor = 'orange';
+                } else
+                    seen[s.value] = s;
+            });
+            document.getElementById('shippingValidationText').textContent =
+                    'There are duplicate Serial IDs (orange border). Please select a different Serial ID for each product.';
+            msgBox.classList.remove('hidden');
+            msgBox.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+            return;
+        }
+
+        // Chọn Serial nhưng chưa bấm Next: SHIPPING
+        if (anySelected && selectedStatus !== 'SHIPPING') {
+            e.preventDefault();
+            document.getElementById('shippingValidationText').textContent =
+                    'You have selected the Serial ID. Please click the "Next: SHIPPING" button to confirm the status change before saving.';
+            msgBox.classList.remove('hidden');
+            msgBox.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+            return;
+        }
+
+        // Bấm SHIPPING nhưng chưa chọn đủ Serial
+        if (selectedStatus === 'SHIPPING' && !allSelected) {
+            e.preventDefault();
+            selects.forEach(s => {
+                s.style.borderColor = s.value === '' ? 'red' : '';
+            });
+            document.getElementById('shippingValidationText').textContent =
+                    'Please select the Serial ID for ALL products before proceeding to SHIPPING.';
+            msgBox.classList.remove('hidden');
+            msgBox.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+            return;
+        }
+
+        msgBox.classList.add('hidden');
+    });
 </script>
