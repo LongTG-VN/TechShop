@@ -21,7 +21,7 @@
                     Hủy bỏ
                 </button>
                 
-                <form action="forgotpassword" method="get" class="flex-1">
+                <form action="verificationaccount" method="get" class="flex-1">
                     <input type="hidden" name="action" value="sendVerificationEmail">
                     <input type="hidden" name="username" value="${username}">
                     <button type="submit" 

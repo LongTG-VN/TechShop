@@ -39,18 +39,32 @@
                         </c:if>
                     </div>            
 
-                    <div class="grid md:grid-cols-1 md:gap-8">
-                        <div class="relative z-0 w-full mb-6 group">
-                            <input type="tel" pattern="^0(3|5|7|8|9)[0-9]{8}$"  title="Số điện thoại phải bắt đầu bằng 0, theo sau là 3, 5, 7, 8, 9 và đủ 10 chữ số." name="phone_number" id="phone_number" value="${customer.phoneNumber}" 
-                                   class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                            <label for="phone_number" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Phone Number</label>
-                            <c:if test="${not empty errorNumber}">
-                                <p class="mt-1 text-xs text-red-600 font-medium">${errorNumber}</p>
-                            </c:if>
-                        </div>
+                    <div class="grid md:grid-cols-2 md:gap-8">
+    <div class="relative z-0 w-full mb-6 group">
+        <input type="tel" pattern="^0(3|5|7|8|9)[0-9]{8}$" 
+               title="Số điện thoại phải bắt đầu bằng 0, theo sau là 3, 5, 7, 8, 9 và đủ 10 chữ số." 
+               name="phone_number" id="phone_number" value="${customer.phoneNumber}" 
+               class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
+               placeholder=" " required />
+        <label for="phone_number" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
+            Phone Number
+        </label>
+        <c:if test="${not empty errorNumber}">
+            <p class="mt-1 text-xs text-red-600 font-medium">${errorNumber}</p>
+        </c:if>
+    </div>
 
-
-                    </div>
+    <div class="relative z-0 w-full mb-6 group">
+        <select name="status" id="status" 
+                class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 focus:outline-none focus:ring-0 focus:border-blue-600 peer">
+            <option value="ACTIVE" ${customer.status eq 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
+            <option value="INACTIVE" ${customer.status eq 'INACTIVE' ? 'selected' : ''}>INACTIVE</option>
+        </select>
+        <label for="status" class="peer-focus:font-medium absolute text-sm text-blue-600 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0">
+            Account Status
+        </label>
+    </div>
+</div>
 
                     <div class="flex items-center justify-end space-x-3 pt-6 border-t border-gray-50">
                         <a href="customerservlet?action=all" 

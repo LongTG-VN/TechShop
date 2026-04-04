@@ -218,7 +218,7 @@ public class customerServlet extends HttpServlet {
                     String fullNameE = request.getParameter("full_name");
                     String emailE = request.getParameter("email");
                     String phoneE = request.getParameter("phone_number");
-
+String statusE = request.getParameter("status");
                     String errorEmailE = utils.IO.checkDuplicationGmailInEdit(emailE, customer.getEmail()) ? "" : "Gmail already exists";
                     String errorNumberE = utils.IO.CheckNumber(phoneE) ? "" : "Invalid phone (10 digits required)";
 
@@ -231,7 +231,7 @@ public class customerServlet extends HttpServlet {
                         updatedCus.setFullname(fullNameE);
                         updatedCus.setEmail(emailE);
                         updatedCus.setPhoneNumber(phoneE);
-                        
+                        updatedCus.setStatus(statusE);
                         
                         cdao.updateCustomer(updatedCus);
                         response.sendRedirect("customerservlet?action=all");

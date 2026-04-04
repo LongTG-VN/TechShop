@@ -32,15 +32,15 @@ public class IO {
     public static String generate8DigitPassword() {
         Random random = new Random();
         StringBuilder password = new StringBuilder(8);
-        
+
         for (int i = 0; i < 8; i++) {
             // Lấy ngẫu nhiên một số từ 0 đến 9 ghép vào chuỗi
             password.append(random.nextInt(10));
         }
-        
+
         return password.toString();
     }
-    
+
     public static boolean CheckDuplicationUsername(String username) {
 
         List<Customer> listC = cdao.getAllCustomer();
@@ -90,12 +90,20 @@ public class IO {
         List<Employees> listE = edao.getAllEmployeeses();
         for (Customer customer : listC) {
             if (email.equalsIgnoreCase(customer.getEmail())) {
+
+                if (customer.getStatus().equalsIgnoreCase("LOCKED") || customer.getStatus().equalsIgnoreCase("INACTIVE")) {
+                    return true;
+                }
+
                 return false;
             }
         }
 
         for (Employees employees : listE) {
             if (email.equalsIgnoreCase(employees.getEmail())) {
+                if (employees.getStatus().equalsIgnoreCase("LOCKED") || employees.getStatus().equalsIgnoreCase("INACTIVE")) {
+                    return true;
+                }
                 return false;
             }
         }

@@ -18,10 +18,10 @@ import model.Customer;
 
 /**
  *
- * @author ASUS
+ * @author Admin
  */
-@WebServlet(name = "forgotPassword", urlPatterns = {"/forgotpassword"})
-public class forgotPassword extends HttpServlet {
+@WebServlet(name = "verificationAccount", urlPatterns = {"/verificationaccount"})
+public class verificationAccount extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -40,10 +40,10 @@ public class forgotPassword extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet forgotPassword</title>");
+            out.println("<title>Servlet verificationAccount</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet forgotPassword at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet verificationAccount at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -61,14 +61,12 @@ public class forgotPassword extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String headerComponent = "/components/navbar.jsp"; // Trang mặc định khi mới vào
+       String headerComponent = "/components/navbar.jsp"; // Trang mặc định khi mới vào
         String footerComponent = "/components/footer.jsp"; // Trang mặc định khi mới vào
-        String page = "/pages/MainPage/forgot-password.jsp"; // Trang mặc định khi mới vào
+
         request.setAttribute("HeaderComponent", headerComponent);
         request.setAttribute("FooterComponent", footerComponent);
-        request.setAttribute("ContentPage", page);
-
-        // 5. Forward đến Template duy nhất
+        request.setAttribute("ContentPage", "/pages/MainPage/verificationAccount.jsp");
         request.getRequestDispatcher("/template/userTemplate.jsp").forward(request, response);
     }
 
@@ -83,10 +81,10 @@ public class forgotPassword extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
+       
         String email = request.getParameter("email");
         CustomerDAO cdao = new CustomerDAO();
-        String errorEmail = utils.IO.checkDuplicationGmail(email) ? "Email not yet registered Or locked/Inactived" : "";
+        String errorEmail = utils.IO.checkDuplicationGmail(email) ? "Email not yet registered" : "";
         int idC = 0;
         List<Customer> list = cdao.getAllCustomer();
 
@@ -113,13 +111,13 @@ public class forgotPassword extends HttpServlet {
 
             request.setAttribute("HeaderComponent", headerComponent);
             request.setAttribute("FooterComponent", footerComponent);
-            request.setAttribute("ContentPage", "/pages/MainPage/verificationForgotPassword.jsp");
+            request.setAttribute("ContentPage", "/pages/MainPage/verificationOTP.jsp");
             request.getRequestDispatcher("/template/userTemplate.jsp").forward(request, response);
         } else {
             request.setAttribute("errorEmail", errorEmail);
             String headerComponent = "/components/navbar.jsp"; // Trang mặc định khi mới vào
             String footerComponent = "/components/footer.jsp"; // Trang mặc định khi mới vào
-            String page = "/pages/MainPage/forgot-password.jsp"; // Trang mặc định khi mới vào
+            String page = "/pages/MainPage/verificationAccount.jsp"; // Trang mặc định khi mới vào
             request.setAttribute("HeaderComponent", headerComponent);
             request.setAttribute("FooterComponent", footerComponent);
             request.setAttribute("ContentPage", page);
@@ -128,7 +126,6 @@ public class forgotPassword extends HttpServlet {
             request.getRequestDispatcher("/template/userTemplate.jsp").forward(request, response);
 
         }
-
     }
 
     /**

@@ -90,15 +90,7 @@
                     </label>
                 </div>
 
-                <div class="relative z-0 w-full group">
-                    <select name="status" id="status" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 focus:outline-none focus:ring-0 focus:border-blue-600 peer">
-                        <option value="ACTIVE" ${empty oldStatus or oldStatus == 'ACTIVE' ? 'selected' : ''} selected>Active</option>
-                        <option value="LOCKED" ${oldStatus == 'LOCKED' ? 'selected' : ''}>Locked (Inactive)</option>
-                    </select>
-                    <label for="status" class="absolute text-xs text-blue-600 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0]">
-                        Initial Status
-                    </label>
-                </div>
+              
             </div>
 
             <div class="flex items-center justify-end space-x-4 pt-6">
@@ -114,3 +106,34 @@
         </form>
     </div>
 </div>
+                    
+                    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Lấy thời gian hiện tại và format chuẩn theo 'YYYY-MM-DDThh:mm'
+        var now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        var currentDateTime = now.toISOString().slice(0, 16);
+        
+        // valid_from: Tối đa là hiện tại (chỉ chọn từ quá khứ đến hiện tại)
+        var validFromInput = document.getElementById('valid_from');
+        if (validFromInput) {
+            validFromInput.max = currentDateTime;
+        }
+        
+        // valid_to: Tối thiểu là hiện tại (chỉ chọn từ hiện tại đến tương lai)
+        var validToInput = document.getElementById('valid_to');
+        if (validToInput) {
+            validToInput.min = currentDateTime;
+        }
+        
+        // Mở rộng thêm: Đảm bảo valid_to luôn phải lớn hơn valid_from nếu người dùng đổi valid_from
+        validFromInput.addEventListener('change', function() {
+            if (this.value) {
+                // Nếu valid_from được chọn, valid_to ít nhất phải bằng valid_from
+                // Nhưng vì yêu cầu valid_to luôn từ hiện tại trở đi, ta lấy max giữa hiện tại và valid_from
+                var fromValue = this.value;
+                validToInput.min = fromValue > currentDateTime ? fromValue : currentDateTime;
+            }
+        });
+    });
+</script>

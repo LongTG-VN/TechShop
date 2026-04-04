@@ -81,6 +81,19 @@ public class voucherServlet extends HttpServlet {
         VoucherDAO vdao = new VoucherDAO();
         if (action != null) {
             switch (action) {
+
+                case "toggleLock":
+                    int idLock = Integer.parseInt(request.getParameter("id"));
+                    String currentStatus = request.getParameter("currentStatus");
+
+                    if ("ACTIVE".equals(currentStatus)) {
+                        vdao.lockVoucher(idLock);
+                    } else if ("LOCKED".equals(currentStatus)) {
+                        vdao.unlockVoucher(idLock);
+                    }
+
+                    response.sendRedirect("voucherservlet?action=all");
+                    return;
                 case "search":
                     String name = request.getParameter("name");
                     page = "/pages/VoucherManagementPage/voucherManagement.jsp";
@@ -158,7 +171,7 @@ public class voucherServlet extends HttpServlet {
                     String minOrderValueStr = request.getParameter("min_order_value");
                     String maxDiscountStr = request.getParameter("max_discount_amount");
                     String totalQuantityStr = request.getParameter("total_quantity");
-                    String status = request.getParameter("status");
+                    String status = "ACTIVE";
 
                     String errorCode = utils.IO.checkCodeDuplicate(code) ? "" : "This voucher code already exists!";
                     String errorValidTo = utils.IO.checkValidDates(validFromStr, validToStr) ? "" : "Invalid date range. End date must be after the start date!";
@@ -178,18 +191,10 @@ public class voucherServlet extends HttpServlet {
                         v.setMaxDiscountAmount((maxDiscountStr != null && !maxDiscountStr.isEmpty()) ? Double.parseDouble(maxDiscountStr) : 0);
                         v.setTotalQuantity(Integer.parseInt(totalQuantityStr));
                         v.setUsedQuantity(0);
-
-                        LocalDateTime Day = LocalDateTime.now();
-                        if (Day.isAfter(LocalDateTime.parse(validToStr))) {
-                            v.setStatus("EXPIRED");
-                        } else {
-                            v.setStatus(status);
-                        }
-
+                        v.setStatus(status);
                         dao.insertVoucher(v);
                         response.sendRedirect("voucherservlet?action=all");
                     } else {
-
                         request.setAttribute("errorCode", errorCode);
                         request.setAttribute("errorValidTo", errorValidTo);
                         request.setAttribute("errorMaxDiscountAmount", errorMaxDiscountAmount);
@@ -226,8 +231,7 @@ public class voucherServlet extends HttpServlet {
                     double maxDiscountAmountE = (maxDiscountStrE != null && !maxDiscountStrE.isEmpty())
                             ? Double.parseDouble(maxDiscountStrE) : 0;
                     int totalQuantityE = Integer.parseInt(request.getParameter("total_quantity"));
-                    String statusE = request.getParameter("status");
-
+String statusE = request.getParameter("status"); // Lấy từ form
                     Voucher vEdit = new Voucher();
                     vEdit.setCode(codeE);
                     vEdit.setVoucherId(idE);
@@ -237,12 +241,7 @@ public class voucherServlet extends HttpServlet {
                     vEdit.setMinOrderValue(minOrderValueE);
                     vEdit.setMaxDiscountAmount(maxDiscountAmountE);
                     vEdit.setTotalQuantity(totalQuantityE);
-                    LocalDateTime Day = LocalDateTime.now();
-                    if (Day.isAfter(validFromE)) {
-                        vEdit.setStatus("EXPIRED");
-                    } else {
-                        vEdit.setStatus(statusE);
-                    }
+vEdit.setStatus(statusE); // Set vào object
                     String errorValidToE = utils.IO.checkValidDates(request.getParameter("valid_from"), request.getParameter("valid_to")) ? "" : "Invalid date range. End date must be after the start date!";
                     String errorMaxDiscountAmountE = utils.IO.checkVoucherConditions(request.getParameter("min_order_value"), maxDiscountStrE) ? "" : "Invalid input. Values must be numbers and cannot be negative!";
 

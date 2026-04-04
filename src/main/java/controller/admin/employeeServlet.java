@@ -72,9 +72,21 @@ public class employeeServlet extends HttpServlet {
         RoleDAO rdao = new RoleDAO();
         if (action != null) {
             switch (action) {
-                 case "search":
+                case "lock":
+                case "unlock":
+                    int idL = Integer.parseInt(request.getParameter("id"));
+                    // Cả 2 nút này đều dùng chung 1 hàm toggle cho tiện
+                    if (edao.toggleLockUnlockEmployee(idL)) {
+                        request.setAttribute("successMessage", "Thay đổi trạng thái nhân viên thành công!");
+                    } else {
+                        request.setAttribute("errorMessage", "Không thể thực hiện thao tác này!");
+                    }
+                     page = "/pages/EmployeeManagementPage/employeeManagement.jsp";
+                    listData = edao.getAllEmployeeses(); // Nhớ giữ dòng load lại list này nhé
+                    break;
+                case "search":
                     String name = request.getParameter("name");
-                      page = "/pages/EmployeeManagementPage/employeeManagement.jsp";
+                    page = "/pages/EmployeeManagementPage/employeeManagement.jsp";
                     listData = new EmployeesDAO().searchByName(name);
                     break;
                 case "add":
@@ -142,14 +154,15 @@ public class employeeServlet extends HttpServlet {
         RoleDAO rdao = new RoleDAO();
         if (action != null) {
             switch (action) {
+
                 case "add":
                     // 1. Lấy dữ liệu từ Form Add Employee
                     String username = request.getParameter("username");
                     String fullName = request.getParameter("full_name");
                     String email = request.getParameter("email");
-                    String password = request.getParameter("password");
+                    String password = utils.IO.generate8DigitPassword();
                     String phone = request.getParameter("phone_number");
-                    String status = request.getParameter("status");
+                    String status = "VERIFY";
 
                     // Lấy role_id từ <select> và ép kiểu sang int
                     int roleId = Integer.parseInt(request.getParameter("role_id"));
@@ -172,12 +185,18 @@ public class employeeServlet extends HttpServlet {
                         // OK -> Thêm vào DB
                         edao.insertEmployee(newEmp);
                         try {
-                            utils.EmailUtils.sendEmail(email, "Test TechShop", "<h1>Chào " + fullName +"!</h1><p>Tài khoản và mật khẩu của bạn là: <b>" + username + "</b>" + " và " + password  +"</p>");
+                            String loginUrl = "http://localhost:8080/your_project_name/login"; // Sửa lại thành link thực tế của bạn
+
+                            String emailContent = "<h1>Chào " + fullName + "!</h1>"
+                                    + "<p>Tài khoản và mật khẩu của bạn là: <b>" + username + "</b> và <b>" + password + "</b></p>"
+                                    + "<p>Vui lòng truy cập vào đường link sau để đăng nhập: <a href='" + loginUrl + "'>Nhấn vào đây để đăng nhập</a></p>";
+
+                            utils.EmailUtils.sendEmail(email, "Test TechShop", emailContent);
                         } catch (MessagingException ex) {
                             System.getLogger(employeeServlet.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
                         }
 
-                   response.sendRedirect("employeeservlet?action=all");
+                        response.sendRedirect("employeeservlet?action=all");
                     } else {
                         // Lỗi -> Forward về trang Add kèm theo dữ liệu đã nhập
                         request.setAttribute("errorUsername", errorUsername);

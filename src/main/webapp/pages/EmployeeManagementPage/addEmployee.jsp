@@ -5,68 +5,63 @@
     <div class="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-10 border border-gray-100">
 
         <div class="text-center mb-10">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-50 text-blue-600 rounded-full mb-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                </svg>
+            </div>
             <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">New Employee</h2>
             <p class="text-gray-500 mt-2">Enter the professional details for the new staff member.</p>
         </div>
 
-        <%-- Updated action to point to your employee/user servlet --%>
         <form action="employeeservlet" method="POST" class="space-y-8">
             <input type="hidden" name="action" value="add">
 
+            <%-- Row 1: Username & Full Name --%>
             <div class="grid md:grid-cols-2 md:gap-8">
                 <div class="relative z-0 w-full group">
                     <input type="text" name="username" value="${oldUsername}" id="username" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
                     <label for="username" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Username</label>
-                 <c:if test="${not empty errorUsername}">
+                    <c:if test="${not empty errorUsername}">
                         <p class="mt-1 text-xs text-red-600 font-medium">${errorUsername}</p>
                     </c:if>
                 </div>
                 <div class="relative z-0 w-full group">
-                    <input type="text" name="full_name" id="full_name" value="${oldFullName}"  class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
+                    <input type="text" name="full_name" id="full_name" value="${oldFullName}" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
                     <label for="full_name" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Full Name</label>
                 </div>
             </div>
 
+            <%-- Row 2: Email & Phone Number --%>
             <div class="grid md:grid-cols-2 md:gap-8">
                 <div class="relative z-0 w-full group">
                     <input type="email" value="${oldEmail}" name="email" id="email" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
                     <label for="email" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Work Email</label>
-                   <c:if test="${not empty errorEmail}">
+                    <c:if test="${not empty errorEmail}">
                         <p class="mt-1 text-xs text-red-600 font-medium">${errorEmail}</p>
                     </c:if>
                 </div>
                 <div class="relative z-0 w-full group">
-                    <input type="password"  value="${oldPassword}" name="password" id="password" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                    <label for="password" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Password</label>
+                    <input type="tel" name="phone_number" value="${oldPhone}" pattern="^0(3|5|7|8|9)[0-9]{8}$" title="Số điện thoại phải bắt đầu bằng 0, theo sau là 3, 5, 7, 8, 9 và đủ 10 chữ số." id="phone_number" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
+                    <label for="phone_number" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Phone Number</label>
+                    <c:if test="${not empty errorNumber}">
+                        <p class="mt-1 text-xs text-red-600 font-medium">${errorNumber}</p>
+                    </c:if>
                 </div>
             </div>
 
-            <div class="grid md:grid-cols-2 md:gap-8">
-                <div class="relative z-0 w-full group">
-                    <input type="tel" name="phone_number" value="${oldPhone}" pattern="^0(3|5|7|8|9)[0-9]{8}$"  title="Số điện thoại phải bắt đầu bằng 0, theo sau là 3, 5, 7, 8, 9 và đủ 10 chữ số." id="phone_number" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
-                    <label for="phone_number" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Phone Number</label>
-                  <c:if test="${not empty errorNumber}">
-                    <p class="mt-1 text-xs text-red-600 font-medium">${errorNumber}</p>
-                </c:if>
-                </div>
-                
-                <%-- Added Role selection for Employees --%>
+            <%-- Row 3: Role & Status --%>
+            <div class="grid md:grid-cols-1 md:gap-8">
                 <div class="relative z-0 w-full group">
                     <select name="role_id" id="role_id" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 focus:outline-none focus:ring-0 focus:border-blue-600 peer" required>
-                        <option value="" ${empty oldRoleId ? 'selected' : ''} disabled selected>Select Position</option>
+                        <option value="" ${empty oldRoleId ? 'selected' : ''} disabled>Select Position</option>
                         <option value="1" ${oldRoleId == '1' ? 'selected' : ''}>Admin</option>                      
                         <option value="2" ${oldRoleId == '2' ? 'selected' : ''}>Staff</option>                     
                     </select>
                     <label for="role_id" class="absolute text-xs text-blue-600 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0]">Role / Position</label>
                 </div>
-            </div>
 
-            <div class="relative z-0 w-full group">
-                <select name="status" id="status" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 focus:outline-none focus:ring-0 focus:border-blue-600 peer">
-                    <option value="ACTIVE" selected>Active</option>
-                    <option value="LOCKED">Locked</option>
-                </select>
-                <label for="status" class="absolute text-xs text-blue-600 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0]">Account Status</label>
+               
             </div>
 
             <div class="flex items-center justify-end space-x-4 pt-6">

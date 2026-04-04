@@ -104,7 +104,8 @@
                                 </a>
 
                                 <c:choose>
-                                    <c:when test="${cus.status eq 'ACTIVE' || cus.status eq 'Active' ||  cus.status eq 'VERIFY' || cus.status eq 'INACTIVE'}">
+                                    <%-- Chỉ cho phép KHÓA khi tài khoản đang ở trạng thái ACTIVE --%>
+                                    <c:when test="${cus.status eq 'ACTIVE' || cus.status eq 'Active'}">
                                         <a href="customerservlet?action=lock&id=${cus.customerID}" 
                                            onclick="return confirm('Bạn có chắc chắn muốn KHÓA tài khoản này không?')"
                                            class="inline-flex items-center p-1.5 text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-700 hover:text-white transition-all duration-200" 
@@ -115,6 +116,8 @@
                                             <span class="ml-1 text-xs font-bold uppercase hidden md:inline">Lock</span>
                                         </a>
                                     </c:when>
+
+                                    <%-- Chỉ cho phép MỞ KHÓA khi tài khoản đang ở trạng thái LOCKED --%>
                                     <c:when test="${cus.status eq 'LOCKED' || cus.status eq 'Locked'}">
                                         <a href="customerservlet?action=unlock&id=${cus.customerID}" 
                                            onclick="return confirm('Bạn có chắc chắn muốn MỞ KHÓA tài khoản này không?')"
@@ -126,6 +129,8 @@
                                             <span class="ml-1 text-xs font-bold uppercase hidden md:inline">Unlock</span>
                                         </a>
                                     </c:when>
+
+                                    <%-- Các trạng thái khác như INACTIVE, VERIFY sẽ không hiển thị nút nào ở đây --%>
                                 </c:choose>
 
                                 <a href="customerservlet?action=delete&id=${cus.customerID}" 

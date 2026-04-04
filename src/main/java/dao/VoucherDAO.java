@@ -1,5 +1,6 @@
 package dao;
 
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
@@ -28,21 +29,33 @@ public class VoucherDAO extends DBContext {
     }
 
     // ===== GET ALL =====
-    public List<Voucher> getAllVoucher() {
-        List<Voucher> list = new ArrayList<>();
-        String sql = "SELECT * FROM vouchers";
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                list.add(mapResultSetToVoucher(rs));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+  public List<Voucher> getAllVoucher() {
+    List<Voucher> list = new ArrayList<>();
+    // Câu SQL: Ưu tiên status là ACTIVE lên trước, sau đó sắp xếp theo ID mới nhất
+    String sql = """
+        SELECT * FROM vouchers 
+        ORDER BY 
+            CASE WHEN status = 'ACTIVE' THEN 0 ELSE 1 END ASC, 
+            voucher_id DESC
+    """;
+    
+    try {
+        // 1. Chạy Procedure để cập nhật trạng thái mới nhất từ Database
+        try (CallableStatement cs = conn.prepareCall("{call sp_RefreshVoucherStatuses}")) {
+            cs.execute(); 
         }
-        return list;
-    }
 
+        // 2. Thực hiện truy vấn với thứ tự đã sắp xếp
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+            list.add(mapResultSetToVoucher(rs));
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return list;
+}
     public List<Voucher> getVouchersByMonth(int month) {
         List<Voucher> list = new ArrayList<>();
         // Câu lệnh SQL lọc theo tháng của cột valid_from
@@ -140,7 +153,7 @@ public class VoucherDAO extends DBContext {
         String sql = """
             UPDATE vouchers 
             SET code=?, discount_percent=?, max_discount_amount=?, min_order_value=?, 
-                valid_from=?, valid_to=?, total_quantity=?, status=? 
+                valid_from=?, valid_to=?, total_quantity=?
             WHERE voucher_id=?
         """;
         try {
@@ -152,8 +165,8 @@ public class VoucherDAO extends DBContext {
             ps.setTimestamp(5, Timestamp.valueOf(v.getValidFrom()));
             ps.setTimestamp(6, Timestamp.valueOf(v.getValidTo()));
             ps.setInt(7, v.getTotalQuantity());
-            ps.setString(8, v.getStatus());
-            ps.setInt(9, v.getVoucherId());
+            
+            ps.setInt(8, v.getVoucherId());
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -253,7 +266,7 @@ public class VoucherDAO extends DBContext {
 public boolean softDeleteVoucher(int id) {
     String sql = """
         UPDATE vouchers
-        SET status = 'LOCKED'
+        SET status = 'INACTIVE'
         WHERE voucher_id = ?
     """;
     try {
@@ -265,4 +278,39 @@ public boolean softDeleteVoucher(int id) {
     }
     return false;
 }
+
+
+// ===== LOCK VOUCHER =====
+    public boolean lockVoucher(int id) {
+        String sql = """
+            UPDATE vouchers
+            SET status = 'LOCKED'
+            WHERE voucher_id = ? AND status = 'ACTIVE'
+        """;
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // ===== UNLOCK VOUCHER =====
+    public boolean unlockVoucher(int id) {
+        String sql = """
+            UPDATE vouchers
+            SET status = 'ACTIVE'
+            WHERE voucher_id = ? AND status = 'LOCKED'
+        """;
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }

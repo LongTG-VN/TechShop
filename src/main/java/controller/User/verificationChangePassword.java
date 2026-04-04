@@ -13,15 +13,14 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import java.util.List;
 import model.Customer;
 
 /**
  *
- * @author ASUS
+ * @author Admin
  */
-@WebServlet(name = "forgotPassword", urlPatterns = {"/forgotpassword"})
-public class forgotPassword extends HttpServlet {
+@WebServlet(name = "verificationChangePassword", urlPatterns = {"/verificationchangepassword"})
+public class verificationChangePassword extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -40,10 +39,10 @@ public class forgotPassword extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet forgotPassword</title>");
+            out.println("<title>Servlet verificationChangePassword</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet forgotPassword at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet verificationChangePassword at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -61,14 +60,12 @@ public class forgotPassword extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String headerComponent = "/components/navbar.jsp"; // Trang mặc định khi mới vào
+         String headerComponent = "/components/navbar.jsp"; // Trang mặc định khi mới vào
         String footerComponent = "/components/footer.jsp"; // Trang mặc định khi mới vào
-        String page = "/pages/MainPage/forgot-password.jsp"; // Trang mặc định khi mới vào
+
         request.setAttribute("HeaderComponent", headerComponent);
         request.setAttribute("FooterComponent", footerComponent);
-        request.setAttribute("ContentPage", page);
-
-        // 5. Forward đến Template duy nhất
+        request.setAttribute("ContentPage", "/pages/MainPage/verificationChangePassword.jsp");
         request.getRequestDispatcher("/template/userTemplate.jsp").forward(request, response);
     }
 
@@ -84,51 +81,50 @@ public class forgotPassword extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String email = request.getParameter("email");
+        String password = request.getParameter("password");
+        String passwordConfirm = request.getParameter("confirmPassword");
         CustomerDAO cdao = new CustomerDAO();
-        String errorEmail = utils.IO.checkDuplicationGmail(email) ? "Email not yet registered Or locked/Inactived" : "";
-        int idC = 0;
-        List<Customer> list = cdao.getAllCustomer();
 
-        if (errorEmail.isEmpty()) {
+        // 1. Kiểm tra mật khẩu khớp nhau (Dùng equals thay vì equalsIgnoreCase để bảo mật case-sensitive)
+        if (password != null && password.equals(passwordConfirm)) {
+            HttpSession session = request.getSession(false);
 
-            for (Customer customer : list) {
-                if (customer.getEmail().equalsIgnoreCase(email)) {
-                    idC = customer.getCustomerID();
+            if (session != null && session.getAttribute("id") != null) {
+                int idC = (int) session.getAttribute("id");
+                Customer c = cdao.getCustomerById(idC);
+
+                if (c != null) {
+                    // 2. Hash mật khẩu và update
+
+                    boolean isUpdated = cdao.changePassword(idC, passwordConfirm);
+                    cdao.changeCustomerStatus(idC, "ACTIVE");
+                    if (isUpdated) {
+                        // Cập nhật thành công mới xóa session và gửi mail
+                        session.removeAttribute("id");
+
+                        try {
+                            utils.EmailUtils.sendEmail(c.getEmail(), "TechShop - Password Changed",
+                                    "Chào " + c.getUserName() + ", mật khẩu của bạn đã được thay đổi thành công.");
+                        } catch (Exception e) {
+                            e.printStackTrace(); // Log lỗi gửi mail nhưng đừng chặn người dùng
+                        }
+
+                        response.sendRedirect("userservlet?action=loginPage");
+                        return;
+                    }
                 }
             }
-
-            HttpSession session = request.getSession();
-            String code = utils.EmailUtils.generateToken();
-            session.setMaxInactiveInterval(300);
-            session.setAttribute("code", code);
-            session.setAttribute("id", idC);
-
-            try {
-                utils.EmailUtils.sendEmail(email, "TechShop", "OTP : " + code);
-            } catch (Exception e) {
-            }
-            String headerComponent = "/components/navbar.jsp"; // Trang mặc định khi mới vào
-            String footerComponent = "/components/footer.jsp"; // Trang mặc định khi mới vào
-
-            request.setAttribute("HeaderComponent", headerComponent);
-            request.setAttribute("FooterComponent", footerComponent);
-            request.setAttribute("ContentPage", "/pages/MainPage/verificationForgotPassword.jsp");
-            request.getRequestDispatcher("/template/userTemplate.jsp").forward(request, response);
+            // Nếu rơi xuống đây nghĩa là không tìm thấy Customer hoặc lỗi DB
+            request.setAttribute("errorPassword", "Lỗi hệ thống: Không thể xác định người dùng.");
         } else {
-            request.setAttribute("errorEmail", errorEmail);
-            String headerComponent = "/components/navbar.jsp"; // Trang mặc định khi mới vào
-            String footerComponent = "/components/footer.jsp"; // Trang mặc định khi mới vào
-            String page = "/pages/MainPage/forgot-password.jsp"; // Trang mặc định khi mới vào
-            request.setAttribute("HeaderComponent", headerComponent);
-            request.setAttribute("FooterComponent", footerComponent);
-            request.setAttribute("ContentPage", page);
-
-            // 5. Forward đến Template duy nhất
-            request.getRequestDispatcher("/template/userTemplate.jsp").forward(request, response);
-
+            request.setAttribute("errorPassword", "Hai mật khẩu không khớp nhau!");
         }
 
+        // 3. Xử lý khi có lỗi (Forward lại trang cũ)
+        request.setAttribute("HeaderComponent", "/components/navbar.jsp");
+        request.setAttribute("FooterComponent", "/components/footer.jsp");
+        request.setAttribute("ContentPage", "/pages/MainPage/verificationChangePassword.jsp");
+        request.getRequestDispatcher("/template/userTemplate.jsp").forward(request, response);
     }
 
     /**

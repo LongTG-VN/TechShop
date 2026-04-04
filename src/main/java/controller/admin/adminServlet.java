@@ -97,9 +97,9 @@ public class adminServlet extends HttpServlet {
                     List<Voucher> listV = new VoucherDAO().getVouchersByYear(2026);
                     List<Order> listOrders = new OrderDAO().getOrdersByYear(2026);
 
-                    long activeV = listV.stream().filter(v -> v.getStatus().equalsIgnoreCase("Active")).count();
-                    long lockedV = listV.stream().filter(v -> v.getStatus().equalsIgnoreCase("Locked")).count();
-                    long expiredV = listV.stream().filter(v -> v.getStatus().equalsIgnoreCase("Expired")).count();
+                    long activeV = listV.stream().filter(v -> v.getStatus().equalsIgnoreCase("ACTIVE")).count();
+                    long lockedV = listV.stream().filter(v -> v.getStatus().equalsIgnoreCase("LOCKED")).count();
+                    long expiredV = listV.stream().filter(v -> v.getStatus().equalsIgnoreCase("EXPIRED")).count();
 
                     long pendingCount = listOrders.stream()
                             .filter(o -> o.getStatus().equalsIgnoreCase("PENDING")).count();
@@ -184,9 +184,9 @@ public class adminServlet extends HttpServlet {
                         List<Voucher> listVD = new VoucherDAO().getVouchersByYear(2026);
                         List<Order> listOrdersYear = new OrderDAO().getOrdersByYear(2026);
 
-                        long activeVD = listVD.stream().filter(v -> v.getStatus().equalsIgnoreCase("Active")).count();
-                        long lockedVD = listVD.stream().filter(v -> v.getStatus().equalsIgnoreCase("Locked")).count();
-                        long expiredVD = listVD.stream().filter(v -> v.getStatus().equalsIgnoreCase("Expired")).count();
+                        long activeVD = listVD.stream().filter(v -> v.getStatus().equalsIgnoreCase("ACTIVE")).count();
+                        long lockedVD = listVD.stream().filter(v -> v.getStatus().equalsIgnoreCase("LOCKED")).count();
+                        long expiredVD = listVD.stream().filter(v -> v.getStatus().equalsIgnoreCase("EXPIRED")).count();
 
                         long pendingCountY = listOrdersYear.stream().filter(o -> o.getStatus().equalsIgnoreCase("PENDING")).count();
                         long approvedCountY = listOrdersYear.stream().filter(o -> o.getStatus().equalsIgnoreCase("APPROVED")).count();
@@ -212,9 +212,9 @@ public class adminServlet extends HttpServlet {
                         List<Voucher> listVM = new VoucherDAO().getVouchersByMonth(Integer.parseInt(month));
                         List<Order> listOrdersMonth = new OrderDAO().getOrdersByMonth(Integer.parseInt(month));
 // Đếm trạng thái Voucher
-                        long activeVM = listVM.stream().filter(v -> v.getStatus().equalsIgnoreCase("Active")).count();
-                        long lockedVM = listVM.stream().filter(v -> v.getStatus().equalsIgnoreCase("Locked")).count();
-                        long expiredVM = listVM.stream().filter(v -> v.getStatus().equalsIgnoreCase("Expired")).count();
+                        long activeVM = listVM.stream().filter(v -> v.getStatus().equalsIgnoreCase("ACTIVE")).count();
+                        long lockedVM = listVM.stream().filter(v -> v.getStatus().equalsIgnoreCase("LOCKED")).count();
+                        long expiredVM = listVM.stream().filter(v -> v.getStatus().equalsIgnoreCase("EXPIRED")).count();
 
                         long pendingCountM = listOrdersMonth.stream().filter(o -> o.getStatus().equalsIgnoreCase("PENDING")).count();
                         long approvedCountM = listOrdersMonth.stream().filter(o -> o.getStatus().equalsIgnoreCase("APPROVED")).count();
@@ -275,9 +275,9 @@ public class adminServlet extends HttpServlet {
                     List<Voucher> listVC = new VoucherDAO().getVouchersByYear(2026);
                     List<Order> listOrdersDefault = new OrderDAO().getOrdersByYear(2026);
 
-                    long activeVC = listVC.stream().filter(v -> v.getStatus().equalsIgnoreCase("Active")).count();
-                    long lockedVC = listVC.stream().filter(v -> v.getStatus().equalsIgnoreCase("Locked")).count();
-                    long expiredVC = listVC.stream().filter(v -> v.getStatus().equalsIgnoreCase("Expired")).count();
+                    long activeVC = listVC.stream().filter(v -> v.getStatus().equalsIgnoreCase("ACTIVE")).count();
+                    long lockedVC = listVC.stream().filter(v -> v.getStatus().equalsIgnoreCase("LOCKED")).count();
+                    long expiredVC = listVC.stream().filter(v -> v.getStatus().equalsIgnoreCase("EXPIRED")).count();
 
                     long pendingCountD = listOrdersDefault.stream().filter(o -> o.getStatus().equalsIgnoreCase("PENDING")).count();
                     long approvedCountD = listOrdersDefault.stream().filter(o -> o.getStatus().equalsIgnoreCase("APPROVED")).count();

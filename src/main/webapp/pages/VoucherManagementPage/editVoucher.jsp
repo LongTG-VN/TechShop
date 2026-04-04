@@ -3,17 +3,11 @@
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
-<%-- 
-    1. XỬ LÝ DỮ LIỆU TRƯỚC KHI HIỂN THỊ 
-    Để code HTML bên dưới sạch đẹp, ta xử lý format ở đây.
---%>
-
-<c:set var="fmtValidFrom" value="${fn:substring(voucher.validFrom.toString(), 0, 16)}" />
-<c:set var="fmtValidTo" value="${fn:substring(voucher.validTo.toString(), 0, 16)}" />
+<c:set var="fmtValidFrom" value="${fn:replace(fn:substring(voucher.validFrom.toString(), 0, 16), ' ', 'T')}" />
+<c:set var="fmtValidTo" value="${fn:replace(fn:substring(voucher.validTo.toString(), 0, 16), ' ', 'T')}" />
 
 <fmt:formatNumber var="fmtMinOrder" value="${voucher.minOrderValue}" groupingUsed="false" maxFractionDigits="0" />
 <fmt:formatNumber var="fmtMaxDiscount" value="${voucher.maxDiscountAmount}" groupingUsed="false" maxFractionDigits="0" />
-
 
 <div class="flex justify-center items-start pt-10 min-h-screen bg-gray-50">
     <div class="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-10 border border-gray-100">
@@ -45,7 +39,6 @@
                     <label for="discount_percent" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
                         Discount Percentage (%)
                     </label>
-                    
                 </div>
             </div>
 
@@ -53,7 +46,7 @@
                 <div class="relative z-0 w-full group">
                     <input type="datetime-local" name="valid_from" id="valid_from" value="${fmtValidFrom}"
                            class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
-                           required />
+                           onkeydown="return false" required />
                     <label for="valid_from" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
                         Valid From
                     </label>
@@ -61,11 +54,11 @@
                 <div class="relative z-0 w-full group">
                     <input type="datetime-local" name="valid_to" id="valid_to" value="${fmtValidTo}"
                            class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
-                           required />
+                           onkeydown="return false" required />
                     <label for="valid_to" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
                         Valid To
                     </label>
-                       <c:if test="${not empty errorValidTo}">
+                    <c:if test="${not empty errorValidTo}">
                         <p class="mt-1 text-xs text-red-600 font-medium">${errorValidTo}</p>
                     </c:if>
                 </div>
@@ -107,13 +100,13 @@
                 </div>
                 
                 <div class="relative z-0 w-full group">
-                    <select name="status" id="status" class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 focus:outline-none focus:ring-0 focus:border-blue-600 peer">
-                        <option value="ACTIVE" ${voucher.status == 'ACTIVE' ? 'selected' : ''}>Active</option>
-                        <option value="LOCKED" ${voucher.status == 'LOCKED' ? 'selected' : ''}>Locked</option>
-                        <option value="EXPIRED" ${voucher.status == 'EXPIRED' ? 'selected' : ''}>Expired</option>
+                    <select name="status" id="status" 
+                            class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 focus:outline-none focus:ring-0 focus:border-blue-600 peer">
+                        <option value="ACTIVE" ${voucher.status eq 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
+                        <option value="INACTIVE" ${voucher.status eq 'INACTIVE' ? 'selected' : ''}>INACTIVE</option>
                     </select>
-                    <label for="status" class="absolute text-xs text-blue-600 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0]">
-                        Current Status
+                    <label for="status" class="peer-focus:font-medium absolute text-sm text-blue-600 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0">
+                        Voucher Status
                     </label>
                 </div>
             </div>
@@ -131,3 +124,31 @@
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        var currentDateTime = now.toISOString().slice(0, 16);
+        
+        var validFromInput = document.getElementById('valid_from');
+        var validToInput = document.getElementById('valid_to');
+        
+        if (validFromInput) {
+            validFromInput.max = currentDateTime;
+        }
+        
+        if (validToInput) {
+            validToInput.min = currentDateTime;
+        }
+        
+        if (validFromInput && validToInput) {
+            validFromInput.addEventListener('change', function() {
+                if (this.value) {
+                    var fromValue = this.value;
+                    validToInput.min = fromValue > currentDateTime ? fromValue : currentDateTime;
+                }
+            });
+        }
+    });
+</script>

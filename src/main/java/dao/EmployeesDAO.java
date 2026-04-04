@@ -359,24 +359,57 @@ public class EmployeesDAO extends DBContext {
         return false;
     }
     
-    // 17.5 Soft Delete Employee Record
-public boolean softDeleteEmployee(int id) {
-    // Thay vì xóa vĩnh viễn, ta cập nhật trạng thái thành 'DEACTIVATED'
-    // Lưu ý: Tên trạng thái phải khớp với quy định trong Database của bạn (ví dụ: 'INACTIVE', 'LOCKED')
-    String sql = "UPDATE employees SET status = 'DEACTIVATED' WHERE employee_id = ?";
+ /**
+     * Tự động đảo ngược trạng thái giữa ACTIVE và LOCKED cho nhân viên.
+     * @param id của nhân viên cần xử lý
+     * @return true nếu cập nhật thành công
+     */
+    public boolean toggleLockUnlockEmployee(int id) {
+        // 1. Lấy thông tin nhân viên hiện tại
+        Employees currentEmp = getEmployeeById(id);
+        if (currentEmp == null) {
+            return false;
+        }
 
-    try {
-        PreparedStatement ps = conn.prepareStatement(sql);
-        ps.setInt(1, id);
+        String currentStatus = currentEmp.getStatus();
+        String newStatus = "";
 
-        // Trả về true nếu cập nhật trạng thái thành công
-        return ps.executeUpdate() > 0;
-    } catch (Exception e) {
-        // Ghi log lỗi nếu có vấn đề về kết nối hoặc tên cột
-        e.printStackTrace();
+        // 2. Xác định trạng thái mới (Chỉ đảo giữa ACTIVE và LOCKED)
+        if ("ACTIVE".equalsIgnoreCase(currentStatus)) {
+            newStatus = "LOCKED";
+        } else if ("LOCKED".equalsIgnoreCase(currentStatus)) {
+            newStatus = "ACTIVE";
+        } else {
+            // Nếu là INACTIVE hoặc VERIFY thì không cho phép toggle nhanh qua hàm này
+            return false; 
+        }
+
+        // 3. Thực thi cập nhật vào Database
+        String sql = "UPDATE employees SET status = ? WHERE employee_id = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, newStatus);
+            ps.setInt(2, id);
+
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
-    return false;
-}
+
+    // Cập nhật lại hàm Soft Delete để dùng đúng trạng thái INACTIVE như bạn quy định
+    public boolean softDeleteEmployee(int id) {
+        String sql = "UPDATE employees SET status = 'INACTIVE' WHERE employee_id = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 
     // Test Main
     public static void main(String[] args) {
@@ -399,4 +432,6 @@ public boolean softDeleteEmployee(int id) {
 // 3. Gọi hàm DAO để chèn vào Database
 //        System.out.println(dao.getEmployeeById(2));
     }
+    
+    
 }
