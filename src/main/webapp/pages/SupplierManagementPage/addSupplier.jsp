@@ -1,6 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
+<%-- Thêm nhà cung cấp: POST supplier?action=add; thông báo flash qua session --%>
 <div class="w-full flex flex-col items-center">
     <c:if test="${not empty sessionScope.msg}">
         <div class="mb-4 w-full max-w-xl">
@@ -36,6 +37,7 @@
                        inputmode="numeric" title="Exactly 10 digits"
                        class="w-full px-3 py-2 border rounded" placeholder="10 digits"
                        oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                <p class="text-xs text-gray-500 mt-1">Must be 10 digits and unique — not used by another supplier.</p>
             </div>
 
             <div class="mb-3">
@@ -82,10 +84,16 @@
     }
 </style>
 <script>
+    /*
+     * Form thêm nhà cung cấp:
+     * - Ô địa chỉ tự cao theo nội dung (có trần để không chiếm cả màn hình)
+     * - Lọc ký tự tên realtime; validate tên trước submit (khớp servlet)
+     */
+    /** Điều chỉnh chiều cao textarea địa chỉ theo nội dung; vượt ngưỡng thì bật cuộn trong khung. */
     function autoResizeAddress(el) {
         if (!el)
             return;
-        var cap = 192; // max ~12rem; chỉ scroll khi vượt cap
+        var cap = 192;
         el.style.height = 'auto';
         el.style.overflowY = 'hidden';
         var sh = el.scrollHeight;
@@ -98,13 +106,16 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
+    /** Sau khi trang load: căn chiều cao textarea địa chỉ theo nội dung ban đầu. */
+    function initAddSupplierAddressOnLoad() {
         var ta = document.getElementById('addSupplierAddress');
         if (ta)
             autoResizeAddress(ta);
-    });
+    }
+    document.addEventListener('DOMContentLoaded', initAddSupplierAddressOnLoad);
 
-    function filterSupplierNameInput(el) { // khớp regex server
+    /** Xóa ký tự không nằm trong bộ cho phép của tên nhà cung cấp (đồng bộ với servlet). */
+    function filterSupplierNameInput(el) {
         if (!el)
             return;
         try {
@@ -114,6 +125,7 @@
         }
     }
 
+    /** Trước khi gửi form: trim tên, bắt buộc có nội dung, regex giống máy chủ; dùng setCustomValidity của trình duyệt. */
     function validateSupplierNameField(el) {
         if (!el)
             return true;

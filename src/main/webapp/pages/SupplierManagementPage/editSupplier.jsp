@@ -1,6 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
+<%-- Sửa nhà cung cấp: POST supplier?action=update; cần supplier_id ẩn --%>
 <div class="w-full flex flex-col items-center">
     <c:if test="${not empty sessionScope.msg}">
         <div class="mb-4 w-full max-w-xl">
@@ -47,6 +48,7 @@
                            value="${supplier.phone}"
                            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200" placeholder="10 digits"
                            oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                    <p class="text-xs text-gray-500 mt-1">Must be 10 digits and unique — not used by another supplier.</p>
                 </div>
 
                 <div class="mb-3">
@@ -56,7 +58,7 @@
                            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200" placeholder="Email (optional)"
                            autocomplete="email"
                            onblur="if (this.value)
-                                   this.value = this.value.trim().toLowerCase()">
+                                       this.value = this.value.trim().toLowerCase()">
                 </div>
 
                 <div class="mb-3">
@@ -97,10 +99,14 @@
     }
 </style>
 <script>
+    /*
+     * Form sửa nhà cung cấp: cùng logic resize địa chỉ và lọc/validate tên như form thêm.
+     */
+    /** Tự điều chỉnh chiều cao ô địa chỉ theo nội dung (có giới hạn tối đa). */
     function autoResizeAddress(el) {
         if (!el)
             return;
-        var cap = 192; // max ~12rem
+        var cap = 192;
         el.style.height = 'auto';
         el.style.overflowY = 'hidden';
         var sh = el.scrollHeight;
@@ -113,12 +119,15 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
+    /** Sau khi trang load: căn chiều cao textarea địa chỉ (form edit thường có nội dung dài). */
+    function initEditSupplierAddressOnLoad() {
         var ta = document.getElementById('editSupplierAddress');
         if (ta)
             autoResizeAddress(ta);
-    });
+    }
+    document.addEventListener('DOMContentLoaded', initEditSupplierAddressOnLoad);
 
+    /** Loại bỏ ký tự không hợp lệ trong tên khi đang gõ (đồng bộ servlet). */
     function filterSupplierNameInput(el) {
         if (!el)
             return;
@@ -129,6 +138,7 @@
         }
     }
 
+    /** Kiểm tra tên trước submit: không rỗng, đúng bộ ký tự; báo lỗi bằng API hợp lệ của trình duyệt. */
     function validateSupplierNameField(el) {
         if (!el)
             return true;
